@@ -1,0 +1,62 @@
+---
+title: "Lake Trout Length-Weight Relationship"
+author: "Matt Tyers"
+date: "2024-05-01"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, 
+                      warning=FALSE, message=FALSE, 
+                      fig.width = 9, fig.height=7)
+```
+
+```{r}
+library(tidyverse)
+library(jagsUI)
+library(jagshelper)
+```
+
+
+## Length-Weight Relationship for Each Lake
+
+### Model
+
+A log-log regression was used to model weight as a function of length, expanding somewhat on the form used by Lester, et al.  Since fish-level data (lengths and weights) were available from several lakes of differing habitat, the length-weight relationships were fit separately for each lake, with slope and intercept parameters modeled hierarchically as shown below.
+
+$log(W_{j[i]}) = \beta_{0[j]} + \beta_{1[j]}log(L_{j[i]}) + \epsilon_i$
+
+which is equivalent to
+
+$W = e^{\beta_{0[j]}} \times L^{\beta_{1[j]}} \times e^{\epsilon_i}$
+
+in which
+
+$\beta_{0[j]} \sim N(\mu_{\beta_0}, \sigma_{\beta_0}) \text{ for } j \in 1...n_{lakes}$
+
+$\beta_{1[j]} \sim N(\mu_{\beta_1}, \sigma_{\beta_1}) \text{ for } j \in 1...n_{lakes}$
+
+$\epsilon_i \sim N(0,\sigma_{\epsilon})$
+
+### Results
+
+```{r, fig.show='hide'}
+# loading all the data, but hiding the data exploration plots, etc
+source("R/1_laketrout_lwdata.R")
+```
+
+
+## Asymptotic Length for Each Lake
+
+## Appendix: notes on data and modeling
+
+### Length-Weight Relationship
+
+#### Data
+
+#### Modeling
+
+```{r}
+
+```
+
