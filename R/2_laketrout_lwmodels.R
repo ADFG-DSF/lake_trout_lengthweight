@@ -345,6 +345,8 @@ for(imodel in (imodel+1):nrow(controlmat)) {
 theDIC <- sapply(alloutputs, function(x) x$DIC)[1:16]
 theDIC
 theDIC - min(theDIC)
+# [1] 2.25661808 1.89560947 0.26957872 0.83358178 1.98750118 3.20484979 0.00000000 0.02992762
+# [9] 1.61076528 1.17305266 1.22793261 0.86946090 1.01976078 1.64548233 0.74567197 0.46453610
 
 modeldescription[which.min(theDIC)]
 
@@ -369,15 +371,38 @@ abline(h=0, lty=2)
 comparecat(alloutputs[controlmat[,4]==1], p="b1_area")
 abline(h=0, lty=2)
 
+
+
 par(mfrow=c(2,2))
 caterpillar(alloutputs[[1]], p="b0", x=lt_data$lat, xlab="latitude")
 caterpillar(alloutputs[[1]], p="b1", x=lt_data$lat, xlab="latitude")
 caterpillar(alloutputs[[1]], p="b0", x=lt_data$area, xlab="log area")
 caterpillar(alloutputs[[1]], p="b1", x=lt_data$area, xlab="log area")
+
+caterpillar(alloutputs[[7]], p="b0", x=lt_data$lat, xlab="latitude")
+caterpillar(alloutputs[[7]], p="b1", x=lt_data$lat, xlab="latitude")
+envelope(alloutputs[[7]], p="mu_b1", x=lt_data$lat, add=TRUE)
+caterpillar(alloutputs[[7]], p="b0", x=lt_data$area, xlab="log area")
+envelope(alloutputs[[7]], p="mu_b0", x=lt_data$area, add=TRUE)
+caterpillar(alloutputs[[7]], p="b1", x=lt_data$area, xlab="log area")
+
 caterpillar(alloutputs[[16]], p="b0", x=lt_data$lat, xlab="latitude")
 caterpillar(alloutputs[[16]], p="b1", x=lt_data$lat, xlab="latitude")
 caterpillar(alloutputs[[16]], p="b0", x=lt_data$area, xlab="log area")
 caterpillar(alloutputs[[16]], p="b1", x=lt_data$area, xlab="log area")
+
+comparecat(alloutputs[c(1,7,16)], p="b0", ylim=c(-0.4,0.3))
+comparecat(alloutputs[c(1,7,16)], p="b1", ylim=c(2.4,4.2))
+
+for(imodel in c(1,7,16)) {
+  print(paste("model",imodel))
+  print(mean(alloutputs[[imodel]]$sims.list$b0_lat > 0))
+  print(mean(alloutputs[[imodel]]$sims.list$b0_area > 0))
+  print(mean(alloutputs[[imodel]]$sims.list$b1_lat > 0))
+  print(mean(alloutputs[[imodel]]$sims.list$b1_area > 0))
+}
+
+
 
 data.frame(modeldescription,
            deltaDIC=theDIC - min(theDIC))
