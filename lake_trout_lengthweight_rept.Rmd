@@ -8,7 +8,7 @@ output: word_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, 
                       warning=FALSE, message=FALSE, 
-                      fig.width = 9, fig.height=7)
+                      fig.width = 12, fig.height=9)
 ```
 
 ```{r}
@@ -38,6 +38,8 @@ $\beta_{1[j]} \sim N(\mu_{\beta_1}, \sigma_{\beta_1}) \text{ for } j \in 1...n_{
 
 $\epsilon_i \sim N(0,\sigma_{\epsilon})$
 
+Note: The model was extended to explore possible relationships between lake area and latitude on the length-weight relationship, with some weak relationships identified but fairly equivalent inferences for the lake parameters.  See Appendix for more details.
+
 ### Results
 
 ```{r, fig.show='hide'}
@@ -54,9 +56,196 @@ source("R/1_laketrout_lwdata.R")
 
 #### Data
 
-#### Modeling
+The raw data consisted of 3,887 paired length x weight measurements from 24 lakes, and 57 sampling events from 1960-2022.  Raw data are plotted below.
 
 ```{r}
+laketrout_all %>%
+  ggplot(aes(x=ForkLength_mm, y=Weight_g)) +#, 
+             # colour=LakeName)) +
+  geom_point(alpha=.3) +
+  # facet_wrap(facets=~LakeName) +
+  scale_y_log10() +
+  scale_x_log10() +
+  theme_bw()
+```
 
+A cluster of points in the lower right were best explained by weight having been entered as kilograms rather than grams.  These entries were adjusted according to this assumption.
+
+Obvious outliers were removed according to the rules: weight > 100,000g, length < 150mm.
+
+```{r}
+laketrout_lw_filter1 %>%
+  ggplot(aes(x=ForkLength_mm, y=Weight_g, 
+             colour=LakeName)) +
+  geom_point(alpha=.3) +
+  # facet_wrap(facets=~LakeName) +
+  scale_y_log10() +
+  scale_x_log10() +
+  theme_bw()
+
+
+laketrout_lw_filter1 %>%
+  ggplot(aes(x=ForkLength_mm, y=Weight_g)) +
+  geom_point(alpha=.3) +
+  facet_wrap(facets=~LakeName) +
+  scale_y_log10() +
+  scale_x_log10() +
+  theme_bw()
+```
+
+Many observations from Paxson Lake showed substantial deviations from the trend.  Residual analysis showed this phenomenon to be related to data from a few specific projects.  It was not clear whether this was an artifact of sampling, or if errors were introduced in data entry or data sorting, etc.  Regardless, the data from these projects were censored from the length-weight analysis.
+
+A number of observations still showed large deviations from the trend, likely due to data entry or transcription errors.  These were removed by fitting a global linear regression model, and removing the points with residuals greater than $\pm 4$ times the residual standard deviation, shown below.
+
+```{r}
+plot(laketrout_lw_filter2$ForkLength_mm, laketrout_lw_filter2$Weight_g,
+     log="xy", xlab="Fork Length (mm)", ylab="Weight (g)",
+     pch=ifelse(lm_filter2$residuals/sd(lm_filter2$residuals) > -4 &
+         lm_filter2$residuals/sd(lm_filter2$residuals) < 4, 1, 16),
+     col=adjustcolor(1,alpha.f=.6))
+```
+
+
+#### Modeling
+
+A log-log regression was used to model weight as a function of length, expanding somewhat on the form used by Lester, et al.  Since fish-level data (lengths and weights) were available from several lakes of differing habitat, the length-weight relationships were fit separately for each lake, with the base model defining slope and intercept parameters as modeled hierarchically, shown below.
+
+$log(W_{j[i]}) = \beta_{0[j]} + \beta_{1[j]}log(L_{j[i]}) + \epsilon_i$
+
+which is equivalent to
+
+$W = e^{\beta_{0[j]}} \times L^{\beta_{1[j]}} \times e^{\epsilon_i}$
+
+in which
+
+$\beta_{0[j]} \sim N(\mu_{\beta_0}, \sigma_{\beta_0}) \text{ for } j \in 1...n_{lakes}$
+
+$\beta_{1[j]} \sim N(\mu_{\beta_1}, \sigma_{\beta_1}) \text{ for } j \in 1...n_{lakes}$
+
+$\epsilon_i \sim N(0,\sigma_{\epsilon})$
+
+This was extended to allow possible relationships between the lake-level intercept parameters $\beta_{0[j]}$ and slope parameters $\beta_{1[j]}$ and both lake area and latitude.  The full model extension is expressed below.
+
+$\beta_{0[j]} \sim N(\mu_{\beta_0[j]}, \sigma_{\beta_0}) \text{ for } j \in 1...n_{lakes}$
+
+$\beta_{1[j]} \sim N(\mu_{\beta_1[j]}, \sigma_{\beta_1}) \text{ for } j \in 1...n_{lakes}$
+
+$\mu_{\beta_0[j]} = \gamma_0 + \tau_{0,Area}log(Area_j) + \tau_{0,Lat}Latitude_j \text{ for } j \in 1...n_{lakes}$
+
+$\mu_{\beta_1[j]} = \gamma_1 + \tau_{1,Area}log(Area_j) + \tau_{1,Lat}Latitude_j \text{ for } j \in 1...n_{lakes}$
+
+$\epsilon_i \sim N(0,\sigma_{\epsilon})$
+
+Models were fit for all possible combinations of relationships, and were compared according to DIC scores, as tabulated below.
+
+```{r}
+load(file="alloutputs.Rdata")
+# alloutputs <- alloutputs1
+
+theDIC <- sapply(alloutputs, function(x) x$DIC)[1:16]
+# theDIC
+# [1] -3343.813 -3344.528 -3346.021 -3345.798 -3345.114 -3345.044 -3346.590 -3346.775
+# [9] -3344.630 -3344.252 -3346.165 -3346.176 -3344.370 -3344.958 -3346.061 -3346.038
+
+# theDIC - min(theDIC)
+# [1] 2.9622832 2.2467628 0.7539361 0.9766494 1.6606827 1.7314548 0.1847344 0.0000000
+# [9] 2.1452072 2.5227203 0.6104599 0.5986784 2.4050054 1.8175136 0.7138559 0.7370097
+
+# modeldescription[which.min(theDIC)]
+
+controlmat <- expand.grid(0:1,0:1,0:1,0:1)
+
+intmodel <- slopemodel <- rep(NA, nrow(controlmat))
+intmodel[controlmat[,1]==0 & controlmat[,2]==0] <- "hierarchical"
+intmodel[controlmat[,1]==1 & controlmat[,2]==0] <- "trends with lat"
+intmodel[controlmat[,1]==0 & controlmat[,2]==1] <- "trends with area"
+intmodel[controlmat[,1]==1 & controlmat[,2]==1] <- "trends with lat & area"
+slopemodel[controlmat[,3]==0 & controlmat[,4]==0] <- "hierarchical"
+slopemodel[controlmat[,3]==1 & controlmat[,4]==0] <- "trends with lat"
+slopemodel[controlmat[,3]==0 & controlmat[,4]==1] <- "trends with area"
+slopemodel[controlmat[,3]==1 & controlmat[,4]==1] <- "trends with lat & area"
+modeldescription <- paste0("intercept ", intmodel,", ", "slope ", slopemodel)
+
+nparam <- rowSums(controlmat)
+
+# par(mfrow=c(1, 1))
+# plot(x=theDIC - min(theDIC), y=rank(theDIC),
+#      xlim=c(0, 10))
+# text(x=theDIC - min(theDIC), y=rank(theDIC),
+#      labels=paste(modeldescription, nparam), pos=4)
+
+# par(mfrow=c(1,1))
+# comparecat(alloutputs, p="sig")
+# thesigs <- sapply(alloutputs, function(x) jags_df(x, p="sig", exact=T))
+# thesigs %>% as.data.frame %>% caterpillar
+
+model_df <- data.frame(Model=modeldescription, delta_DIC = theDIC - min(theDIC),
+                       Addl_Param = nparam)
+# rownames(model_df) <- modeldescription
+highlight <- rep("", nrow(model_df))
+bestmodels <- model_df$delta_DIC %in% tapply(model_df$delta_DIC, model_df$Addl_Param, min)
+highlight[bestmodels] <- " *** "
+# model_df$highlight <- highlight
+
+# model_df <- model_df[order(model_df$delta_DIC),]
+
+# knitr::kable(model_df)
+
+par(mfrow=c(1, 1))
+plot(x=theDIC - min(theDIC), y=seq_along(theDIC),
+     xlim=c(0, 8),
+     col=rowSums(controlmat)+1, pch=16,
+     ylab="Model", xlab="Delta DIC (smaller is better)",
+     ylim=c(16,1))
+axis(2, 1:16)
+text(x=theDIC - min(theDIC), y=seq_along(theDIC),
+     labels=paste0(modeldescription, ", Addl param = ",nparam,highlight), pos=4,
+     col=rowSums(controlmat)+1)
+```
+
+To illustrate the possible relationships between lake-level variables (log-area and latitude) and lake-level slope and intercept parameters, parameters are plotted for model 7.  This was nearly the top-performing model in terms of DIC, in which the lake-level intercept parameters have a linear relationship with log area, and the lake-level slope parameters have a linear relationship with latitude.
+
+```{r, fig.width=9, fig.height=9}
+# bundle data to pass into JAGS
+laketrout_lw <- filter(laketrout_lw, !is.na(SurfaceArea_h))
+
+logarea <- log(with(laketrout_lw, tapply(SurfaceArea_h, LakeName, median, na.rm=T)))
+lat <- with(laketrout_lw, tapply(Latitude_WGS84, LakeName, median))
+
+lt_data <- list(x=log(laketrout_lw$ForkLength_mm) - mean(log(laketrout_lw$ForkLength_mm)),
+                y=log(laketrout_lw$Weight_g/1000),
+                n=nrow(laketrout_lw),
+                lake=as.numeric(as.factor(laketrout_lw$LakeName)),
+                nlake=length(unique(laketrout_lw$LakeName)),
+                meanx = mean(log(laketrout_lw$ForkLength_mm)),
+                lat=lat - mean(lat),
+                area=logarea - mean(logarea))
+lt_data$xpred <- seq(from=min(lt_data$x), to=max(lt_data$x), length.out=30)
+lt_data$npred <- length(lt_data$xpred)
+
+par(mfrow=c(2,2))
+caterpillar(alloutputs[[7]], p="b0", x=lat, xlab="latitude", ylab="lake-level parameter value")
+caterpillar(alloutputs[[7]], p="b1", x=lat, xlab="latitude", ylab="lake-level parameter value")
+envelope(alloutputs[[7]], p="mu_b1", x=lat, add=TRUE, dark=.2)
+caterpillar(alloutputs[[7]], p="b0", x=logarea, xlab="log area", ylab="lake-level parameter value")
+envelope(alloutputs[[7]], p="mu_b0", x=logarea, add=TRUE, dark=.2)
+caterpillar(alloutputs[[7]], p="b1", x=logarea, xlab="log area", ylab="lake-level parameter value")
+```
+
+It is important to compare the differences between inferences in terms of lake-level parameters, among the models considered.  Here the lake-level intercept (b0) and slope (b1) parameters are compared, for the top-performing models for each number of additional parameters (see table below).
+
+```{r}
+knitr::kable(model_df[bestmodels,], digits=2)
+```
+
+
+
+```{r, fig.height=15}
+bestoutputs <- alloutputs[bestmodels]
+
+par(mfrow=c(3,1))
+comparecat(bestoutputs, p="b0[", col=1:5)
+comparecat(bestoutputs, p="b0_interp[", col=1:5)
+comparecat(bestoutputs, p="b1[", col=1:5)
 ```
 

@@ -51,7 +51,24 @@ slopemodel[controlmat[,3]==1 & controlmat[,4]==0] <- "trends with lat"
 slopemodel[controlmat[,3]==0 & controlmat[,4]==1] <- "trends with area"
 slopemodel[controlmat[,3]==1 & controlmat[,4]==1] <- "trends with lat & area"
 modeldescription <- paste0("intercept ", intmodel,", ", "slope ", slopemodel)
+
 modeldescription
+# [1] "intercept hierarchical, slope hierarchical"
+# [2] "intercept trends with lat, slope hierarchical"
+# [3] "intercept trends with area, slope hierarchical"
+# [4] "intercept trends with lat & area, slope hierarchical"
+# [5] "intercept hierarchical, slope trends with lat"
+# [6] "intercept trends with lat, slope trends with lat"
+# [7] "intercept trends with area, slope trends with lat"
+# [8] "intercept trends with lat & area, slope trends with lat"
+# [9] "intercept hierarchical, slope trends with area"
+# [10] "intercept trends with lat, slope trends with area"
+# [11] "intercept trends with area, slope trends with area"
+# [12] "intercept trends with lat & area, slope trends with area"
+# [13] "intercept hierarchical, slope trends with lat & area"
+# [14] "intercept trends with lat, slope trends with lat & area"
+# [15] "intercept trends with area, slope trends with lat & area"
+# [16] "intercept trends with lat & area, slope trends with lat & area"
 
 
 ## write a model that can be extended to all possible configurations
@@ -67,6 +84,7 @@ cat('model {
 
   for(j in 1:nlake) {
     b0[j] ~ dnorm(mu_b0[j], tau_b0)
+    b0_interp[j] <- b0[j] - b1[j]*meanx
     mu_b0[j] <- b0_int
                 + b0_lat*lat[j]   * intlat
                 + b0_area*area[j] * intarea
@@ -107,6 +125,7 @@ cat('model {
 
   for(j in 1:nlake) {
     b0[j] <- b0_int
+    b0_interp[j] <- b0[j] - b1[j]*meanx
     # b0[j] ~ dnorm(mu_b0[j], tau_b0)
     # mu_b0[j] <- b0_int
     #             + b0_lat*lat[j]   * intlat
@@ -148,6 +167,7 @@ cat('model {
 
   for(j in 1:nlake) {
     b0[j] ~ dnorm(mu_b0[j], tau_b0)
+    b0_interp[j] <- b0[j] - b1[j]*meanx
     mu_b0[j] <- b0_int
                 + b0_lat*lat[j]   * intlat
                 + b0_area*area[j] * intarea
@@ -189,6 +209,7 @@ cat('model {
 
   for(j in 1:nlake) {
     b0[j] <- b0_int
+    b0_interp[j] <- b0[j] - b1[j]*meanx
     # b0[j] ~ dnorm(mu_b0[j], tau_b0)
     # mu_b0[j] <- b0_int
     #             + b0_lat*lat[j]   * intlat
@@ -228,7 +249,7 @@ cat('model {
 
 
 # JAGS controls
-niter <- 50000
+niter <- 2000#500000
 ncores <- min(10, parallel::detectCores()-1)
 par(mfrow=c(4,4))
 
@@ -249,10 +270,10 @@ for(imodel in 1:nrow(controlmat)) {
     lt_jags_out <- jagsUI::jags(model.file=lt_jags, data=lt_data,
                                 parameters.to.save=c("b0","b1","sig",
                                                      "mu_b0","sig_b0","mu_b1","sig_b1",
-                                                     "fit","pred","ypp","b0_interp",
+                                                     "fit","pred","b0_interp",
                                                      "b0_int","b1_int",
                                                      "b0_lat","b0_area",
-                                                     "b1_lat","b1_area"),
+                                                     "b1_lat","b1_area"),#,"ypp"
                                 n.chains=ncores, parallel=T, n.iter=niter,
                                 n.burnin=niter/2, n.thin=niter/2000)
     print(Sys.time() - tstart)
@@ -260,6 +281,23 @@ for(imodel in 1:nrow(controlmat)) {
     alloutputs[[imodel]] <- lt_jags_out
   }
 }
+
+# save(alloutputs, file="alloutputs.Rdata")
+for(i in 1:length(alloutputs)) {
+  qq_postpred(alloutputs[[i]], p="ypp", y=lt_data$y, main=i)
+}
+
+# trim_ypp <- function(aa) {
+#   aa <- aa[names(aa) != "samples"]
+#   aa$sims.list <- aa$sims.list[names(aa$sims.list) != "ypp"]
+#   class(aa) <- "jagsUI"
+#   return(aa)
+# }
+# alloutputs1 <- lapply(alloutputs, trim_ypp)
+# save(alloutputs1, file="alloutputs1.Rdata")
+
+
+
 
 ## appending models with common intercept
 controlmat <- rbind(controlmat,
@@ -276,10 +314,10 @@ for(imodel in (imodel+1):nrow(controlmat)) {
     lt_jags_out <- jagsUI::jags(model.file=lt_jags_commonint, data=lt_data,
                                 parameters.to.save=c("b0","b1","sig",
                                                      "mu_b0","sig_b0","mu_b1","sig_b1",
-                                                     "fit","pred","ypp","b0_interp",
+                                                     "fit","pred","b0_interp",
                                                      "b0_int","b1_int",
                                                      "b0_lat","b0_area",
-                                                     "b1_lat","b1_area"),
+                                                     "b1_lat","b1_area"),#,"ypp"
                                 n.chains=ncores, parallel=T, n.iter=niter,
                                 n.burnin=niter/2, n.thin=niter/2000)
     print(Sys.time() - tstart)
@@ -303,10 +341,10 @@ for(imodel in (imodel+1):nrow(controlmat)) {
     lt_jags_out <- jagsUI::jags(model.file=lt_jags_commonslope, data=lt_data,
                                 parameters.to.save=c("b0","b1","sig",
                                                      "mu_b0","sig_b0","mu_b1","sig_b1",
-                                                     "fit","pred","ypp","b0_interp",
+                                                     "fit","pred","b0_interp",
                                                      "b0_int","b1_int",
                                                      "b0_lat","b0_area",
-                                                     "b1_lat","b1_area"),
+                                                     "b1_lat","b1_area"),#,"ypp"
                                 n.chains=ncores, parallel=T, n.iter=niter,
                                 n.burnin=niter/2, n.thin=niter/2000)
     print(Sys.time() - tstart)
@@ -330,10 +368,10 @@ for(imodel in (imodel+1):nrow(controlmat)) {
     lt_jags_out <- jagsUI::jags(model.file=lt_jags_common, data=lt_data,
                                 parameters.to.save=c("b0","b1","sig",
                                                      "mu_b0","sig_b0","mu_b1","sig_b1",
-                                                     "fit","pred","ypp","b0_interp",
+                                                     "fit","pred","b0_interp",
                                                      "b0_int","b1_int",
                                                      "b0_lat","b0_area",
-                                                     "b1_lat","b1_area"),
+                                                     "b1_lat","b1_area"),#,"ypp"
                                 n.chains=ncores, parallel=T, n.iter=niter,
                                 n.burnin=niter/2, n.thin=niter/2000)
     print(Sys.time() - tstart)
@@ -344,22 +382,45 @@ for(imodel in (imodel+1):nrow(controlmat)) {
 
 theDIC <- sapply(alloutputs, function(x) x$DIC)[1:16]
 theDIC
+# [1] -3343.813 -3344.528 -3346.021 -3345.798 -3345.114 -3345.044 -3346.590 -3346.775
+# [9] -3344.630 -3344.252 -3346.165 -3346.176 -3344.370 -3344.958 -3346.061 -3346.038
+
 theDIC - min(theDIC)
-# [1] 2.25661808 1.89560947 0.26957872 0.83358178 1.98750118 3.20484979 0.00000000 0.02992762
-# [9] 1.61076528 1.17305266 1.22793261 0.86946090 1.01976078 1.64548233 0.74567197 0.46453610
+# [1] 2.9622832 2.2467628 0.7539361 0.9766494 1.6606827 1.7314548 0.1847344 0.0000000
+# [9] 2.1452072 2.5227203 0.6104599 0.5986784 2.4050054 1.8175136 0.7138559 0.7370097
 
 modeldescription[which.min(theDIC)]
+
+nparam <- rowSums(controlmat)
 
 par(mfrow=c(1, 1))
 plot(x=theDIC - min(theDIC), y=rank(theDIC),
      xlim=c(0, 10))
 text(x=theDIC - min(theDIC), y=rank(theDIC),
-     labels=modeldescription, pos=4)
+     labels=paste(modeldescription, nparam), pos=4)
+
+par(mfrow=c(1, 1))
+plot(x=theDIC - min(theDIC), y=seq_along(theDIC),
+     xlim=c(0, 10))
+text(x=theDIC - min(theDIC), y=seq_along(theDIC),
+     labels=paste(modeldescription, nparam), pos=4,
+     col=rowSums(controlmat)+1)
 
 # par(mfrow=c(1,1))
 # comparecat(alloutputs, p="sig")
 # thesigs <- sapply(alloutputs, function(x) jags_df(x, p="sig", exact=T))
 # thesigs %>% as.data.frame %>% caterpillar
+
+model_df <- data.frame(delta_DIC = theDIC - min(theDIC),
+                       Addl_Param = nparam)
+rownames(model_df) <- modeldescription
+highlight <- rep("", nrow(model_df))
+highlight[model_df$delta_DIC %in% tapply(model_df$delta_DIC, model_df$Addl_Param, min)] <- "***"
+model_df$highlight <- highlight
+
+model_df <- model_df[order(model_df$delta_DIC),]
+
+
 
 par(mfrow=c(2,2))
 comparecat(alloutputs[controlmat[,1]==1], p="b0_lat")
@@ -381,9 +442,9 @@ caterpillar(alloutputs[[1]], p="b1", x=logarea, xlab="log area")
 
 caterpillar(alloutputs[[7]], p="b0", x=lat, xlab="latitude")
 caterpillar(alloutputs[[7]], p="b1", x=lat, xlab="latitude")
-envelope(alloutputs[[7]], p="mu_b1", x=lat, add=TRUE)
+envelope(alloutputs[[7]], p="mu_b1", x=lat, add=TRUE, dark=.2)
 caterpillar(alloutputs[[7]], p="b0", x=logarea, xlab="log area")
-envelope(alloutputs[[7]], p="mu_b0", x=logarea, add=TRUE)
+envelope(alloutputs[[7]], p="mu_b0", x=logarea, add=TRUE, dark=.2)
 caterpillar(alloutputs[[7]], p="b1", x=logarea, xlab="log area")
 
 caterpillar(alloutputs[[16]], p="b0", x=lat, xlab="latitude")
