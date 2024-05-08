@@ -417,3 +417,85 @@ curve(957*(1-exp(-0.14*(1+log(x)))), lty=3, add=TRUE)
 qq_postpred(linf_jags_out, p="ypp", y=linf_data$y)
 ts_postpred(linf_jags_out, p="ypp", y=linf_data$y, x=linf_data$x, log="x")
 cor(linf_jags_out$q50$mu, linf_data$y)^2
+
+
+
+`%inside%` <- function(x, y) x[x>min(y, na.rm=T) & x<max(y, na.rm=T)]
+hist(laketrout_all$ForkLength_mm %inside% c(300,1000))
+
+par(mfrow=c(3,3))
+lakes <- sort(unique(laketrout_all$LakeName))
+for(lake in lakes) {
+  hist(laketrout_all$ForkLength_mm[laketrout_all$LakeName==lake], main=lake, xlim=c(150, 1000))
+}
+par(mfrow=c(2,2))
+lm(laketrout_all$ForkLength_mm ~ laketrout_all$LakeName) %>% plot
+
+tapply(laketrout_all$ForkLength_mm, laketrout_all$LakeName, median, na.rm=T) %>% hist
+tapply(laketrout_all$ForkLength_mm, laketrout_all$LakeName, sd, na.rm=T) %>% hist
+
+
+# filter to a minimum sample size per lake?
+# hierarchically model mean & sd LENGTH per lake
+# - see if mean + 2sd (or something) could be a good proxy for Linf
+
+######## THIS DOES NOT WORK #########
+
+# model relationship with area here??
+# specify model, which is written to a temporary file
+linf_jags <- tempfile()
+cat('model {
+  for(i in 1:n) {
+    y[i] ~ dnorm(mu[lake[i]], tau[lake[i]])
+    # ypp[i] ~ dnorm(mu[lake[i]], tau[lake[i]])
+  }
+
+  for(j in 1:nlake) {
+    mu[j] ~ dnorm(mumu, sigmu)
+    tau[j] <- pow(sig[j], -2)
+    sig[j] ~ dexp(ratesig)T(0.1,)
+    pred[j] ~ dnorm(mu[j], tau[j])
+  }
+
+  mumu ~ dnorm(500, 0.00001)
+  sigmu ~ dunif(0,1000)
+  ratesig ~ dexp(1/1000)
+
+}', file=linf_jags)
+
+
+lakes_with_more <- table(laketrout_all$LakeName)[table(laketrout_all$LakeName) > 50]
+laketrout_linf <- filter(laketrout_all, !is.na(ForkLength_mm) & !is.na(LakeName)) %>%
+  filter(LakeName %in% names(lakes_with_more))
+# bundle data to pass into JAGS
+linf_data <- list(y=laketrout_linf$ForkLength_mm,
+                  n=nrow(laketrout_linf),
+                  lake=as.numeric(as.factor(laketrout_linf$LakeName)),
+                  nlake=length(unique(laketrout_linf$LakeName)))
+
+# JAGS controls
+niter <- 10000
+# ncores <- 3
+ncores <- min(10, parallel::detectCores()-1)
+
+{
+  tstart <- Sys.time()
+  print(tstart)
+  linf_jags_out <- jagsUI::jags(model.file=linf_jags, data=linf_data,
+                                parameters.to.save=c("mu","sig","mumu","sigmu","ratesig","pred"),
+                                n.chains=ncores, parallel=T, n.iter=niter,
+                                n.burnin=niter/2, n.thin=niter/2000)
+  print(Sys.time() - tstart)
+}
+
+nbyname(linf_jags_out)
+plotRhats(linf_jags_out)
+traceworstRhat(linf_jags_out, parmfrow = c(3, 3))
+par(mfrow=c(2,2))
+caterpillar(linf_jags_out, p="mu")
+caterpillar(linf_jags_out, p="sig")
+caterpillar(linf_jags_out, p="pred")
+plot(jitter(linf_data$lake), linf_data$y)
+caterpillar(linf_jags_out, p="pred", add=T)
+# qq_postpred(linf_jags_out, p="ypp", y=linf_data$y)
+# ts_postpred(linf_jags_out, p="ypp", y=linf_data$y)

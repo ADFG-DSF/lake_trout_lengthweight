@@ -8,7 +8,8 @@ output: word_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, 
                       warning=FALSE, message=FALSE, 
-                      fig.width = 12, fig.height=9)
+                      fig.width = 12, fig.height=9,
+                      dpi=300)
 ```
 
 ```{r}
@@ -38,17 +39,82 @@ $\beta_{1[j]} \sim N(\mu_{\beta_1}, \sigma_{\beta_1}) \text{ for } j \in 1...n_{
 
 $\epsilon_i \sim N(0,\sigma_{\epsilon})$
 
+Modeling lake-level slope and intercept parameters hierarchically allows for variability in the length-weight relationship between lakes, but also allows the overall relationship to inform data-poor cases.
+
 Note: The model was extended to explore possible relationships between lake area and latitude on the length-weight relationship, with some weak relationships identified but fairly equivalent inferences for the lake parameters.  See Appendix for more details.
+
+\pagebreak
 
 ### Results
 
 ```{r, fig.show='hide'}
 # loading all the data, but hiding the data exploration plots, etc
 source("R/1_laketrout_lwdata.R")
+
+laketrout_lw <- filter(laketrout_lw, !is.na(SurfaceArea_h))
+
+logarea <- log(with(laketrout_lw, tapply(SurfaceArea_h, LakeName, median, na.rm=T)))
+lat <- with(laketrout_lw, tapply(Latitude_WGS84, LakeName, median))
+lakenames <- names(lat)
 ```
 
+Parameter estimates are given below for all lakes with paired length-weight data as well as lake area and latitude.  
+
+Note: the model was fit using recentered log-lengths to facilitate model convergence (see inference for $\beta_{0c}$ below), but parameters were back-transformed for interpretability (see inference for $\beta_0$ below.)
+
+```{r}
+load(file="alloutputs.Rdata")
+
+out_tbl <- data.frame(Lake = lakenames,
+                      beta_0 = alloutputs[[1]]$q50$b0_interp,
+                      SE_beta_0 = alloutputs[[1]]$sd$b0_interp,
+                      beta_0_c = alloutputs[[1]]$q50$b0,
+                      SE_beta_0_c = alloutputs[[1]]$sd$b0,
+                      beta_1 = alloutputs[[1]]$q50$b1,
+                      SE_beta_1 = alloutputs[[1]]$sd$b1)
+names(out_tbl) <- c("Lake", 
+                    "beta_0", "SE(beta_0)", 
+                    "beta_0c", "SE(beta_0c)", 
+                    "beta_1", "SE(beta_1)")
+knitr::kable(out_tbl, digits=2)
+```
+
+\pagebreak
+
+Length-weight relationships are plotted below, with the Bayesian model output expressed in blue and the fit line reported in Lester et al. overlayed as a black dotted line.
+
+```{r, fig.height=12, fig.width=12}
+par(mar=c(4,4,3,2))
+par(mfrow=c(5,5))
+logl_vec <- seq(from=min(log(laketrout_lw$ForkLength_mm), na.rm=TRUE),
+                to=max(log(laketrout_lw$ForkLength_mm), na.rm=TRUE),
+                length.out=20)
+logl_mat <-  logl_vec %>% 
+  matrix(nrow=nrow(alloutputs[[1]]$sims.list$b1),
+         ncol=20, byrow=TRUE)
+for(i in 1:length(lakenames)) {
+  b0 <- alloutputs[[1]]$sims.list$b0_interp[,i]
+  b1 <- alloutputs[[1]]$sims.list$b1[,i]
+  predmat <- b0 + b1*logl_mat
+  
+  envelope(predmat, x=exp(logl_vec), dark=.5,
+           transform="exp",log="xy",
+           main=lakenames[i],
+           xlab="Fork Length (mm)", ylab="Weight (kg)")
+  points(x = (laketrout_lw$ForkLength_mm)[laketrout_lw$LakeName==lakenames[i]],
+         y = (laketrout_lw$Weight_g/1000)[laketrout_lw$LakeName==lakenames[i]],
+         col = adjustcolor(1, alpha.f=.5))
+  curve(exp(-19.56)*x^3.2, lty=3, lwd=2, add=TRUE)
+  
+  if(i==1) legend("topleft", lwd=2, lty=3, legend="Lester fit")
+}
+```
+
+\pagebreak
 
 ## Asymptotic Length for Each Lake
+
+\pagebreak
 
 ## Appendix: notes on data and modeling
 
@@ -105,6 +171,7 @@ plot(laketrout_lw_filter2$ForkLength_mm, laketrout_lw_filter2$Weight_g,
      col=adjustcolor(1,alpha.f=.6))
 ```
 
+\pagebreak
 
 #### Modeling
 
@@ -139,7 +206,7 @@ $\epsilon_i \sim N(0,\sigma_{\epsilon})$
 Models were fit for all possible combinations of relationships, and were compared according to DIC scores, as tabulated below.
 
 ```{r}
-load(file="alloutputs.Rdata")
+# load(file="alloutputs.Rdata")
 # alloutputs <- alloutputs1
 
 theDIC <- sapply(alloutputs, function(x) x$DIC)[1:16]
@@ -203,7 +270,7 @@ text(x=theDIC - min(theDIC), y=seq_along(theDIC),
      col=rowSums(controlmat)+1)
 ```
 
-To illustrate the possible relationships between lake-level variables (log-area and latitude) and lake-level slope and intercept parameters, parameters are plotted for model 7.  This was nearly the top-performing model in terms of DIC, in which the lake-level intercept parameters have a linear relationship with log area, and the lake-level slope parameters have a linear relationship with latitude.
+To illustrate the possible relationships between lake-level variables (log-area and latitude) and lake-level slope and intercept parameters, parameters are plotted for model 7.  This was the top-performing model in terms of DIC, and was defined as the lake-level intercept parameters having a linear relationship with log area, and the lake-level slope parameters having a linear relationship with latitude.
 
 ```{r, fig.width=9, fig.height=9}
 # bundle data to pass into JAGS
@@ -238,14 +305,50 @@ It is important to compare the differences between inferences in terms of lake-l
 knitr::kable(model_df[bestmodels,], digits=2)
 ```
 
-
+Note that slight differences in inference exist between models, though all differences are very slight.  Dotted lines are overlayed as appropriate, for comparison with the fit reported in Lester et al.
 
 ```{r, fig.height=15}
 bestoutputs <- alloutputs[bestmodels]
 
 par(mfrow=c(3,1))
-comparecat(bestoutputs, p="b0[", col=1:5)
-comparecat(bestoutputs, p="b0_interp[", col=1:5)
-comparecat(bestoutputs, p="b1[", col=1:5)
+comparecat(bestoutputs, p="b0_interp[", col=1:5, main="b0")
+abline(h=-19.56, lty=3)
+comparecat(bestoutputs, p="b0[", col=1:5, main="b0 (centered)")
+comparecat(bestoutputs, p="b1[", col=1:5, main="b1")
+abline(h=3.2, lty=3)
+```
+
+\pagebreak
+
+That said, it may be beneficial to consider the relationships with latitude and log-area when modeling the length-weight relationship for a new lake *outside* the list presented.
+
+Since model fitting was done using recentered data (log length, log area, latitude), some algebraic headache was required to backtransform all parameters back to the data scale, and is not shown here.  Since the net relationship between log length and log weight contains several sources of uncertainty (error in parameter estimation, errors in hierarchical distributions, residual error), error in expressing the length-weight relationship for a new lake is best calculated in-model or directly from the posterior.  However, the formula below should be sufficient for point estimates of regression parameters.
+
+Note: weight is expressed in kilograms, length in millimeters, area in hectares, and latitude in degrees.
+
+```{r, results='asis'}
+g0 <- alloutputs[[7]]$q50$b0_int
+g1 <- alloutputs[[7]]$q50$b1_int
+t0A <- alloutputs[[7]]$q50$b0_area
+t1L <- alloutputs[[7]]$q50$b1_lat
+meanlogA <- mean(log(laketrout_lw$SurfaceArea_h))
+meanlogL <- mean(log(laketrout_lw$ForkLength_mm))
+meanlat <- mean(laketrout_lw$Latitude_WGS84)
+
+p1 <- g0 - t0A*meanlogA - g1*meanlogL + t1L*meanlat*meanlogL
+p2 <- t0A
+p3 <- -t1L*meanlogL
+p4 <- g1 - t1L*meanlat
+p5 <- t1L
+
+# cat("$$\\hat{log(W)}=", round(p1, 2), "+",
+#     round(p2, 3), "\\times log(area) +",
+#     round(p3, 3), "\\times lat +",
+#     "(", round(p4, 2), "+", round(p5, 3), "\\times lat)\\times log(L)", "$$")
+
+cat("$$\\hat{log(W)}=", round(p1, 2), 
+    round(p2, 3), "log(area)+",
+    round(p3, 3), "lat +",
+    "(", round(p4, 2), round(p5, 3), " lat)log(L)", "$$")
 ```
 
