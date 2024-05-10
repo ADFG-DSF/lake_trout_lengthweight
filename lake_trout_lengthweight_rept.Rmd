@@ -250,7 +250,7 @@ model_df <- data.frame(Model=modeldescription, delta_DIC = theDIC - min(theDIC),
                        Addl_Param = nparam)
 # rownames(model_df) <- modeldescription
 highlight <- rep("", nrow(model_df))
-bestmodels <- model_df$delta_DIC %in% tapply(model_df$delta_DIC, model_df$Addl_Param, min)
+bestmodels <- which(model_df$delta_DIC %in% tapply(model_df$delta_DIC, model_df$Addl_Param, min))
 highlight[bestmodels] <- " *** "
 # model_df$highlight <- highlight
 
@@ -352,3 +352,101 @@ cat("$$\\hat{log(W)}=", round(p1, 2),
     "(", round(p4, 2), round(p5, 3), " lat)log(L)", "$$")
 ```
 
+The predictive power of the five top models was also compared using a cross-validation routine, in which all considered models were re-fit *excluding* the data for each lake in turn, and the model-predicted length-weight relationships were compared to the relationships actually observed at each lake.
+
+This was done two ways: First, the predicted intercept and slope parameters (b0 and b1) were compared to the respective parameters fit from data.  Since inferences for five different models *excluding* each lakes' data were compared to five different models *including* each lakes' data, consensus was sought among the five possible versions of "truth".
+
+```{r}
+load(file="lw_loocv.Rdata")
+b0_medians <- apply(b0_arr, 2:3, median)
+b1_medians <- apply(b1_arr, 2:3, median)
+
+par(mfrow=c(2,1))
+
+comparecat(list(as.data.frame(b0_interp_arr[,,1]),
+                as.data.frame(b0_interp_arr[,,2]),
+                as.data.frame(b0_interp_arr[,,3]),
+                as.data.frame(b0_interp_arr[,,4]),
+                as.data.frame(b0_interp_arr[,,5])), col=1:5, 
+           main="b0", xlab="lake")
+for(i in seq_along(bestmodels)) lines(alloutputs[[bestmodels[i]]]$q50$b0_interp, lty=1)
+# legend("topleft", legend = c("from Data", paste("Mod", bestmodels)), 
+#        lwd=c(1, rep(3,5)), lty=c(1, rep(1,5)), col=c(1,1:5), pch=c(NA,rep(16,5)))
+legend("topleft", legend = c("from Data", "Model prediction"), 
+       lwd=c(1, 3), lty=c(1, 1), col=c(1,1), pch=c(NA,16))
+
+comparecat(list(as.data.frame(b1_arr[,,1]),
+                as.data.frame(b1_arr[,,2]),
+                as.data.frame(b1_arr[,,3]),
+                as.data.frame(b1_arr[,,4]),
+                as.data.frame(b1_arr[,,5])), col=1:5, 
+           main="b1", xlab="lake")
+for(i in seq_along(bestmodels)) lines(alloutputs[[bestmodels[i]]]$q50$b1, lty=1)
+# legend("topleft", legend = c("from Data", paste("Mod", bestmodels)), 
+#        lwd=c(1, rep(3,5)), lty=c(1, rep(1,5)), col=c(1,1:5), pch=c(NA,rep(16,5)))
+legend("topleft", legend = c("from Data", "Model prediction"), 
+       lwd=c(1, 3), lty=c(1, 1), col=c(1,1), pch=c(NA,16))
+```
+
+Root mean squared prediction error is plotted below for predictions from all five selected models, as compared to parameters fit from data.  In this case, the "truth" from all models is shown, but the five top models are highlighted.
+
+```{r, fig.height=5}
+b0_truths <- sapply(alloutputs, function(x) x$q50$b0)
+b0_interp_truths <- sapply(alloutputs, function(x) x$q50$b0_interp)
+b1_truths <- sapply(alloutputs, function(x) x$q50$b1)
+
+# all models, all truths
+b0_rmse <- b0_interp_rmse <- b1_rmse <- matrix(nrow=ncol(b0_truths), ncol=5)
+for(itruth in 1:ncol(b0_truths)) {
+  for(imodel in 1:5) {
+    b0_rmse[itruth, imodel] <- sqrt(mean((b0_truths[,itruth]-b0_medians[,imodel])^2))
+    # b0_interp_rmse[itruth, imodel] <- sqrt(mean((b0_interp_truths[,itruth]-b0_interp_medians[,imodel])^2))
+    b1_rmse[itruth, imodel] <- sqrt(mean((b1_truths[,itruth]-b1_medians[,imodel])^2))
+  }
+}
+thecolors <- rcolors(22)
+thecolors[bestmodels] <- 1:5
+
+par(mfrow=c(1,2))
+boxplot(b0_rmse, names=bestmodels, xlab="Model used for prediction", main="b0 prediction RMSE")
+for(i in 1:ncol(b0_truths)) {
+  lines(b0_rmse[i,], col=adjustcolor(thecolors[i], alpha.f=.5), 
+        lwd=ifelse(i %in% bestmodels, 2, 1))
+}
+boxplot(b1_rmse, names=bestmodels, xlab="Model used for prediction", main="b1 prediction RMSE")
+for(i in 1:ncol(b0_truths)) {
+  lines(b1_rmse[i,], col=adjustcolor(thecolors[i], alpha.f=.5), 
+        lwd=ifelse(i %in% bestmodels, 2, 1))
+}
+# plot(b0_rmse[1,], type="l", ylim=range(b0_rmse))
+# plot(b1_rmse[1,], type="l", ylim=range(b1_rmse))
+```
+
+Second, the candidate prediction models (that were fit *excluding* the data from each lake in turn) were used to predict log weights from log lengths, using data from the excluded lake.  Model-predicted log weights were compared to actual log-weights for each lake, for each prediction model considered, again in terms of root mean squared prediction error.
+
+```{r, fig.height=5}
+lat_all <- with(laketrout_lw, tapply(Latitude_WGS84, LakeName, median))
+lakenames_all <- names(lat_all)
+pred_r <- pred_sd <- pred_rmse <- matrix(nrow=length(bestmodels), ncol=length(lakenames_all))
+for(imodel in seq_along(bestmodels)) {
+  for(ilake in seq_along(lakenames_all)) {
+    # ypred <- b0_interp_medians[ilake, imodel] +
+    #   b1_medians[ilake, imodel]*log(laketrout_lw$ForkLength_mm[laketrout_lw$LakeName==lakenames_all[ilake]])
+    ypred <- b0_medians[ilake, imodel] +
+      b1_medians[ilake, imodel]*
+      (log(laketrout_lw$ForkLength_mm[laketrout_lw$LakeName==lakenames_all[ilake]]) -
+         mean(log(laketrout_lw$ForkLength_mm)))
+    ytrue <- log(laketrout_lw$Weight_g[laketrout_lw$LakeName==lakenames_all[ilake]]/1000)
+    pred_sd[imodel, ilake] <- sd(ypred-ytrue)  # should this be rmse instead??
+    pred_rmse[imodel, ilake] <- sqrt(mean(((ypred-ytrue)^2)))
+    pred_r[imodel, ilake] <- cor(ypred, ytrue)
+  }
+}
+par(mfrow=c(1,2))
+boxplot(t(pred_rmse), names=bestmodels, xlab="Model used for prediction", main="prediction RMSE for all lakes")
+apply(pred_rmse, 1, mean) %>% lines(lwd=4)
+apply(pred_rmse, 1, mean) %>% plot(main="Mean prediction RMSE error across lakes", type="b", xaxt="n", xlab="Model used for prediction")
+axis(side=1, at=1:5, labels=bestmodels)
+```
+
+The results from cross-validation show relatively strong agreement between models, which could perhaps be interpreted as limited benefit from selecting a prediction model that includes lake area and/or latitude.  However, Model 7 (intercept depends on log area, slope depends on latitude) might be considered a "sweet spot" in predictive power: beyond this number of parameters, the predictive power drops due to overfitting.

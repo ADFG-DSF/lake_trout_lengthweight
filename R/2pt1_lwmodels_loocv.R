@@ -116,7 +116,7 @@ b0_interp_arr <- b0_arr <- b1_arr <- mu_b0_arr <- mu_b1_arr <- array(dim=c(nrow(
                                                           length(bestmodels)))
 
 # JAGS controls
-niter <- 2000
+niter <- 6000
 ncores <- min(10, parallel::detectCores()-1)
 par(mfrow=c(4,4))
 
@@ -182,6 +182,8 @@ for(imodel in seq_along(bestmodels)) {
 }
 }
 
+# save(b0_arr, b0_interp_arr, b1_arr, mu_b0_arr, mu_b1_arr, file="lw_loocv.Rdata")
+
 par(mfrow=c(1,1))
 comparecat(list(as.data.frame(b0_arr[,,1]),
                 as.data.frame(b0_arr[,,2]),
@@ -210,6 +212,7 @@ comparecat(list(as.data.frame(mu_b0_arr[,,1]),
                 as.data.frame(mu_b0_arr[,,4]),
                 as.data.frame(mu_b0_arr[,,5])), col=1:5)
 for(i in seq_along(bestmodels)) lines(alloutputs[[bestmodels[i]]]$q50$b0)
+for(i in seq_along(bestmodels)) lines(alloutputs[[bestmodels[i]]]$q50$mu_b0, lty=2)
 
 comparecat(list(as.data.frame(mu_b1_arr[,,1]),
                 as.data.frame(mu_b1_arr[,,2]),
@@ -217,6 +220,7 @@ comparecat(list(as.data.frame(mu_b1_arr[,,1]),
                 as.data.frame(mu_b1_arr[,,4]),
                 as.data.frame(mu_b1_arr[,,5])), col=1:5)
 for(i in seq_along(bestmodels)) lines(alloutputs[[bestmodels[i]]]$q50$b1)
+for(i in seq_along(bestmodels)) lines(alloutputs[[bestmodels[i]]]$q50$mu_b1, lty=2)
 
 
 ## plot pp quantiles for new arrays vs truth (figure out what truth is!)
@@ -268,6 +272,14 @@ for(i in 1:5) {
 mu_b1_truth <- alloutputs[[truthmodel]]$q50$mu_b1
 mu_b1_qq <- (mu_b1_arr < array(matrix(mu_b1_truth, nrow=dim(mu_b1_arr)[1], ncol=length(mu_b1_truth),
                                       byrow=TRUE), dim=dim(mu_b1_arr))) %>% apply(c(2,3), mean)
+
+mu_b1_qq <- matrix(nrow=length(mu_b1_truth), ncol=length(bestmodels))
+for(ilake in 1:length(mu_b1_truth)) {
+  for(imodel in 1:length(bestmodels)) {
+    mu_b1_qq[ilake, imodel] <- mean(mu_b1_arr[, ilake, imodel] < mu_b1_truth[ilake])
+  }
+}
+
 par(mfrow=c(2,3))
 for(i in 1:5) {
   plot(NA, xlim=c(1,22), ylim=0:1)
@@ -336,7 +348,7 @@ for(i in 1:ncol(b0_truths)) lines(b1_rmse[i,], lwd=2, col=i)
 
 
 ## better still would be residual sd of DATA!
-pred_sd <- pred_rmse <- matrix(nrow=length(bestmodels), ncol=length(lakenames_all))
+pred_r <- pred_sd <- pred_rmse <- matrix(nrow=length(bestmodels), ncol=length(lakenames_all))
 for(imodel in seq_along(bestmodels)) {
   for(ilake in seq_along(lakenames_all)) {
     # ypred <- b0_interp_medians[ilake, imodel] +
@@ -348,15 +360,24 @@ for(imodel in seq_along(bestmodels)) {
     ytrue <- log(laketrout_lw$Weight_g[laketrout_lw$LakeName==lakenames_all[ilake]]/1000)
     pred_sd[imodel, ilake] <- sd(ypred-ytrue)  # should this be rmse instead??
     pred_rmse[imodel, ilake] <- sqrt(mean(((ypred-ytrue)^2)))
+    pred_r[imodel, ilake] <- cor(ypred, ytrue)
   }
 }
 boxplot(pred_sd)
 boxplot(t(pred_sd))
 boxplot(pred_rmse)
 boxplot(t(pred_rmse))
+boxplot(pred_r)
+boxplot(t(pred_r))
 
-apply(pred_rmse, 1, median)
-apply(pred_rmse, 1, mean)
+apply(pred_rmse, 1, median) %>% plot
+apply(pred_rmse, 1, mean) %>% plot
+apply(pred_r, 1, median) %>% plot
+apply(pred_r, 1, mean) %>% plot
 
 plot(pred_rmse[,1], ylim=range(pred_rmse), type='l')
 for(i in 1:ncol(pred_rmse)) lines(pred_rmse[,i], col=i)
+
+nperlake <- table(laketrout_lw$LakeName)
+apply(pred_rmse, 1, weighted.mean, w=nperlake) %>% plot
+apply(pred_rmse, 1, weighted.mean, w=sqrt(nperlake)) %>% plot
