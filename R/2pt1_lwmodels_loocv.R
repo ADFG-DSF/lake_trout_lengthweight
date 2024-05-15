@@ -116,7 +116,7 @@ b0_interp_arr <- b0_arr <- b1_arr <- mu_b0_arr <- mu_b1_arr <- array(dim=c(nrow(
                                                           length(bestmodels)))
 
 # JAGS controls
-niter <- 6000
+niter <- 20000
 ncores <- min(10, parallel::detectCores()-1)
 par(mfrow=c(4,4))
 
