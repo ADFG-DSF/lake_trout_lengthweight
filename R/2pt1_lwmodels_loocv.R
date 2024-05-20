@@ -182,7 +182,8 @@ for(imodel in seq_along(bestmodels)) {
 }
 }
 
-# save(b0_arr, b0_interp_arr, b1_arr, mu_b0_arr, mu_b1_arr, file="lw_loocv.Rdata")
+########################################################
+save(b0_arr, b0_interp_arr, b1_arr, mu_b0_arr, mu_b1_arr, file="lw_loocv.Rdata")
 
 par(mfrow=c(1,1))
 comparecat(list(as.data.frame(b0_arr[,,1]),
@@ -381,3 +382,4 @@ for(i in 1:ncol(pred_rmse)) lines(pred_rmse[,i], col=i)
 nperlake <- table(laketrout_lw$LakeName)
 apply(pred_rmse, 1, weighted.mean, w=nperlake) %>% plot
 apply(pred_rmse, 1, weighted.mean, w=sqrt(nperlake)) %>% plot
+

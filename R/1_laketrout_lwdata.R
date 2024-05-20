@@ -2,13 +2,16 @@ library(tidyverse)
 library(jagsUI)
 library(jagshelper)
 
-morphometry <- read_csv("flat_data/lake_morphometry.csv", skip=2)
+# morphometry <- read_csv("flat_data/lake_morphometry.csv", skip=2)
+morphometry <- read_csv("flat_data/lake_morphometry2.csv", skip=2)
 
 # # is lake name unique?  YES
 # sum(!is.na(morphometry$LakeName))
 # length(unique(morphometry$LakeName))
 
-laketrout_all <- read_csv("flat_data/length_weight.csv", skip=2) %>%
+# laketrout_all <- read_csv("flat_data/length_weight.csv", skip=2) %>%
+#   left_join(morphometry)
+laketrout_all <- read_csv("flat_data/length_weight2.csv", skip=2) %>%
   left_join(morphometry)
 
 sum(!is.na(laketrout_all$ForkLength_mm))  # 34107

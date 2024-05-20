@@ -1,0 +1,645 @@
+Available Data and Morphometry,,,,,,,,,,,,,,,,,,,
+"Alaska Lake Database (ALDAT) data export 10/27/22, 12/15/22, and 5/17/2024 (https://www.adfg.alaska.gov/SF_Lakes/)",,,,,,,,,,"*Date may correspond to the last time information was updated, and may not reflect when data were collected. This date only applies to lake morphology data.",,**Blanks represent missing data in the lake database.,,,,,,,
+SportFishRegion,ManagementArea,LakeName,Longitude_WGS84,Latitude_WGS84,SurfaceArea_h,Volume_m3,MeanDepth_m,MaximumDepth_m,ShorelineLength_km,*Most Recent Survey Date,SpeciesPreviouslyStocked,**NativeSpeciesPresent,BathymetricMap,Average of ForkLength_mm,Average of Weight_g,Count of ForkLength_mm,Count of Weight_g,Abundance,SWHS
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Bernard Lake,-144.91500,61.52540,,,,,,,,lake trout,No,311,,5,,,
+Region III,Fairbanks (Lower Tanana River Drainage),Caribou Lake,-146.51657,62.21525,7.14,"129,516",1.81,7.6,1.29,4/9/2015,"Arctic grayling, coho salmon, rainbow trout","burbot, Arctic grayling, slimy sculpin",Yes,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Carlson Lake,-143.86153,62.76354,20.23,,,9.1,,7/12/1961,,"Dolly Varden, Arctic grayling",No,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),Donnelly Lake (Richardson Highway),-145.80576,63.75350,12.29,"448,135",3.65,12.0,2.72,7/6/2005,"Arctic char, lake trout, Arctic grayling, Chinook salmon, coho salmon, rainbow trout",slimy sculpin,Yes,207.2763158,,76,,,yes
+Region III,North Slope Drainages,Ernie Lake,-146.20419,62.54318,5.22,,,4.9,,1/1/1988,,longnose sucker,No,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,Farewell Lake,-153.63924,62.55509,254.95,,,49.4,,1/1/1955,,,No,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),Fourmile Lake (Taylor Highway),-142.57192,63.36110,49.90,"1,047,496",2.1,5.8,3.92,8/21/2007,"Arctic char, lake trout, coho salmon, rainbow trout, sheefish",,Yes,325.3,,10,,,yes
+Region III,Delta (Upper Tanana River Drainage),Ghost Lake (Meadows Road),-145.83043,63.83526,1.96,"116,675",5.95,14.4,0.54,8/24/2005,"Arctic char, lake trout, rainbow trout, sheefish",slimy sculpin,Yes,368.4,,5,,,yes
+Region III,Fairbanks (Lower Tanana River Drainage),Harding Lake,-146.88085,64.43474,887.18,"153,746,079",17.3,43.0,11.87,7/22/2013,"Arctic char, lake trout, Arctic grayling, coho salmon, sockeye salmon, steelhead, rainbow trout, sheefish","burbot, northern pike, slimy sculpin, least cisco",Yes,569,2840.522388,93,67,,
+Region III,Delta (Upper Tanana River Drainage),"Island Lake (Richardson Highway, S of Donnelly Dome)",-145.82474,63.74074,,,,5.5,,4/1/1975,"Arctic grayling, sheefish",,No,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),J Lake (Meadows Road),-145.83582,63.83345,6.80,,,15.1,1.57,8/16/2005,"Arctic char, Arctic grayling, coho salmon, rainbow trout","Arctic grayling, longnose sucker, rainbow trout, slimy sculpin",Yes,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),Jatahmund Lake,-142.02902,62.62185,,,,23.8,,7/24/1979,rainbow trout,"lake trout, burbot, northern pike",No,491,593.75,117,8,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Kelly Lake,-146.99603,62.16106,36.42,,,0.0,,7/1/1973,,"Arctic grayling, whitefish-unspecified",No,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),Kenna Lake,-145.54792,63.70910,5.92,,,12.2,1.38,6/10/2010,"lake trout, rainbow trout",,Yes,370,,2,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Klutina Lake,-145.73370,61.74769,6377.85,,,0.0,,7/21/1976,,"Dolly Varden, burbot, sockeye salmon",Yes,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),16.8 Mile Lake,-145.88319,63.04338,26.3,,,17.7,,8/26/1962,,"lake trout, Arctic grayling",No,349.5714286,,14,,,
+Region III,North Slope Drainages,1st Lake above Toolik Lake,-149.58197,68.60990,,,,,,8/19/1979,,"lake trout, burbot, Arctic grayling",No,,,,,,
+Region III,Delta (Upper Tanana River Drainage),36 Mile Lake ,-146.41635,63.10364,44.52,,,9.1,,8/20/1971,,"lake trout, Arctic grayling, whitefish-unspecified",No,397.4285714,,7,,,
+Region III,Yukon River Drainage,Ackerman Lake,-147.54757,67.53219,745.84,,,25.6,,8/18/1977,,"lake trout, Arctic grayling, humpback whitefish, round whitefish",Yes,,,,,,
+Region III,Yukon River Drainage,Agiak Lake,-152.95399,68.07416,,,,13.7,,7/30/1984,,"Arctic char, lake trout, Arctic grayling",Yes,,,,,,
+Region III,Yukon River Drainage,Alatna River,,,,,,,,,,,,,,,,,yes
+Region III,North Slope Drainages,Amiloyak Lake,-152.86748,68.10734,,,,,,7/30/1984,,"Arctic char, lake trout, Arctic grayling",Yes,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,Amos Lakes,,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Andi Lake,-144.36855,62.95808,28.33,,,,,8/28/1973,,lake trout,No,,,,,,
+Region III,Kuskokwim-Goodnews Drainages,Aniak Lake,-159.18242,60.46815,,,,37.8,,7/10/1976,,"Arctic char, lake trout, Arctic grayling, slimy sculpin, round whitefish",No,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,Aniak River,,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Antelope Lake,-146.30072,62.71308,97.12,,,11.0,,8/26/1975,,"lake trout, longnose sucker, whitefish-unspecified",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),April Lake,-146.25306,62.51485,13.4,,,11.6,,1/1/1987,,"lake trout, longnose sucker, humpback whitefish, round whitefish",No,,,,,,
+Region III,Kuskokwim-Goodnews Drainages,Arolik Lake,-161.10149,59.46189,,,,56.4,,7/13/1975,,"Arctic char, lake trout, Arctic grayling, coho salmon, sockeye salmon, round whitefish",Yes,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,Arolik River,,,,,,,,,,,,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),Backdown Lake,-145.82391,63.71486,2.09,,,6.0,0.58,8/18/2005,"Arctic char, rainbow trout","lake trout, slimy sculpin",Yes,218.48,,25,,,
+Region III,Yukon River Drainage,Beaver Lake (near Chisana),-141.81396,62.03813,135,,12.3,,,6/30/2016,,"Arctic grayling, burbot, humpback whitefish, slimy sculpin",Yes,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Beaver Lake (near Susitna L),-146.57480,62.40508,323.75,,,,,6/24/1964,,"lake trout, burbot, Arctic grayling, longnose sucker, whitefish-unspecified",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Bell Lake,-146.48667,62.45364,210.44,,,9.1,,7/7/1980,,"lake trout, Arctic grayling, longnose sucker, whitefish-unspecified",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Betty Lake,-146.29651,62.50474,16.03,,,9.8,,1/1/1988,,"lake trout, Arctic grayling, longnose sucker, humpback whitefish, round whitefish",No,,,,,,
+Region III,Yukon River Drainage,Big Lake (Bob Johnson Lake),,,,,,,,,,,,,,,,,yes
+Region II,Mat-Su (Susitna River Drainage),Big Lake (Healy),-148.20469,62.98789,437.06,,,24.4,,6/30/1977,,"lake trout, whitefish-unspecified",No,502,8693.333333,65,6,,
+Region III,Yukon River Drainage,Birch Lake (U),-146.646181,64.315223,340,,,14.8,8.25,,"Arctic char, Arctic grayling, Chinook salmon, coho salmon, rainbow trout","burbot, lake chub, least cisco, longnose sucker, slimy sculpin, whitefish-unspecified",,,,,,,yes
+Region II,Mat-Su (Susitna River Drainage),Black Lake (Talkeetna Mtns),-147.89086,62.40265,109.27,,,13.7,,6/30/1972,,"lake trout, Arctic grayling, whitefish-unspecified",No,,,,,,
+Region III,Delta (Upper Tanana River Drainage),Bolio Lake,-145.84406,63.891121,36.93,,,7.6,3.50,3/15/2011,"Arctic char, lake trout, Arctic grayling, Chinook salmon, coho salmon, steelhead, rainbow trout",slimy sculpin,Yes,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Boulder Lake (SW of Sourdough),,,,,,,,,,,,,,,,,yes
+Region III,Yukon River Drainage,Braye Lakes,,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Brian Lake,-146.13780,62.57418,3.68,,,9.8,,1/1/1988,,"lake trout, Arctic grayling, longnose sucker",No,,,,,,
+Region III,Fairbanks (Lower Tanana River Drainage),Broad Pass lakes (near Cantwell),,,,,,,,,,,,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),Bullwinkle Lake,-145.823088,63.906999,2,,,9.2,0.55,8/23/2005,"Arctic char, lake trout, rainbow trout, sheefish",,Yes,357,,1,,,yes
+Region II,Mat-Su (Susitna River Drainage),Butte Lake,-147.85246,63.19019,275.19,,,16.5,9.89,6/28/1984,,"lake trout, Arctic grayling, whitefish-unspecified",No,370.3126294,358.5576923,966,104,,
+Region III,North Slope Drainages,C-116,-154.31826,69.95685,,,,19.2,,7/13/1983,,"lake trout, burbot, least cisco",Yes,,,,,,
+Region III,North Slope Drainages,C-117,-154.26787,69.96765,,,,12.2,,7/13/1983,,"lake trout, burbot, broad whitefish, least cisco",Yes,,,,,,
+Region III,North Slope Drainages,C-119,-152.88071,70.09865,12.95,,,6.1,,7/14/1983,,lake trout,Yes,,,,,,
+Region III,North Slope Drainages,C-120,-153.15347,70.01196,,,,9.8,,7/15/1983,,"lake trout, slimy sculpin, broad whitefish",Yes,,,,,,
+Region III,North Slope Drainages,C-121,-153.24881,70.23086,,,,8.2,,7/16/1983,,"lake trout, burbot",Yes,,,,,,
+Region III,North Slope Drainages,C-122,-153.09023,70.23066,,,,9.8,,7/16/1983,,lake trout,Yes,,,,,,
+Region III,North Slope Drainages,C-124,-153.67659,70.36086,,,,11.3,,7/17/1983,,lake trout,No,,,,,,
+Region III,North Slope Drainages,C-125,-153.60392,70.07222,,,,12.8,,7/19/1983,,"lake trout, burbot, broad whitefish, round whitefish",Yes,,,,,,
+Region III,North Slope Drainages,C-126,-153.50784,69.84480,,,,21.3,,7/19/1983,,"lake trout, burbot",Yes,,,,,,
+Region III,North Slope Drainages,C-40,-153.92261,70.15961,,,,5.5,,7/20/1981,,"lake trout, broad whitefish, least cisco, round whitefish",No,,,,,,
+Region III,North Slope Drainages,C-41,-153.64484,70.20267,,,,6.7,,7/20/1981,,"lake trout, least cisco",No,,,,,,
+Region III,North Slope Drainages,C-50,-153.49786,70.05767,,,,13.7,,7/20/1981,,"lake trout, broad whitefish",No,,,,,,
+Region III,North Slope Drainages,C-52,-153.23756,69.95683,,,,15.2,,7/18/1981,,"lake trout, burbot, slimy sculpin, broad whitefish, least cisco, round whitefish",No,,,,,,
+Region III,North Slope Drainages,C-57,-153.00319,70.28323,,,,11.3,,7/20/1981,,"lake trout, least cisco",No,,,,,,
+Region III,North Slope Drainages,C-58,-152.94069,70.30934,,,,3.0,,7/21/1981,,"lake trout, broad whitefish",No,,,,,,
+Region III,North Slope Drainages,C-59,-153.05958,70.30740,,,,13.4,,7/21/1981,,"lake trout, broad whitefish, least cisco, round whitefish",No,,,,,,
+Region III,North Slope Drainages,Campsite Lake,-149.18101,68.59677,,,,30.5,,7/15/1979,,"Arctic char, lake trout, slimy sculpin",No,,,,,,
+Region III,Kuskokwim-Goodnews Drainages,Canyon Lake,-161.17309,59.43057,,,,45.7,,7/14/1975,,"Arctic char, lake trout, sockeye salmon, round whitefish",Yes,,,,,,
+Region III,Fairbanks (Lower Tanana River Drainage),Caribou Pass Lake (into Jack River),,,,,,,,,,,,,,,,,yes
+Region III,North Slope Drainages,Cascade Lake,-154.59633,68.37631,,,,36.6,,7/25/1977,,"Arctic char, lake trout, slimy sculpin",Yes,,,,,,
+Region III,Yukon River Drainage,Chandalar Lake,-148.52333,67.50427,2320.47,,,35.0,,7/31/1975,,"lake trout, burbot, Arctic grayling, Pacific salmon-unspecified, broad whitefish, humpback whitefish, round whitefish",Yes,,,,,,yes
+Region III,Yukon River Drainage,Chandalar River North Fork,,,,,,,,,,,,,,,,,yes
+Region III,North Slope Drainages,Chandler Lake,-152.71060,68.22725,1311.5,,,22.0,22.34,10/25/2020,,"Arctic char, lake trout, Arctic grayling, slimy sculpin, round whitefish",Yes,536,2130,1331,331,yes,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Chelle Lake,-144.87067,62.19199,14.16,,,10.4,,9/14/1965,,"lake trout, Arctic grayling",No,566.25,,4,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Chelle Lake (Chaleau Lake or Hot Dog Lake),,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Cheryl Lake,-146.22078,62.53713,12.67,,,11.6,,1/1/1988,,"lake trout, humpback whitefish, round whitefish",No,,,,,,
+Region III,Delta (Upper Tanana River Drainage),Chet Lake,-145.837341,63.830588,4,,,10.5,0.90,8/24/2005,"Arctic char, Arctic grayling, lake trout, rainbow trout","Arctic grayling, longnose sucker, slimy sculpin",Yes,335.5,,16,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Cindy Lake,-146.19902,62.51483,8.58,,,14.3,,1/1/1987,,"lake trout, Arctic grayling, longnose sucker, humpback whitefish, round whitefish",No,,,,,,
+Region II,Mat-Su (Susitna River Drainage),Clarence Lake,-147.82389,62.67556,121,,,10.7,,7/24/1964,,"lake trout, Arctic grayling, round whitefish",Yes,454.1111111,,9,,,
+Region III,Delta (Upper Tanana River Drainage),Coal Mine 5,-145.823419,63.717789,4,,,8.2,0.85,3/15/2011,"Arctic char, Chinook salmon, coho salmon, lake trout, rainbow trout",slimy sculpin,Yes,253.8787879,,99,,,yes
+Region III,Delta (Upper Tanana River Drainage),Coal Mine Road lakes (Richardson Highway),,,,,,,,,,,,,,,,,yes
+Region III,North Slope Drainages,Colville River,,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Copper Lake,-143.55234,62.42391,750.3,"343,970,683",45.84,71.6,23.09,6/24/2010,,"Dolly Varden, lake trout, burbot, Arctic grayling, Chinook salmon, coho salmon, sockeye salmon, whitefish-unspecified, kokanee salmon",Yes,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Copper River,,,,,,,,,,,,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),Craig Lake,-144.71049,63.73103,8.41,,,23.4,1.55,7/8/2008,"lake trout, Arctic grayling, coho salmon, rainbow trout, sheefish","lake chub, slimy sculpin",Yes,318.8571429,,7,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Crater Lake (Dickey),-146.08777,62.94311,16.19,,,10.7,,8/30/1961,"coho salmon, rainbow trout",lake trout,No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Crazy Lake,-146.49436,62.49188,126.87,,,11.0,,7/16/1991,,"lake trout, Arctic grayling, longnose sucker, humpback whitefish, whitefish-unspecified, round whitefish",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Crosswind Lake,-146.02538,62.35472,3716.55,"591,141,048",15.9,36.6,41.66,1/1/1988,sockeye salmon,"lake trout, burbot, Arctic grayling, longnose sucker, whitefish-unspecified, lake whitefish, round whitefish",Yes,625,2130,147,331,,yes
+Region III,Delta (Upper Tanana River Drainage),Crystal Lake #1,-145.63912,63.15976,,,,,,3/15/2011,"lake trout, rainbow trout","lake trout, Alaska blackfish, Arctic grayling",No,369,,10,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Curtis Lake,-146.98918,62.30448,84.98,,,9.1,,6/26/1970,,"lake trout, longnose sucker, whitefish-unspecified",No,,,,,,
+Region III,Yukon River Drainage,Dalton Highway lakes,,,,,,,,,,,,,,,,,yes
+Region III,North Slope Drainages,Dalton Highway other lakes,,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),David Lake (near Y Lk),-146.22034,62.51359,3.16,,,4.3,,1/1/1987,,"lake trout, Arctic grayling, longnose sucker, humpback whitefish, round whitefish",No,,,,,,
+Region II,Mat-Su (Susitna River Drainage),Deadman Lake (Healy),-148.25236,63.00926,153.78,,,21.3,,6/30/1977,,"lake trout, Arctic grayling, slimy sculpin, whitefish-unspecified",Yes,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Dee Lake,-146.31257,62.49809,15.18,,,8.8,,1/1/1988,,"lake trout, longnose sucker, humpback whitefish",No,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Deep Lake,-146.01886,62.48144,303.51,,,10.7,,6/26/1967,,"lake trout, burbot, whitefish-unspecified",Yes,,,,,,
+Region III,Delta (Upper Tanana River Drainage),Delta River (below Tangle Lakes),,,,,,,,,,,,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),Denali Highway streams and lakes,,,,,,,,,,,,,,,,,yes
+Region III,Northwest Drainages,Desperation Lake,-158.75103,68.33053,880.19,,,4.6,,7/1/1977,,"lake trout, round whitefish",No,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Dickey Lake,-146.11224,62.93348,305.54,,,,,8/23/1976,,"lake trout, Arctic grayling, sockeye salmon, whitefish-unspecified",Yes,565.9782609,,46,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Dog Lake (near Lk Louise),-146.52459,62.37635,339.94,,,3.0,,7/19/1969,,"lake trout, burbot, longnose sucker, whitefish-unspecified, least cisco, round whitefish",Yes,483,,5,,,yes
+Region III,Delta (Upper Tanana River Drainage),Ellis Lake,-142.96236,62.26928,101.17,,,29.0,,7/22/1982,,"lake trout, Arctic grayling",No,308.1641791,324.6875,67,16,,
+Region III,North Slope Drainages,Elusive Lake,-148.49654,68.65305,372.31,,,169.2,,7/28/1973,,"lake trout, Arctic grayling, least cisco, round whitefish",No,,,,,,yes
+Region III,North Slope Drainages,Etivluk Lake,-156.07565,68.12489,348.03,,,13.7,,8/10/1977,,"lake trout, Arctic grayling, slimy sculpin, round whitefish",No,,,,,,
+Region III,Northwest Drainages,Feniak Lake,-158.31942,68.24783,1729.38,,,37.3,,6/1/2006,,"lake trout, Arctic grayling, round whitefish",Yes,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),Fielding Lake,-145.68664,63.17169,561.96,"49,042,840",8.7,23.1,20.31,8/19/2013,,"lake trout, burbot, Arctic grayling, longnose sucker, whitefish-unspecified",Yes,575.0325581,2277.13784,1293,625,yes,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Final Lake,-146.11011,62.55913,46.3,,,19.2,,1/1/1988,,"lake trout, Arctic grayling, longnose sucker, humpback whitefish",No,,,,,,
+Region III,North Slope Drainages,Fish Lake (Chandler),-152.76960,68.17411,40.47,,,16.8,,1/1/1964,,"Arctic char, lake trout, Arctic grayling, round whitefish",Yes,,,,,,
+Region III,Delta (Upper Tanana River Drainage),Fish Lake (Mt Hayes),-146.00713,63.23309,208.6,"23,998,435",11.50,32.0,16.10,6/27/2019,,"Dolly Varden, lake trout, Arctic grayling, slimy sculpin",Yes,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Flat Lake,-146.32220,62.50028,18.66,,,14.3,,1/1/1988,,"lake trout, Arctic grayling, humpback whitefish, round whitefish",No,,,,,,
+Region III,Delta (Upper Tanana River Drainage),Fourteen Mile Lake,-145.805938,63.071954,39,,,15.7,3.18,6/15/2017,"lake trout, rainbow trout",slimy sculpin,Yes,186.0547945,,146,,,yes
+Region III,North Slope Drainages,Galbraith Lake,-149.42011,68.46224,413.56,,,6.9,18.62,7/2/1975,,"lake trout, burbot, round whitefish",No,566.809816,3931.034483,163,29,,yes
+Region III,Delta (Upper Tanana River Drainage),George Creek,,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Ghost Lake,-146.30143,62.52131,21.12,,,7.0,0.54,1/1/1988,,"lake trout, Arctic grayling, longnose sucker, humpback whitefish, round whitefish",No,,,,,,
+Region III,Delta (Upper Tanana River Drainage),Glacier Gap Lake (Denali Hwy),-146.26005,63.11834,179.3,"13,477,806",7.52,26.0,7.60,9/17/2020,,"lake trout, burbot, Arctic grayling, whitefish-unspecified, round whitefish",Yes,373.3304029,660.7066327,1365,392,,yes
+Region III,Fairbanks (Lower Tanana River Drainage),Goldstream Creek,,,,,,,,,,,,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,Goodnews Lake,-160.55160,59.49199,,,,36.6,,7/1/1975,,"Arctic char, lake trout, Alaska blackfish, threespine stickleback, sockeye salmon, rainbow trout, slimy sculpin, round whitefish",Yes,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,Goodnews River,,,,,,,,,,,,,,,,,yes
+Region III,Yukon River Drainage,Graphite Lake,-143.43689,67.06323,,,,,,1/1/1990,,"lake trout, Arctic grayling, northern pike, whitefish-unspecified",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Grayling Lake (Glennallen),-146.87165,62.30646,101.17,,,9.1,,6/25/1970,,"lake trout, longnose sucker, whitefish-unspecified",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Grizzly Lake (Tok Cut-off),,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Gulkana River (above Paxson),,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),"Gulkana River (above Paxson, West Fork, Middle Fork)",,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Gulkana River (Paxson to ADFG Tower),,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Gulkana River (Paxson to Sourdough),,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Gulkana River (Paxson to West Fork),,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Gulkana River (Sourdough to Highway),,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Gulkana River mainstem (reach unspecified),,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Gulkana River Middle Fork,,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Gunn Creek,,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Hanagita Lake,-143.79877,61.23465,52.61,,,9.8,,8/14/1960,,"lake trout, Arctic grayling, sockeye salmon, steelhead, whitefish-unspecified",No,454.7708333,,48,,,yes
+Region III,Yukon River Drainage,Helpmejack Lake,-153.54150,66.93192,242.81,,,25.3,,7/28/1967,,"lake trout, northern pike, slimy sculpin, round whitefish",No,,,,,,yes
+Region II,Kenai (Upper Kenai Peninsula),Hidden Lake (Kenai),-150.26746,60.48471,682.7,,20.2,45.1,,6/25/1960,,"Arctic char, lake trout, coho salmon, sockeye salmon, rainbow trout",Yes,422.8947368,1006.95858,171,169,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),High Lake (Glennallen),-146.30157,61.85547,89.03,,,23.8,,6/26/1960,,"Dolly Varden, lake trout",Yes,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Horseshoe Lake,-146.18517,62.52267,34.8,,,28.4,1.49,1/1/1987,,"lake trout, burbot, Arctic grayling, longnose sucker, humpback whitefish",No,,,,,,
+Region III,North Slope Drainages,Imiaknikpak Lake,-154.05148,68.47857,,,,4.0,,7/20/1977,,"lake trout, longnose sucker, northern pike, slimy sculpin, broad whitefish, least cisco",Yes,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Indian Pass Lake,-143.94528,62.82222,32.37,,,18.3,,7/3/1973,,"Dolly Varden, lake trout, whitefish-unspecified",No,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Indiana Lake,-146.28144,62.57242,110.07,,,8.2,,8/14/1991,,"lake trout, burbot, Arctic grayling, longnose sucker, humpback whitefish, whitefish-unspecified, round whitefish",Yes,,,,,,
+Region III,Yukon River Drainage,Iniakuk Lake,-153.22635,67.13484,1298.79,"393,497,568",30.30,65.2,21.78,6/24/2017,,"lake trout, burbot, Arctic grayling, ninespine stickleback, northern pike, Chinook salmon, slimy sculpin, humpback whitefish, round whitefish",No,467,,4,,,yes
+Region III,North Slope Drainages,Inyorurak Pass Lake,-156.42064,68.20285,46.13,,,6.7,,8/9/1977,,"lake trout, Arctic grayling, slimy sculpin, least cisco",No,,,,,,
+Region III,North Slope Drainages,Irgnyivik Lake,-151.26167,68.43107,73.14,,,16.8,4.68,7/23/1981,,"lake trout, Arctic grayling, round whitefish",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Island Lake (Glennallen),-146.28971,62.53017,32.86,,,6.4,,1/1/1988,,"lake trout, Arctic grayling, longnose sucker, humpback whitefish, round whitefish",No,,,,,,
+Region III,North Slope Drainages,Island Lake (Philip Smith Mts),-149.48002,68.52432,,,,,,1/0/1900,,"lake trout, burbot",No,,,,,,
+Region III,North Slope Drainages,Itkillik lake,-149.92158,68.40173,438.73,"21,619,654",4.93,13.7,11.40,7/31/2012,,"lake trout, Arctic grayling, slimy sculpin, round whitefish",Yes,426.8786808,572,849,10,,yes
+Region III,Delta (Upper Tanana River Drainage),Jack Lake (Nabesna),-143.28002,62.51537,158.55,"21,479,142",13.55,28.5,9.36,8/9/2017,"Arctic grayling, rainbow trout","lake trout, burbot, Arctic grayling, whitefish-unspecified",No,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Janelle Lake,-146.18930,62.53436,26.43,,,12.5,,1/1/1987,,"lake trout, longnose sucker, humpback whitefish, round whitefish",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Joanne Lake,-146.28371,62.50708,32.05,,,10.7,,1/1/1988,,"lake trout, burbot, Arctic grayling, longnose sucker, humpback whitefish, round whitefish",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Joy Lake,-146.21558,62.51978,7.65,,,15.2,,1/1/1987,,"lake trout, Arctic grayling, humpback whitefish, round whitefish",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Julie Lake,-146.35485,62.17746,16.59,,,7.3,,9/3/1985,,"lake trout, burbot, Arctic grayling, longnose sucker, humpback whitefish, whitefish-unspecified, round whitefish",Yes,560,,1,,,
+Region II,Kenai (Upper Kenai Peninsula),Juneau Lake (Cooper Landing),-149.87639,60.57625,56.66,,,13.7,,7/9/1968,,"Dolly Varden, lake trout, burbot, Arctic grayling, rainbow trout, whitefish-unspecified, round whitefish",Yes,481.25,1861.583333,12,3,,
+Region III,Kuskokwim-Goodnews Drainages,Kagati Lake,-160.06641,59.87477,,,,35.7,,7/23/1975,,"Arctic char, lake trout, burbot, Arctic grayling, sockeye salmon, round whitefish",Yes,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),"Kaina Creek (Kaina River, Upper Kaina Creek)",,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Kaina Lake,-146.20144,61.83765,210.44,,,15.8,,7/29/1970,,"lake trout, burbot, Arctic grayling, longnose sucker, Chinook salmon, sockeye salmon, slimy sculpin, whitefish-unspecified",Yes,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,"Kanektok River (Quinhagak, Chosen)",,,,,,,,,,,,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,Kanuktik Lake,-160.30703,59.71250,,,,30.5,,7/31/1975,,"Arctic char, lake trout, Chinook salmon, slimy sculpin, round whitefish",Yes,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Kettle Lake,-143.416144,62.563693,,,,,,3/15/2011,"Arctic grayling, coho salmon, lake trout, rainbow trout","burbot, longnose sucker, slimy sculpin",No,321.8888889,,9,,,
+Region III,Northwest Drainages,Kiingyak Lake,-156.97110,68.20708,165.11,,,2.7,,7/1/1977,,"lake trout, Arctic grayling, threespine stickleback, least cisco, round whitefish",Yes,,,,,,
+Region III,Northwest Drainages,Kikitaliorak Lake,-156.24030,68.12429,85.39,,,4.6,,8/11/1977,,"lake trout, Arctic grayling, slimy sculpin, least cisco, round whitefish",Yes,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Kimball Pass streams,,,,,,,,,,,,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,Kisaralik Lake,-159.35329,60.32216,1362.45,"306,311,823",22.48,57.4,27.58,6/27/2016,,"Arctic char, lake trout, Arctic grayling",No,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,Kisaralik Lake II,-159.46614,60.21565,420.06,,,58.5,,7/10/1976,,"Arctic char, lake trout, Arctic grayling",No,,,,,,
+Region III,Kuskokwim-Goodnews Drainages,Kisaralik River,,,,,,,,,,,,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,Klak Lake,-160.45762,59.72511,,,,,,7/31/1975,,"Arctic char, lake trout, Chinook salmon, coho salmon",Yes,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Klutina River,,,,,,,,,,,,,,,,,yes
+Region III,Northwest Drainages,Kobuk River,,,,,,,,,,,,,,,,,yes
+Region III,Yukon River Drainage,Koyukuk R. Middle Fork (not accessed from Dalton Highway),,,,,,,,,,,,,,,,,yes
+Region III,Yukon River Drainage,Koyukuk River drainage,,,,,,,,,,,,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,Kukaktlim Lake,-160.47715,59.34359,,,,2.1,,7/15/1975,,"Arctic char, lake trout, sockeye salmon, round whitefish",Yes,,,,,,
+Region III,North Slope Drainages,Kuparuk Lake,-149.23723,68.53657,24.28,,,10.7,,7/12/1975,,"lake trout, Arctic grayling",No,,,,,,
+Region III,North Slope Drainages,Kurupa Lake,-154.64469,68.35947,,,,37.5,,7/23/1977,,"Arctic char, lake trout, round whitefish",Yes,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,Kuskokwim River - reach not specified,,,,,,,,,,,,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,Kwethluk River,,,,,,,,,,,,,,,,,yes
+Region III,North Slope Drainages,Lake Betty,-156.50755,68.47636,142.04,,,7.6,,8/7/1977,,"lake trout, Arctic grayling, broad whitefish",No,,,,,,yes
+Region III,Northwest Drainages,Lake Isiak,-156.14832,67.72149,187.37,,,9.4,,7/1/1977,,"lake trout, northern pike, least cisco, round whitefish",Yes,,,,,,
+Region III,Northwest Drainages,Lake Kipmik,-156.14152,67.95516,836.08,,,12.5,,7/1/1977,,"lake trout, Arctic grayling, round whitefish",Yes,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Lake Louise,-146.55208,62.32447,5913.07,"780,230,549",13.20,51.0,65.16,6/18/2021,,"lake trout, burbot, Arctic grayling, longnose sucker, humpback whitefish, whitefish-unspecified, round whitefish",Yes,517,,6735,,yes,yes
+Region III,Northwest Drainages,Lake Matcharak,-156.20872,67.74720,664.09,,,17.1,,7/1/1977,,"lake trout, least cisco, round whitefish",Yes,,,,,,
+Region III,North Slope Drainages,Lake Peters,-145.04738,69.32291,,,,,,1/1/1968,,"Arctic char, lake trout, Arctic grayling, whitefish-unspecified",Yes,,,,,,
+Region III,North Slope Drainages,Lake Schrader,-145.00258,69.37954,1077.27,,,,,7/26/1995,,"Arctic char, lake trout, Arctic grayling, whitefish-unspecified",Yes,458,1544,750,750,,
+Region III,Northwest Drainages,Lake Selby,-155.67670,66.87303,1902.02,,,45.7,,7/29/1967,,"lake trout, Arctic grayling, northern pike, slimy sculpin, round whitefish",Yes,,,,,,
+Region III,North Slope Drainages,Lake Udrivik,-153.99241,68.50510,,,,9.1,,7/20/1977,,"lake trout, northern pike, least cisco",Yes,,,,,,
+Region III,Delta (Upper Tanana River Drainage),Landlocked Tangle Lake,-146.05418,62.99823,218.53,,,27.4,,1/1/1954,,"lake trout, Arctic grayling, round whitefish",Yes,363.2458809,508.398374,789,123,,
+Region III,Delta (Upper Tanana River Drainage),Landmark Gap Lake,-146.08486,63.12974,297.85,,,47.2,,3/15/2011,,"lake trout, Arctic grayling, whitefish-unspecified",Yes,102.25,,4,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Laura Lake,-146.24703,62.49097,43.75,,,6.4,,1/1/1987,,"lake trout, burbot, humpback whitefish, round whitefish",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Lee's Lake,-146.39359,62.08638,30.35,,,13.7,,6/30/1960,,"lake trout, Arctic grayling, longnose sucker, whitefish-unspecified",No,690,,1,,,
+Region III,North Slope Drainages,Little Chandler Lake,-152.67554,68.27687,331.85,,,18.3,16.14,10/27/2022,,"Arctic char, lake trout, Arctic grayling, round whitefish",Yes,542.6974359,1522.773143,195,35,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Little Dog Lake,-145.96209,62.43947,153.78,,,4.3,,7/19/1965,,"lake trout, burbot, Arctic grayling, longnose sucker, whitefish-unspecified",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Little Lake Louise,-146.65580,62.30231,506.32,"65,449,915",12.93,32.9,16.62,6/27/2018,,"lake trout, longnose sucker, whitefish-unspecified",Yes,585,,1,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Little Swede Lake,,,,,,,2.21,,,,,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),Little Tok River,,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Long Lake (McCarthy Rd),-143.29887,61.38122,,,,,,12/16/1970,,"Dolly Varden, lake trout, Arctic grayling, longnose sucker, coho salmon, sockeye salmon, slimy sculpin, kokanee salmon",Yes,675,,2,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Lower Hanagita,61.23465,-143.79877,,,,,,,,lake trout,No,593,,3,,,
+Region III,Delta (Upper Tanana River Drainage),North Twin Lake (Meadows Road),-145.83965,63.864305,6.40,,,13.4,1.33,12/18/2013,"lake trout, Chinook salmon, coho salmon, rainbow trout","Arctic char, Arctic grayling, slimy sculpin",Yes,372,,9,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Lost Bob Lake,-146.23314,62.52556,9.51,,,8.8,,1/1/1987,,"lake trout, Arctic grayling, longnose sucker, humpback whitefish, round whitefish",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Lost Haller Lake,-146.16784,62.53743,11.17,,,9.1,,1/1/1987,,"lake trout, Arctic grayling, humpback whitefish, round whitefish",No,,,,,,
+Region III,Delta (Upper Tanana River Drainage),Pauls Pond (Coal Mine Road),-145.82967,63.706505,2.22,,,6.7,,3/15/2011,"Arctic char, lake trout, Arctic grayling, rainbow trout",slimy sculpin,Yes,430.5,,2,,,yes
+Region III,North Slope Drainages,Lower Anayak Lake,-151.48426,68.52638,,,,6.7,,7/23/1981,,"lake trout, Arctic grayling, round whitefish",No,,,,,,
+Region III,Delta (Upper Tanana River Drainage),Lower Tangle Lake,-145.96075,63.13533,137.42,"7,652,592",5.57,27.7,14.58,6/15/2022,,lake trout,Yes,502.6534884,2168.317308,430,104,soon,yes - all lakes combined
+Region II,Kenai (Upper Kenai Peninsula),Lower Trail Lake,-149.36673,60.44311,111.29,,7.6,12.8,,5/23/1962,,"Dolly Varden, lake trout, rainbow trout, round whitefish",Yes,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Lower Twelve Mile Lake,-145.86781,62.77960,40.47,,,6.1,,6/1/1966,,"lake trout, Arctic grayling, longnose sucker, whitefish-unspecified",No,762,,1,,,
+Region III,North Slope Drainages,Lupine Lake (North Slope),-148.26286,68.82621,121.41,,,10.1,,8/8/1971,,"lake trout, Arctic grayling, threespine stickleback, round whitefish",Yes,,,,,,
+Region III,North Slope Drainages,M-72,-149.17708,68.57660,8.09,,,9.1,,5/1/1983,,lake trout,Yes,,,,,,
+Region III,North Slope Drainages,M-73,-149.15040,68.60968,16.19,,,9.1,,5/1/1983,,"Arctic char, lake trout",Yes,,,,,,
+Region III,North Slope Drainages,M-74,-149.15096,68.62239,24.28,,,9.1,,5/1/1983,,lake trout,Yes,,,,,,
+Region III,North Slope Drainages,M-77,-149.16028,68.61614,8.09,,,9.1,,5/1/1983,,"Arctic char, lake trout",Yes,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Mankomen Lake,-144.53614,63.00045,,,,24.4,,7/26/1961,,"Dolly Varden, lake trout, Arctic grayling, slimy sculpin, whitefish-unspecified, round whitefish",Yes,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),Rapids Lake (Richardson Highway),-145.85858,63.50342,2.25,,,7.8,1.38,8/19/2003,"lake trout, coho salmon, rainbow trout",,Yes,293.8431373,,51,,,yes
+Region III,Delta (Upper Tanana River Drainage),"Meadows Road lakes (Fort Greely Lakes, Richardson Highway)",,,,,,,,,,,,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),"Tangle Lake, Lower",-145.96075,63.135331,137.20,"7,649,443",5.58,27.8,14.58,6/15/2022,,lake trout,No,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Michigan Lake,-146.21709,62.58475,113.31,,,8.2,,6/26/1967,,"lake trout, Arctic grayling, whitefish-unspecified",Yes,460,,1,,,
+Region III,Kuskokwim-Goodnews Drainages,Middle Fork Lake,,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Middle Hanagita Lake,-143.53843,61.19347,36.42,,,5.5,,6/13/1979,,"lake trout, Arctic grayling, whitefish-unspecified",No,,,,,,
+Region III,Northwest Drainages,Minakokosa Lake,-155.02388,66.92759,242.81,,,41.1,,7/31/1967,,"lake trout, humpback whitefish",Yes,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Minnesota Lake,-146.16270,62.57637,329.41,,,17.1,,1/1/1988,,"lake trout, Arctic grayling, longnose sucker, humpback whitefish, whitefish-unspecified, round whitefish",Yes,735,,1,,,yes
+Region III,Fairbanks (Lower Tanana River Drainage),Mirror Lake (Broad Pass),-149.10307,63.33487,32.37,,,9.4,,7/10/1969,,"lake trout, burbot, Arctic grayling, slimy sculpin, humpback whitefish, round whitefish",No,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Monsoon Lake,-146.62531,62.82704,49.78,,,,,8/23/1976,Chinook salmon,"lake trout, burbot, Arctic grayling, whitefish-unspecified",Yes,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),Monte Lake,-144.08433,63.50359,60,,,32.8,3.67,7/10/2008,rainbow trout,"lake trout, rainbow trout, slimy sculpin",Yes,391.4814815,830.3922222,27,27,,
+Region III,Fairbanks (Lower Tanana River Drainage),Lost Lake  (Chisholm Lake) (near Birch Lake),-146.67855,64.300827,42.21,,,11.9,,3/15/2011,"Arctic char, lake trout, Arctic grayling, Chinook salmon, coho salmon, steelhead, rainbow trout, sheefish","lake chub, longnose sucker, northern pike",Yes,217.7777778,,9,,,yes
+Region III,Delta (Upper Tanana River Drainage),Nabesna Twin 2 Lake,-143.27420,62.52668,7.51,,,8.4,,6/24/2009,Arctic grayling,"lake trout, burbot, Arctic grayling",Yes,564,,1,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Nancy Lake,-146.28218,62.51506,6.52,,,13.4,,1/1/1988,,"lake trout, Arctic grayling, longnose sucker, humpback whitefish, round whitefish",No,,,,,,
+Region III,North Slope Drainages,Nanushuk Lake,-150.58767,68.39588,80.94,,,18.3,3.27,Unknown,,"lake trout, Arctic grayling, round whitefish",Yes,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Nathan Lake,-146.24136,62.51324,24.4,,,11.0,,1/1/1987,,"lake trout, Arctic grayling, longnose sucker, humpback whitefish, round whitefish",No,,,,,,
+Region III,North Slope Drainages,Natvakruak Lake,-151.70968,68.36411,,,,18.3,,7/23/1981,,"lake trout, slimy sculpin, round whitefish",Yes,,,,,,
+Region III,Fairbanks (Lower Tanana River Drainage),Nenana River drainage,,,,,,,,,,,,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),Nickel Lake,-145.834341,63.8282,2.7,,,11.0,0.75,3/15/2011,"Arctic char, Arctic grayling, lake trout, rainbow trout","Arctic grayling, longnose sucker",Yes,282,,9,,,yes
+Region III,North Slope Drainages,Nigu Lake,-156.34453,68.27899,36.42,,,,,8/11/1982,,lake trout,No,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),No Mercy Lake,-145.82891,63.86414,0.96,,,7.0,0.38,8/17/2005,rainbow trout,"lake trout, longnose sucker",Yes,308.7826087,,23,,,
+Region III,Northwest Drainages,Noatak River,,,,,,,,,,,,,,,,,yes
+Region III,Yukon River Drainage,Non-Yukon River drainages - Other,,,,,,,,,,,,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,North Fork Lakes,,,,,,,,,,,,,,,,,yes
+Region III,North Slope Drainages,North Itgaknit Lake,-149.66309,68.70018,,,,18.3,,7/15/1979,,"lake trout, Arctic grayling",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),North Lake,-146.00777,62.50976,64.75,,,14.3,,6/22/1971,,"lake trout, longnose sucker, whitefish-unspecified",No,,,,,,
+Region III,Fairbanks (Lower Tanana River Drainage),Moose Lake (Eielson AFB),-147.07095,64.6826,14.07,,,18.3,2.28,3/15/2011,"Arctic char, lake trout, Arctic grayling, coho salmon, rainbow trout",northern pike,Yes,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,North Middle Fork Lake of Goodnews River,-160.57993,59.41469,,,,,,7/1/1975,,"Arctic char, lake trout, sockeye salmon, round whitefish",Yes,,,,,,
+Region III,Fairbanks (Lower Tanana River Drainage),Steese Highway Mile 33.5 Pit,-147.38645,65.148734,0.93,,,3.5,0.38,6/21/2006,"Arctic grayling, rainbow trout",burbot,Yes,,,,,,yes
+Region III,Northwest Drainages,Nutuvuki Lake,-154.71343,66.98426,1535.48,"329,600,991",21.47,52.6,23.90,7/8/2014,,"lake trout, burbot, stickleback-unspecified, northern pike, humpback whitefish",Yes,522,,3,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Octopus Lake,-146.28918,62.52364,31.44,,,8.8,,1/1/1988,,"lake trout, longnose sucker, humpback whitefish, round whitefish",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Octopus Lake (Denali Hwy),-145.71460,63.06127,8.09,,,18.6,,7/8/1965,,"lake trout, Arctic grayling, whitefish-unspecified",Yes,626,,5,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Ohio Lake,-146.23729,62.57702,68.8,,,7.6,,6/24/1967,,"lake trout, Arctic grayling, longnose sucker, whitefish-unspecified",Yes,,,,,,
+Region III,Kuskokwim-Goodnews Drainages,Ohnlik Lake,-160.26446,59.73702,,,,30.5,,7/1/1975,,"Arctic char, lake trout, sockeye salmon, round whitefish",No,,,,,,
+Region III,Fairbanks (Lower Tanana River Drainage),Triangle Lake,-150.33857,64.597334,44.05,,,13.1,2.57,7/13/2006,"lake trout, Arctic grayling, rainbow trout",Alaska blackfish,Yes,,,,,,yes
+Region III,North Slope Drainages,Oolah area streams,,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Other lakes,,,,,,,,,,,,,,,,,yes
+Region III,North Slope Drainages,Other lakes,,,,,,,,,,,,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,Other lakes Kuskokwim Bay,,,,,,,,,,,,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,Other lakes Kuskokwim drainage above Aniak,,,,,,,,,,,,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,Other lakes Kuskokwim drainage below Aniak,,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Other streams,,,,,,,,,,,,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,Other streams Kuskokwim drainages above Aniak,,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Long Lake (Nabesna Road near Slana),-143.40431,62.555657,16.19,,,3.7,,8/9/1960,,"burbot, Arctic grayling",No,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Paxson Lake,-145.53322,62.90736,1569.9,"202,708,713",12.91,29.2,39.80,9/25/2020,"lake trout, Chinook salmon","lake trout, burbot, Arctic grayling, sockeye salmon, humpback whitefish, round whitefish",Yes,508,5965,13632,535,yes,yes
+Region III,Kuskokwim-Goodnews Drainages,Pegati Lake,,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Summit Lake (Richardson Highway near Paxson),-145.53726,63.15242,1770.12,"276,092,023",15.6,63.4,48.63,8/21/2013,lake trout,burbot,Yes,444.2222222,,9,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Petrokov Lake,-146.51280,63.18900,,,,6.0,,7/9/2009,,"lake trout, burbot, Arctic grayling, slimy sculpin",No,398,,14,,,
+Region III,Delta (Upper Tanana River Drainage),Ptarmigan Lake,-141.16443,61.85609,259,,,12.2,14.58,8/14/1991,,"lake trout, burbot, Arctic grayling, longnose sucker, round whitefish",No,,,,,,
+Region III,Fairbanks (Lower Tanana River Drainage),Ptarmigan Lake (14 miles northeast of Healy),,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Pup Lake,-145.97935,62.41633,117.36,,,3.7,,7/19/1965,,"lake trout, burbot, Arctic grayling, longnose sucker, sockeye salmon, whitefish-unspecified",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Raindrop Lake,-144.37887,62.94191,14.16,,,,,8/28/1973,,lake trout,No,,,,,,
+Region III,Delta (Upper Tanana River Drainage),Rangeview Lake,-145.829242,63.705764,2,,,5.2,0.60,3/15/2011,"Arctic char, Arctic grayling, lake trout, rainbow trout",slimy sculpin,Yes,205,,1,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Tonsina Lake,-145.52318,61.501518,1392.12,,,0.0,,7/21/1976,,,Yes,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Roberta Lake,-146.31418,62.33034,48.56,,,11.6,,6/21/1982,,"lake trout, burbot, Arctic grayling, longnose sucker, whitefish-unspecified",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Rock Lake,,,,,,,,,,,,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),Rockhound Lake,-145.825159,63.863878,1,,,8.7,0.35,8/17/2005,"lake trout, rainbow trout","longnose sucker, slimy sculpin",Yes,337.8918919,,37,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Rolo Lake,-146.11158,62.56848,19.99,,,16.1,,1/1/1988,,"lake trout, Arctic grayling, longnose sucker, humpback whitefish",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Roosevelt Lake,-147.16370,63.18343,32.37,,,,,9/1/1974,,"lake trout, Arctic grayling",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Ross Lake,-146.22611,62.51004,10.97,,,4.0,,1/1/1987,,"lake trout, Arctic grayling, longnose sucker, humpback whitefish, round whitefish",No,,,,,,
+Region III,North Slope Drainages,Round Lake (Chandler),-152.59411,68.32142,194.25,,,13.7,,1/1/1964,,lake trout,No,503,,7,,,
+Region III,Delta (Upper Tanana River Drainage),Round Tangle Lake,-145.99031,63.05591,156.15,"15,595,922",10,27.3,9.63,6/28/2017,,"lake trout, burbot, Arctic grayling, longnose sucker, slimy sculpin, round whitefish",Yes,433.0263158,1190.75,228,52,soon,yes - all lakes combined
+Region III,Delta (Upper Tanana River Drainage),Rusty Lake,-145.88997,63.05248,24.28,,,,,7/9/1965,,"lake trout, Arctic grayling",No,,,,,,
+Region III,North Slope Drainages,Sagavanirktok River (Dalton Highway),,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Sandy Lake,-147.15805,62.75788,202.34,,,,,6/1/1966,,"lake trout, Arctic grayling, longnose sucker, whitefish-unspecified",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Scott Lake,-146.19894,62.53590,6.52,,,11.6,,1/1/1988,,"lake trout, burbot, longnose sucker, humpback whitefish",No,,,,,,
+Region III,Northwest Drainages,Selawik Lake,,,,,,,,,,,,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,North Lime Lake,-155.34776,61.43514,777.00,,,4.6,,7/1/1978,,"Arctic grayling, northern pike, slimy sculpin",No,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Sevenmile Lake,-146.27078,63.18142,622.75,"56,793,224",9.12,48.3,24.54,8/12/2014,,"lake trout, Arctic grayling",Yes,387.3125,,64,,,
+Region III,Delta (Upper Tanana River Drainage),Sevenmile Lake (Denali Hwy),-145.61895,63.09816,35.13,"1,531,226",4.4,14.1,3.20,9/6/2008,,"lake trout, burbot, Arctic grayling, slimy sculpin",Yes,351,561,3341,169,yes,yes
+Region III,Fairbanks (Lower Tanana River Drainage),"Sevenmile Lake (SE of Anderson, no fish)",,,,,,,,,,,,,,,,,yes
+Region III,North Slope Drainages,Shainin Lake,-151.06103,68.33950,,,,17.7,,8/17/1977,,"lake trout, Arctic grayling, slimy sculpin, round whitefish",Yes,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),Shallow Tangle Lake,-145.96391,63.07659,102.84,"4,021,372",3.91,22.6,11.92,6/14/2022,,"lake trout, burbot, Arctic grayling, longnose sucker, round whitefish",Yes,504.4672897,1837.657534,107,73,soon,yes - all lakes combined
+Region II,Kenai (Upper Kenai Peninsula),Skilak Lake ,-150.37361,60.41639,9914.8,,,,,12/20/1972,,"Dolly Varden, lake trout, coho salmon, sockeye salmon, rainbow trout, whitefish-unspecified",Yes,349.3342318,462.7176075,371,372,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Snodgrass Lake,-147.55258,63.08039,83.8,"4,914,730",5.86,26.0,3.70,6/11/2019,,"lake trout, burbot, Arctic grayling, longnose sucker, slimy sculpin, humpback whitefish, round whitefish",No,384,,3,,,
+Region III,Fairbanks (Lower Tanana River Drainage),Soule Lake,,,,,,,,,,,,,,,,,yes
+Region III,Kuskokwim-Goodnews Drainages,South Middle Fork Lake of Goodnews River,-160.56237,59.39926,161.87,,,22.9,,7/1/1975,,"Arctic char, lake trout, sockeye salmon, round whitefish",Yes,,,,,,
+Region III,Delta (Upper Tanana River Drainage),South Twin Lake,-145.83851,63.86333,5.38,,,5.1,1.29,8/24/2005,"Chinook salmon, coho salmon, rainbow trout","lake trout, slimy sculpin",Yes,191.5,,20,,,
+Region III,Yukon River Drainage,Squaw Lake,-148.21184,67.61015,497.36,,,13.7,,7/31/1975,,"lake trout, Arctic grayling, northern pike, humpback whitefish",Yes,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Stan Lake,-146.22518,62.54288,12.67,,,11.3,,1/1/1988,,"lake trout, Arctic grayling, longnose sucker, humpback whitefish, round whitefish",No,,,,,,
+Region III,North Slope Drainages,Peters Lake (Schrader Lake),-145.04738,69.322914,,,,0.0,,1/1/1968,,"Arctic char, lake trout, Arctic grayling, whitefish-unspecified",Yes,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Suluklak Lake,-146.13922,62.58586,22.1,,,14.0,,1/1/1988,,"lake trout, Arctic grayling, longnose sucker, humpback whitefish",No,,,,,,
+Region III,Fairbanks (Lower Tanana River Drainage),Summit Lake (Parks Hwy),-149.15813,63.31164,182.39,,,9.4,,6/24/2010,"Arctic char, lake trout","Arctic char, lake trout, burbot, Arctic grayling, slimy sculpin, humpback whitefish, round whitefish",Yes,330,,2,,,yes
+Region III,Fairbanks (Lower Tanana River Drainage),Summit Lake (Paxson),,,,,,,48.63,,,,,439.2727273,,11,,,
+Region III,North Slope Drainages,Toolik Lake (Dalton Highway),-149.60683,68.63288,,,,0.0,,1/0/1900,,,No,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Sunny Lake,-146.10733,62.54088,15.01,,,15.8,,1/1/1987,,"lake trout, Arctic grayling, longnose sucker, humpback whitefish",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Susan Lake,-146.23168,62.48357,45.04,,,5.5,,1/1/1987,,"lake trout, longnose sucker, humpback whitefish, round whitefish",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Susitna Lake,-146.67209,62.39545,,,,,87.06,1/0/1900,,"lake trout, burbot",Yes,406.25,510,24,2,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Swallow Tail Lake,-146.29572,62.56749,17.32,,,8.2,,7/23/1991,,"lake trout, Arctic grayling, longnose sucker, humpback whitefish, round whitefish",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Swan Lake (by Lake Louise),-146.48068,62.37122,,,,,,1/0/1900,,"lake trout, longnose sucker, whitefish-unspecified",No,,,,,,
+Region II,Kenai (Upper Kenai Peninsula),Swan Lake (Cooper Landing),-149.84282,60.61404,36.42,,,21.9,,7/11/1968,,"Dolly Varden, lake trout, coho salmon, sockeye salmon, rainbow trout",Yes,464.5,,8,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Swede Lake (Big Swede Lake),,,,,,,,,,,,,,,,,yes
+Region III,Yukon River Drainage,Takahula Lake,-153.66540,67.35308,141.64,,,19.8,,7/29/1967,,"Arctic char, lake trout, Arctic grayling, northern pike, coho salmon, slimy sculpin, broad whitefish, round whitefish",Yes,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Tanada Creek,,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Tanada Lake,-143.37573,62.42391,1203.36,"233,976,782",19.44,51.8,33.24,9/15/2010,,"lake trout, burbot, Arctic grayling, sockeye salmon, round whitefish",Yes,374,,2,,,yes
+Region III,Northwest Drainages,Matcharak Lake,-156.20872,67.7472,664.09,,,17.1,,7/1/1977,,"lake trout, least cisco, round whitefish",Yes,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),Tangle Lakes and Tangle River,,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Tazlina Lake,-146.38734,61.94980,,,,,,7/12/1977,,"Dolly Varden, lake trout, burbot, Arctic grayling, sockeye salmon, rainbow trout, slimy sculpin, whitefish-unspecified, round whitefish",No,403,,6,,,yes
+Region III,Kuskokwim-Goodnews Drainages,Telequana Lake,,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Ten Mile Lake,-145.70597,63.07104,36.42,,,12.8,,9/29/1962,sockeye salmon,"lake trout, Arctic grayling, whitefish-unspecified",No,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Tenas Lake,-147.18620,63.18550,,,,,,8/3/1993,,"lake trout, Arctic grayling",No,,,,,,
+Region III,North Slope Drainages,Teshekpuk Lake,-153.52783,70.59867,81584.63,,,15.2,,8/17/1977,,"lake trout, Arctic grayling, Arctic cisco, broad whitefish, humpback whitefish, least cisco",No,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),Thing Two Lake,-145.75803,63.12482,,,,6.0,,7/10/2009,,"lake trout, Arctic grayling, slimy sculpin",No,362,,16,,,
+Region III,Yukon River Drainage,Timber Lake,,,,,,,,,,,,,,,,,yes
+Region III,Northwest Drainages,Selby Lake,-155.67670,66.87303,1902.02,,,45.7,,7/29/1967,,"lake trout, Arctic grayling, northern pike, slimy sculpin, round whitefish",Yes,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Tonsina River (Lower Tonsina River),,,,,,,,,,,,,,,,,yes
+Region III,Yukon River Drainage,Medicine Lake,-144.52191,65.49833,388.50,,,1.8,,1/1/1968,,"northern pike, broad whitefish",No,,,,,,yes
+Region III,Yukon River Drainage,Old John Lake,-145.04644,68.079844,,,,23.8,,6/23/1977,,,No,,,,,,yes
+Region II,Mat-Su (Susitna River Drainage),Tsusena Butte Lake,-148.51667,62.93333,76.89,,,33.5,,6/16/1977,,"lake trout, Arctic grayling, whitefish-unspecified",No,488,,8,,,
+Region III,North Slope Drainages,Tukuto Lake,-157.03612,68.50066,177.66,,,7.0,,8/6/1977,,"lake trout, Arctic grayling, slimy sculpin, least cisco, round whitefish",No,,,,,,
+Region III,North Slope Drainages,Tulugak Lake,-151.47501,68.28252,,,,12.2,,7/23/1981,,"lake trout, Arctic grayling, slimy sculpin, least cisco, round whitefish",Yes,,,,,,yes
+Region II,Homer (Lower Kenai Peninsula),Tustumena Lake,-150.88918,60.19692,,,,,,1/0/1900,,"Dolly Varden, lake trout, stickleback-unspecified, coho salmon, pink salmon, sockeye salmon, slimy sculpin, whitefish-unspecified",Yes,,,,,,
+Region III,Fairbanks (Lower Tanana River Drainage),Twin Lake East (west of Kantishna River),,,,,,,,,,,,,,,,,yes
+Region III,Yukon River Drainage,Twin Lakes,,,,,,,,,,,,,,,,,yes
+Region III,Yukon River Drainage,Twin Lakes (Chandalar),-149.07319,67.51637,953.03,,,57.6,,8/3/1977,,"lake trout, Arctic grayling, round whitefish",Yes,,,,,,
+Region III,Delta (Upper Tanana River Drainage),Twin Lakes (N. and S.) (Meadows Road),,,,,,,,,,,,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),Twin Lakes (Nabesna Road),,,,,,,,,,,,,,,,,yes
+Region III,Fairbanks (Lower Tanana River Drainage),Twin Lakes (West of Kantishna River),,,,,,,,,,,,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),Two Bit Lake,-145.64144,63.13471,114.7,,,19.8,,7/17/1974,,lake trout,No,354.2924757,572.4806202,824,129,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Tyone Lake,-146.69981,62.51293,388.5,,,,,6/24/1964,,"lake trout, burbot",Yes,407,655,2,2,,
+Region III,North Slope Drainages,Unnamed (F-26),-148.24507,69.02418,80.94,,,26.5,,8/8/1971,,"lake trout, Arctic grayling",Yes,,,,,,
+Region III,North Slope Drainages,Unnamed (Philip Smith Mountains),-149.68864,68.66434,,,,,,7/12/1975,,"lake trout, Arctic grayling",No,,,,,,
+Region III,Yukon River Drainage,Unspecified lakes,,,,,,,,,,,,,,,,,yes
+Region III,Delta (Upper Tanana River Drainage),Upper Landmark Gap Lake,-146.14192,63.13313,,,,20.0,,7/10/2009,,lake trout,No,220,,5,,,
+Region II,Kenai (Upper Kenai Peninsula),Upper Summit Lake,-149.496868,60.637327,104.4,,,21.3,,1/0/1900,"Arctic char, Chinook salmon, lake trout, rainbow trout",Dolly Varden,Yes,506.5,2271.735,4,4,,yes
+Region III,Delta (Upper Tanana River Drainage),Upper Tangle Lake,-146.06151,63.02778,151.91,"14,115,955",9.29,34.0,17.82,7/5/2022,,"lake trout, burbot, Arctic grayling, longnose sucker, round whitefish",Yes,430.7056604,1906.380282,265,71,soon,yes - all lakes combined
+Region II,Kenai (Upper Kenai Peninsula),Upper Trail Lake (Moose Pass),-149.37221,60.51014,710.63,,16.4,44.5,,5/23/1962,,"Dolly Varden, lake trout, chum salmon, rainbow trout, whitefish-unspecified",Yes,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Vicki Lake,-146.28422,62.58535,2.95,,,6.7,,7/25/1991,,"lake trout, Arctic grayling, longnose sucker, humpback whitefish, round whitefish",No,,,,,,
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Wait-A-Bit Lake,-145.74761,63.00832,36.42,,,20.1,,8/7/1984,,"lake trout, burbot, Arctic grayling, slimy sculpin, whitefish-unspecified",Yes,570,,1,,,
+Region III,Northwest Drainages,Walker Lake,-154.35796,67.12800,3844.51,,,30.5,,7/30/1967,,"Arctic char, lake trout, Arctic grayling, northern pike, round whitefish",Yes,,,,,,yes
+Region II,Mat-Su (Susitna River Drainage),Watana Lake,-148.04892,62.72930,121.41,,,9.1,,6/30/1977,,"lake trout, Arctic grayling",No,,,,,,
+Region III,Kuskokwim-Goodnews Drainages,Whitefish Lake (Hoholitna),-154.87916,60.95492,3884.98,,,33.5,,7/30/1979,,"Arctic char, lake trout, Arctic grayling, northern pike, coho salmon, slimy sculpin, broad whitefish, round whitefish",Yes,,,,,,yes
+Region III,Yukon River Drainage,Wild Lake,-151.57378,67.50274,951.01,,,72.2,,8/2/1967,,"lake trout, burbot, Arctic grayling, northern pike, round whitefish",No,,,,,,yes
+Region III,Yukon River Drainage,Wild River,,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Wisconsin Lake,-146.18941,62.58577,80.94,,,9.1,,6/24/1967,,"lake trout, Arctic grayling, longnose sucker, whitefish-unspecified",Yes,,,,,,
+Region III,Fairbanks (Lower Tanana River Drainage),Wonder Lake,,,,,,,,,,,,,,,,,yes
+Region III,Glennallen (Upper Copper-Upper Susitna Drainages),Y Lake (Gulkana),-146.22230,62.49330,66.69,,,6.9,,1/1/1987,,"lake trout, Arctic grayling, humpback whitefish, round whitefish",Yes,,,,,,
+Region III,Yukon River Drainage,Yukon River - Fort Yukon to Koyukuk River,,,,,,,,,,,,,,,,,yes
+Region III,Yukon River Drainage,Yukon River drainages - Canadian border to Fort Yukon,,,,,,,,,,,,,,,,,yes
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,

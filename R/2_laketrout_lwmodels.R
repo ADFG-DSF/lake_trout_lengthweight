@@ -279,7 +279,7 @@ cat('model {
 
 
 # JAGS controls
-niter <- 500000#2000#500000
+niter <- 500000
 ncores <- min(10, parallel::detectCores()-1)
 par(mfrow=c(4,4))
 
@@ -312,7 +312,9 @@ for(imodel in 1:nrow(controlmat)) {
 }
 
 ## saving output for big model runs
-# save(alloutputs, file="alloutputs.Rdata")
+
+########################################################
+save(alloutputs, file="alloutputs.Rdata")
 
 ## post pred is currently commented out - I was satisfied with it
 # for(i in 1:length(alloutputs)) {
@@ -435,6 +437,7 @@ modeldescription[which.min(theDIC)]
 
 ## vector of the number of additional parameters (used for description)
 nparam <- rowSums(controlmat)
+bestmodels <- which(theDIC %in% tapply(theDIC, rowSums(controlmat), min))
 
 
 ## plotting DIC for each model (a couple ways)
@@ -607,7 +610,7 @@ for(i in 1:length(logarea)) {
 
 
 ## post predict a new lake (Crosswind!)
-bestmodels_ind <- which(bestmodels)
+bestmodels_ind <- bestmodels # which(bestmodels)
 newarea <- median(log(laketrout_all$SurfaceArea_h[laketrout_all$LakeName=="Crosswind Lake"])) - meanlogA
   #log(morphometry$SurfaceArea_h[morphometry$LakeName=="Crosswind Lake"])
 newlat <- median(laketrout_all$Latitude_WGS84[laketrout_all$LakeName=="Crosswind Lake"]) - meanlat
@@ -641,3 +644,4 @@ caterpillar(b0_new - b1_new*lt_data$meanx)
 abline(h=-19.56, lty=2)
 caterpillar(b1_new)
 abline(h=3.2, lty=2)
+
