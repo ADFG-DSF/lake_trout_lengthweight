@@ -116,7 +116,7 @@ b0_interp_arr <- b0_arr <- b1_arr <- mu_b0_arr <- mu_b1_arr <- array(dim=c(nrow(
                                                           length(bestmodels)))
 
 # JAGS controls
-niter <- 20000
+niter <- 10*1000#20*1000
 ncores <- min(10, parallel::detectCores()-1)
 par(mfrow=c(4,4))
 
@@ -183,7 +183,7 @@ for(imodel in seq_along(bestmodels)) {
 }
 
 ########################################################
-save(b0_arr, b0_interp_arr, b1_arr, mu_b0_arr, mu_b1_arr, file="lw_loocv.Rdata")
+# save(b0_arr, b0_interp_arr, b1_arr, mu_b0_arr, mu_b1_arr, file="lw_loocv.Rdata")
 
 par(mfrow=c(1,1))
 comparecat(list(as.data.frame(b0_arr[,,1]),
