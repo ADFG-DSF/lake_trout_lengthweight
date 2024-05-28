@@ -143,7 +143,7 @@ WL_data <- list(y = log(laketrout$Weight_g/1000),
 
 
 # JAGS controls
-niter <- 10*1000#20*1000
+niter <- 20*1000#20*1000
 ncores <- min(10, parallel::detectCores()-1)
 
 {
@@ -173,9 +173,10 @@ traceworstRhat(WL_jags_out, parmfrow=c(3,3))
 # # qq_postpred(WL_jags_out$sims.list$ypp[,(1:20000)[!is.na(WL_data$y[1:20000])]],
 # #             y=WL_data$y[1:20000][!is.na(WL_data$y[1:20000])])
 
-caterpillar(WL_jags_out, p="b1")
-caterpillar(WL_jags_out, p="b0")
-caterpillar(WL_jags_out, p="b0_interp")
+cols <- 3 - 1*(sort(unique(laketrout$LakeNum)) %in% WL_data$whichlakesc)
+caterpillar(WL_jags_out, p="b1", col=cols)
+caterpillar(WL_jags_out, p="b0", col=cols)
+caterpillar(WL_jags_out, p="b0_interp", col=cols)
 
 # plot regression bands for each lake, overlay data and lester line
 xpredict <- seq(from = min(log(laketrout$ForkLength_mm[!is.na(laketrout$Weight_g)]), na.rm=TRUE),
@@ -238,6 +239,8 @@ cat('model {
     for(ifit in 1:nfit) {
       yfit[ifit, j] <- Linf[j]*(1-exp(-k[j]*(xfit[ifit]-t0[j])))
     }
+
+    # L_quantile[j] <- mean(x[whichdata] <= Linf[j])   #########
   }
 
   mu_Linf ~ dnorm(700, 0.0001)
@@ -283,7 +286,8 @@ ncores <- min(10, parallel::detectCores()-1)
                                                    "mu_Linf","sig_Linf",
                                                    "mu_k", "sig_k",
                                                    "mu_t0","sig_t0",
-                                                   "yfit"),#
+                                                   "yfit",
+                                                   "L_quantile"),#
                               n.chains=ncores, parallel=T, n.iter=niter,
                               n.burnin=niter/2, n.thin=niter/2000)
   print(Sys.time() - tstart)
@@ -292,7 +296,7 @@ ncores <- min(10, parallel::detectCores()-1)
 par(mfrow=c(1,1))
 # nbyname(LA_jags_out)
 plotRhats(LA_jags_out)
-traceworstRhat(LA_jags_out, parmfrow=c(4,3))
+traceworstRhat(LA_jags_out, parmfrow=c(3,3))
 
 par(mfrow=c(1,2))
 caterpillar(LA_jags_out, p="Linf")
@@ -301,6 +305,31 @@ caterpillar(LA_jags_out, p="k")
 caterpillar(LA_jags_out, p="k_prior")
 caterpillar(LA_jags_out, p="t0")
 caterpillar(LA_jags_out, p="t0_prior")
+
+## calculate a vector of Linf quantile
+L_quantile <- matrix(nrow=nrow(LA_jags_out$sims.list$Linf),
+                     ncol=ncol(LA_jags_out$sims.list$Linf))
+# for(i in 1:nrow(L_quantile)) {
+#   for(j in 1:ncol(L_quantile)) {   # might be able to make this more efficient
+#     L_quantile[i,j] <- mean(LA_data$y[LA_data$lake==j] < LA_jags_out$sims.list$Linf[i,j], na.rm=TRUE)
+#   }
+# }
+for(j in 1:ncol(L_quantile)) {
+  L_quantile[,j] <- colMeans(outer(LA_data$y[LA_data$lake==j], LA_jags_out$sims.list$Linf[,j], "<"), na.rm=TRUE)
+  # str(LA_jags_out$sims.list$Linf[,j])
+}
+caterpillar(L_quantile, col=3-(laketrout_Winf$n_Age > 100))
+
+## imputing for data-poor lakes
+L_quantile_imputed <- matrix(nrow=nrow(L_quantile), ncol=nrow(laketrout_Winf))
+for(j in which(laketrout_Winf$n_Age < 100)) {
+  L_quantile_imputed[,j] <- sample(L_quantile[, which(laketrout_Winf$n_Age > 100)], nrow(L_quantile))
+}
+for(j in which(laketrout_Winf$n_Age > 100)) {
+  L_quantile_imputed[,j] <- L_quantile[,j]
+}
+caterpillar(L_quantile_imputed)
+
 
 par(mfrow=c(3,3))
 for(ilake in LA_data$whichlakes) {
@@ -312,6 +341,176 @@ for(ilake in LA_data$whichlakes) {
 
 ## run Linf~Area model, using Lester priors
 
+## trying to re-fit Lester's L_inf from lake area model
+# specify model, which is written to a temporary file
+LinfArea_jags <- tempfile()
+cat('model {
+  for(i in whichlakes) {
+    y[i] ~ dnorm(mu[i], tau)
+    ypp[i] ~ dnorm(mu[i], tau)
+    mu[i] <- b0 * (1 - exp(-b1 * (1 + log(x[i]))))
+  }
 
+  tau <- pow(sig, -2)
+  sig ~ dunif(0, 300)
+  b0 ~ dnorm(957, pow(0.3*957, -2))
+  b0_prior ~ dnorm(957, pow(0.3*957, -2))
+  b1 ~ dnorm(0.14, pow(1*0.14, -2))
+  b1_prior ~ dnorm(0.14, pow(1*0.14, -2))
+}', file=LinfArea_jags)
+
+# bundle data to pass into JAGS
+larea <- tapply(laketrout$SurfaceArea_h, laketrout$LakeNum, median, na.rm=TRUE)
+quantile_meds <- apply(L_quantile_imputed, 2, median, na.rm=TRUE)
+Linf_med <- rep(NA, nrow(laketrout_Winf))
+for(ilake in 1:length(Linf_med)) {
+  Linf_med[ilake] <- quantile(laketrout$ForkLength_mm[laketrout$LakeNum==ilake],
+                              quantile_meds[ilake], na.rm=TRUE)
+}
+LinfArea_data <- list(x = larea,
+                  y = Linf_med,
+                  whichlakes = which(!is.na(larea)))
+
+# JAGS controls
+niter <- 100000
+# ncores <- 3
+ncores <- min(10, parallel::detectCores()-1)
+
+{
+  tstart <- Sys.time()
+  print(tstart)
+  LinfArea_jags_out <- jagsUI::jags(model.file=LinfArea_jags, data=LinfArea_data,
+                                parameters.to.save=c("b0","b1",
+                                                     "b0_prior","b1_prior",
+                                                     "sig", "mu","ypp"),
+                                n.chains=ncores, parallel=T, n.iter=niter,
+                                n.burnin=niter/2, n.thin=niter/2000)
+  print(Sys.time() - tstart)
+}
+# nbyname(LinfArea_jags_out)
+plotRhats(LinfArea_jags_out)
+traceworstRhat(LinfArea_jags_out, parmfrow=c(3,3))
+
+par(mfrow=c(3,2))
+comparepriors(LinfArea_jags_out)
+plot(LinfArea_data$x, LinfArea_data$y, log="x",
+     xlab="Lake Area (ha)", ylab="L_inf (mm)",
+     main="Trend")
+envelope(LinfArea_jags_out, p="mu", x=LinfArea_data$x, add=TRUE)
+curve(957*(1-exp(-0.14*(1+log(x)))), lty=3, add=TRUE)
+
+plot(LinfArea_data$x, LinfArea_data$y, log="x",
+     xlab="Lake Area (ha)", ylab="L_inf (mm)",
+     main="Trend")
+envelope(LinfArea_jags_out, p="ypp", x=LinfArea_data$x, log="x",
+         xlab="Lake Area (ha)", ylab="L_inf (mm)",
+         main="Post Predictive", add=TRUE)
+points(LinfArea_data$x, LinfArea_data$y)
+curve(957*(1-exp(-0.14*(1+log(x)))), lty=3, add=TRUE)
+
+qq_postpred(LinfArea_jags_out, p="ypp", y=LinfArea_data$y)
+# ts_postpred(LinfArea_jags_out, p="ypp", y=LinfArea_data$y, x=LinfArea_data$x, log="x")
+
+
+
+
+### all Winf methods:
+nlake <- nrow(laketrout_Winf)
+Winf_all <- array(dim=c(10000, nlake, 4))  # n mcmc, n lakes, n methods
+
+# Winf from quantile
+# need sufficient weights sample + L_quantile_imputed
+for(ilake in 1:nlake) {
+  print(ilake)
+  for(imcmc in 1:10000) {
+    Winf_all[imcmc, ilake, 1] <- quantile(laketrout$Weight_g[laketrout$LakeNum==ilake]/1000,
+                                          L_quantile_imputed[imcmc, ilake],
+                                          na.rm=TRUE)
+  }
+}
+caterpillar(Winf_all[,,1])
+# for(ilake in 1:nlake) {
+#   Winf_all[, ilake, 1] <- outer(laketrout$Weight_g[laketrout$LakeNum==ilake]/1000,
+#             L_quantile_imputed[, ilake],
+#             quantile, na.rm=TRUE)
+# }
+
+
+# Winf from Linf
+# need Linf + WL relationship
+Linf_mat <- matrix(nrow=10000, ncol=nlake)
+Linf_mat[, 1:ncol(LA_jags_out$sims.list$Linf)] <- LA_jags_out$sims.list$Linf
+
+# nbyname(WL_jags_out)
+b0 <- WL_jags_out$sims.list$b0_interp
+b1 <- WL_jags_out$sims.list$b1
+
+
+Winf_all[,,2] <- exp(b0 + b1*log(Linf_mat))
+caterpillar(Winf_all[,,2])
+
+
+
+# Winf from (Linf from quantile)
+# need sufficient lengths sample + L_quantile_imputed + WL relationship
+Linf_placeholder <- NA*Winf_all[,,3]
+for(ilake in 1:nlake) {
+  print(ilake)
+  for(imcmc in 1:10000) {
+    Linf_placeholder[imcmc, ilake] <- quantile(laketrout$ForkLength_mm[laketrout$LakeNum==ilake],
+                                          L_quantile_imputed[imcmc, ilake],
+                                          na.rm=TRUE)
+  }
+}
+Winf_all[,,3] <- exp(b0 + b1*log(Linf_placeholder))
+caterpillar(Winf_all[,,3])
+
+
+
+# Winf from (Linf from area)
+# need ypp Linf  + WL relationship
+ypp_mat <- LinfArea_jags_out$sims.list$ypp
+Winf_all[,,4] <- exp(b0 + b1*log(ypp_mat))
+caterpillar(Winf_all[,,4])
+
+
+# par(mfrow=c(1,1))
+# comparecat(list(data.frame(Winf_all[,,1]),
+#                 data.frame(Winf_all[,,2]),
+#                 data.frame(Winf_all[,,3]),
+#                 data.frame(Winf_all[,,4])), ylim=c(0,15))
+caterpillar(Winf_all[,,1], ylim=c(0,15), col=1)
+caterpillar(Winf_all[,,2], add=TRUE, col=2, x=1:nlake+.2)
+caterpillar(Winf_all[,,3], add=TRUE, col=3, x=1:nlake+.4)
+caterpillar(Winf_all[,,4], add=TRUE, col=4, x=1:nlake+.6)
+
+
+## should only include those with adequate data to support them
+Winf_all_all <- Winf_all
+# Winf_all <- Winf_all_all
+
+# Winf from quantile
+# need sufficient weights sample + L_quantile_imputed
+Winf_all[, laketrout_Winf$n_Weight < 150, 1] <- NA
+Winf_all[, laketrout_Winf$n_Weight >= 150, 2:4] <- NA
+
+# Winf from Linf
+# need Linf + WL relationship
+Winf_all[, laketrout_Winf$n_Age < 50, 2] <- NA
+Winf_all[, laketrout_Winf$n_Age >= 50, 3:4] <- NA
+
+# Winf from (Linf from quantile)
+# need sufficient lengths sample + L_quantile_imputed + WL relationship
+Winf_all[, laketrout_Winf$n_Length < 150, 3] <- NA
+Winf_all[, laketrout_Winf$n_Length >= 150, 4] <- NA
+
+# Winf from (Linf from area)
+# need ypp Linf  + WL relationship
+
+
+caterpillar(Winf_all[,,1], ylim=c(0,15), col=1, x=2*(1:nlake))
+caterpillar(Winf_all[,,2], add=TRUE, col=2, x=2*(1:nlake)+.3)
+caterpillar(Winf_all[,,3], add=TRUE, col=3, x=2*(1:nlake)+.6)
+caterpillar(Winf_all[,,4], add=TRUE, col=4, x=2*(1:nlake)+.9)
 
 ## .....do the big gnarly predictive thingy from mcmc vectors
