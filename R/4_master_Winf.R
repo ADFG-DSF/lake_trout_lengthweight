@@ -2,7 +2,7 @@ library(tidyverse)
 library(jagsUI)
 library(jagshelper)
 
-## load data, filter bad observations BUT NOT empty lakes
+## load data, filter bad observations BUT NOT observations with missing data
 ## - bad = obviously bad W~L, obviously bad L~age, outlying W, L, age
 
 # morphometry <- read_csv("flat_data/lake_morphometry.csv", skip=2)
@@ -18,6 +18,12 @@ laketrout_all <- read_csv("flat_data/length_weight2.csv", skip=2) %>%
   left_join(morphometry)
 nrow(laketrout_all)
 sapply(laketrout_all, function(x) sum(is.na(x)))
+
+
+
+## Filtering informed by Weight ~ Length relationship
+## - one problematic project
+## - outlying residuals from a log(Weight) ~ log(Length) regression
 
 laketrout1 <- laketrout_all %>%
   filter(!ProjectTitle %in% c("Mark-Recapture Event 1 - (September - 2002)",
@@ -53,6 +59,9 @@ laketrout %>%
   theme_bw()
 
 
+
+## Filtering informed by Length ~ Age relationship
+
 ## plotting length ~ age
 laketrout_all %>%
   # ggplot(aes(y=ForkLength_mm, x=Age, color=LakeName)) +
@@ -85,7 +94,7 @@ cat('model {
     mu[i] <- b0[lake[i]] + b1[lake[i]]*x[i]
   }
 
-  # loop over lakes     -- need to somehow predict lakes without lat & area???
+  # loop over lakes with data
   for(j in whichlakes) {
     b0[j] ~ dnorm(mu_b0[j], tau_b0)
     b0_interp[j] <- b0[j] - b1[j]*meanx
@@ -97,6 +106,9 @@ cat('model {
                 + b1_lat*lat[j]
   }
 
+  # loop over lakes without area & lat data (c for complement)
+  # draw log(area) and lat from Normal distributions (mean & sd of actual data)
+  # corresponding b0, b0_interp, and b1 will effectively be from the post pred
   for(jc in whichlakesc) {
     b0[jc] ~ dnorm(mu_b0[jc], tau_b0)
     b0_interp[jc] <- b0[jc] - b1[jc]*meanx
@@ -110,6 +122,7 @@ cat('model {
     latsim[jc] ~ dnorm(mean(lat[whichlakes]), pow(sd(lat[whichlakes]), -2))
   }
 
+  # global priors
   sig_b0 ~ dunif(0, 10)
   tau_b0 <- pow(sig_b0, -2)
 
@@ -143,7 +156,7 @@ WL_data <- list(y = log(laketrout$Weight_g/1000),
 
 
 # JAGS controls
-niter <- 20*1000#20*1000
+niter <- 20*1000
 ncores <- min(10, parallel::detectCores()-1)
 
 {
@@ -173,7 +186,12 @@ traceworstRhat(WL_jags_out, parmfrow=c(3,3))
 # # qq_postpred(WL_jags_out$sims.list$ypp[,(1:20000)[!is.na(WL_data$y[1:20000])]],
 # #             y=WL_data$y[1:20000][!is.na(WL_data$y[1:20000])])
 
-cols <- 3 - 1*(sort(unique(laketrout$LakeNum)) %in% WL_data$whichlakesc)
+
+## colors are differentiated by whether lat/area data and weight data are present
+LatArea_present <- sort(unique(laketrout$LakeNum)) %in% WL_data$whichlakes
+weight_present <- table(laketrout$LakeNum,!is.na(laketrout$Weight_g))[,2] > 0
+# cols <- 3 - 1*(sort(unique(laketrout$LakeNum)) %in% WL_data$whichlakesc)
+cols <- ifelse(weight_present, 3, ifelse(LatArea_present, 4, 2))
 caterpillar(WL_jags_out, p="b1", col=cols)
 caterpillar(WL_jags_out, p="b0", col=cols)
 caterpillar(WL_jags_out, p="b0_interp", col=cols)
@@ -187,14 +205,15 @@ for(ilake in 1:max(laketrout$LakeNum)) {
   logweight_predict <- WL_jags_out$sims.list$b0_interp[,ilake] +
     outer(WL_jags_out$sims.list$b1[,ilake], xpredict)
   plot(NA, xlim=range(xpredict), ylim=range(log(laketrout$Weight_g/1000), na.rm=TRUE))
-  if(all(!is.na(logweight_predict))) envelope(logweight_predict, x=xpredict, add=TRUE)
+  if(all(!is.na(logweight_predict))) envelope(logweight_predict, x=xpredict, add=TRUE, col=cols[ilake])
   points(x = log(laketrout$ForkLength_mm[laketrout$LakeNum==ilake]),
          y = log(laketrout$Weight_g[laketrout$LakeNum==ilake]/1000))
   abline(a=-19.56, b=3.2, lty=3)
 }
 
+## looking at weights for a given log length near L_inf
 par(mfrow=c(1,1))
-caterpillar(WL_jags_out$sims.list$b0_interp + WL_jags_out$sims.list$b1*6.5, transform="exp")
+caterpillar(WL_jags_out$sims.list$b0_interp + WL_jags_out$sims.list$b1*6.5, transform="exp", col=cols)
 
 
 
@@ -273,7 +292,7 @@ LA_data$whichdata <- which((laketrout$LakeNum %in% LA_data$whichlakes) &
                             (!is.na(laketrout$Age)))
 
 # JAGS controls
-niter <- 20*1000#20*1000
+niter <- 50*1000
 ncores <- min(10, parallel::detectCores()-1)
 
 {
@@ -328,7 +347,7 @@ for(j in which(laketrout_Winf$n_Age < 100)) {
 for(j in which(laketrout_Winf$n_Age > 100)) {
   L_quantile_imputed[,j] <- L_quantile[,j]
 }
-caterpillar(L_quantile_imputed)
+caterpillar(L_quantile_imputed, ylim=0:1)
 
 
 par(mfrow=c(3,3))
@@ -405,7 +424,7 @@ plot(LinfArea_data$x, LinfArea_data$y, log="x",
 envelope(LinfArea_jags_out, p="ypp", x=LinfArea_data$x, log="x",
          xlab="Lake Area (ha)", ylab="L_inf (mm)",
          main="Post Predictive", add=TRUE)
-points(LinfArea_data$x, LinfArea_data$y)
+# points(LinfArea_data$x, LinfArea_data$y)
 curve(957*(1-exp(-0.14*(1+log(x)))), lty=3, add=TRUE)
 
 qq_postpred(LinfArea_jags_out, p="ypp", y=LinfArea_data$y)
@@ -428,6 +447,7 @@ for(ilake in 1:nlake) {
                                           na.rm=TRUE)
   }
 }
+par(mfrow=c(2,2))
 caterpillar(Winf_all[,,1])
 # for(ilake in 1:nlake) {
 #   Winf_all[, ilake, 1] <- outer(laketrout$Weight_g[laketrout$LakeNum==ilake]/1000,
@@ -474,7 +494,7 @@ Winf_all[,,4] <- exp(b0 + b1*log(ypp_mat))
 caterpillar(Winf_all[,,4])
 
 
-# par(mfrow=c(1,1))
+par(mfrow=c(1,1))
 # comparecat(list(data.frame(Winf_all[,,1]),
 #                 data.frame(Winf_all[,,2]),
 #                 data.frame(Winf_all[,,3]),
@@ -484,25 +504,85 @@ caterpillar(Winf_all[,,2], add=TRUE, col=2, x=1:nlake+.2)
 caterpillar(Winf_all[,,3], add=TRUE, col=3, x=1:nlake+.4)
 caterpillar(Winf_all[,,4], add=TRUE, col=4, x=1:nlake+.6)
 
+boxplot(apply(Winf_all, 2:3, median, na.rm=TRUE))
+
 
 ## should only include those with adequate data to support them
-Winf_all_all <- Winf_all
+
 # Winf_all <- Winf_all_all
+Winf_all_all <- Winf_all
+
+c1 <- laketrout_Winf$n_Weight >= 300
+c2 <- laketrout_Winf$n_Age >= 10
+c3 <- laketrout_Winf$n_Length >= 300
+
+sum(c1)
+sum(c2 & !c1)
+sum(c3 & !(c1 | c2))
+sum(!(c1 | c2 | c3))
+
+# mat2dflist <- function(x) apply(x,3, function(x) data.frame(x), simplify=F)
+# comparecat(mat2dflist(Winf_all_all[,which(c1),]), ylim=c(0, 16))
+caterpillar(Winf_all_all[,which(c1),1], ylim=c(0,20), x=2*(1:sum(c1)), col=1)
+caterpillar(Winf_all_all[,which(c1),2], add=TRUE, x=2*(1:sum(c1))+.3, col=2)
+caterpillar(Winf_all_all[,which(c1),3], add=TRUE, x=2*(1:sum(c1))+.6, col=3)
+caterpillar(Winf_all_all[,which(c1),4], add=TRUE, x=2*(1:sum(c1))+.9, col=4)
+
+par(mfrow=c(2,3))
+for(i in which(c1)) {
+  caterpillar(Winf_all_all[,i,],
+              col = c(2, 4, 4, 4),
+              xax = c(laketrout_Winf$n_Weight[i],
+                      laketrout_Winf$n_Age[i],
+                      laketrout_Winf$n_Length[i],
+                      "the ugly one"))
+}
+
+par(mfrow=c(2,4))
+for(i in which(c2 & !c1)) {
+  caterpillar(Winf_all_all[,i,],
+              col = c(4, 2, 4, 4),
+              xax = c(laketrout_Winf$n_Weight[i],
+                      laketrout_Winf$n_Age[i],
+                      laketrout_Winf$n_Length[i],
+                      "the ugly one"))
+}
+
+par(mfrow=c(1,2))
+for(i in which(c3 & !(c1 | c2))) {
+  caterpillar(Winf_all_all[,i,],
+              col = c(4, 4, 2, 4),
+              xax = c(laketrout_Winf$n_Weight[i],
+                      laketrout_Winf$n_Age[i],
+                      laketrout_Winf$n_Length[i],
+                      "the ugly one"))
+}
+
+par(mfrow=c(3,4))
+for(i in which(!(c1 | c2 | c3))) {
+  caterpillar(Winf_all_all[,i,],
+              col = c(4, 4, 4, 2),
+              xax = c(laketrout_Winf$n_Weight[i],
+                      laketrout_Winf$n_Age[i],
+                      laketrout_Winf$n_Length[i],
+                      "the ugly one"))
+}
+
 
 # Winf from quantile
 # need sufficient weights sample + L_quantile_imputed
-Winf_all[, laketrout_Winf$n_Weight < 150, 1] <- NA
-Winf_all[, laketrout_Winf$n_Weight >= 150, 2:4] <- NA
+Winf_all[, !c1, 1] <- NA
+Winf_all[, c1, 2:4] <- NA
 
 # Winf from Linf
 # need Linf + WL relationship
-Winf_all[, laketrout_Winf$n_Age < 50, 2] <- NA
-Winf_all[, laketrout_Winf$n_Age >= 50, 3:4] <- NA
+Winf_all[, !c2, 2] <- NA
+Winf_all[, c2, 3:4] <- NA
 
 # Winf from (Linf from quantile)
 # need sufficient lengths sample + L_quantile_imputed + WL relationship
-Winf_all[, laketrout_Winf$n_Length < 150, 3] <- NA
-Winf_all[, laketrout_Winf$n_Length >= 150, 4] <- NA
+Winf_all[, !c3, 3] <- NA
+Winf_all[, c3, 4] <- NA
 
 # Winf from (Linf from area)
 # need ypp Linf  + WL relationship
@@ -513,4 +593,7 @@ caterpillar(Winf_all[,,2], add=TRUE, col=2, x=2*(1:nlake)+.3)
 caterpillar(Winf_all[,,3], add=TRUE, col=3, x=2*(1:nlake)+.6)
 caterpillar(Winf_all[,,4], add=TRUE, col=4, x=2*(1:nlake)+.9)
 
-## .....do the big gnarly predictive thingy from mcmc vectors
+boxplot(apply(Winf_all, 2:3, median, na.rm=TRUE))
+colSums(!is.na(apply(Winf_all, 2:3, median, na.rm=TRUE)))
+
+
