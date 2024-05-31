@@ -179,6 +179,8 @@ nbyname(WL_jags_out)
 plotRhats(WL_jags_out)
 traceworstRhat(WL_jags_out, parmfrow=c(3,3))
 
+# save(WL_jags_out, WL_data, laketrout, file="WL_data_WinfRept.Rdata")
+
 
 ### these can be used if post predictive (ypp) is stored
 
@@ -384,6 +386,8 @@ for(j in which(laketrout_Winf$n_Age > 100)) {
 }
 caterpillar(L_quantile_imputed, ylim=0:1)
 
+# save(LA_jags_out, LA_data, L_quantile, L_quantile_imputed, file="LA_data_WinfRept.Rdata")
+
 
 par(mfrow=c(3,3))
 for(ilake in LA_data$whichlakes) {
@@ -485,14 +489,7 @@ Winf_all <- array(dim=c(10000, nlake, 4))  # n mcmc, n lakes, n methods
 # Winf from quantile
 # need sufficient weights sample + L_quantile_imputed
 for(ilake in 1:nlake) {
-  print(ilake)
-  # for(imcmc in 1:10000) {
-  #   Winf_all[imcmc, ilake, 1] <- quantile(laketrout$Weight_g[laketrout$LakeNum==ilake]/1000,
-  #                                         # L_quantile_imputed[imcmc, ilake],
-  #                                         L_quantile[imcmc, ilake],
-  #                                         na.rm=TRUE)
-  # }
-  Winf_all[,ilake,1] <- quantile(laketrout$Weight_g[laketrout$LakeNum==ilake]/1000,
+ Winf_all[,ilake,1] <- quantile(laketrout$Weight_g[laketrout$LakeNum==ilake]/1000,
                                  L_quantile_imputed[, ilake],
                                  # L_quantile[, ilake],
                                  na.rm=TRUE)
@@ -525,15 +522,8 @@ caterpillar(Winf_all[,,2])
 # need sufficient lengths sample + L_quantile_imputed + WL relationship
 Linf_placeholder <- NA*Winf_all[,,3]
 for(ilake in 1:nlake) {
-  print(ilake)
-  # for(imcmc in 1:10000) {
-  #   Linf_placeholder[imcmc, ilake] <- quantile(laketrout$ForkLength_mm[laketrout$LakeNum==ilake],
-  #                                              # L_quantile_imputed[imcmc, ilake],
-  #                                              L_quantile[imcmc, ilake],
-  #                                         na.rm=TRUE)
-  # }
   Linf_placeholder[, ilake] <- quantile(laketrout$ForkLength_mm[laketrout$LakeNum==ilake],
-                                             L_quantile_imputed[imcmc, ilake],
+                                             L_quantile_imputed[, ilake],
                                              # L_quantile[, ilake],
                                              na.rm=TRUE)
 }

@@ -1,0 +1,236 @@
+---
+title: "Estimating Asymptotic Weight for Lake Trout"
+author: "Matt Tyers"
+date: "2024-05-31"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, 
+                      warning=FALSE, message=FALSE, 
+                      fig.width = 12, fig.height=9,
+                      dpi=300)
+```
+
+```{r}
+library(tidyverse)
+library(jagsUI)
+library(jagshelper)
+```
+
+
+## Purpose & general outline of methods
+
+Application of the Lester Model to Lake Trout in Alaska lakes may be substantially improved by direct estimation of asymptotic weight $W_{\infty}$ when possible.  In the Lester Model framework, $W_{\infty}$ is estimated by means of a sequence of relationships: first, the relationship observed between lake area and asymptotic length observed in Canada; then, the aggregate relationship between length and weight observed in Canada.
+
+We have data at a finer resolution: in addition to geographical data (lake area and latitude) for 84 lakes with documented lake trout presence, we have sampling data on 30,000+ individual fish (weight, length, age).  The relationships between length and weight and between lake area and asymptotic length can both be estimated for Alaska, and specifically for each of the 84 lakes as appropriate, and using the parameters reported by Lester as priors.  Furthermore, in some cases, asymptotic size may be estimated directly.
+
+Depending on data availability for each lake, $W_{\infty}$ was estimated using one of four methods:
+
+1. $W_{\infty}$ from a weight sample quantile value
+
+2. $L_{\infty}$ from a length ~ age relationship, then $W_{\infty}$ from a weight ~ length relationship
+
+3. $L_{\infty}$ from a length sample quantile value, then $W_{\infty}$ from a weight ~ length relationship
+
+4. $L_{\infty}$ from a $L_{\infty}$ ~ lake area relationship, then $W_{\infty}$ from a weight-length relationship
+
+Overall, the relationships between weight and length were strong when data were present, and direct estimation of $L_{\infty}$ from age yielded results that appeared quite reasonable.  Estimates of $L_{\infty}$ appeared to be reasonably estimated from length sample quantiles, and application of the same quantiles to weight samples seemed reasonable due to the strong and monotonic relationship between length and weight.  The relationship between lake area and $L_{\infty}$ was quite weak, however, and estimation of $W_{\infty}$ will be greatly improved with collection of fish-level samples from these lakes.
+
+\pagebreak
+
+## Models & model selection
+
+### Weight ~ Length (+ Latitude + Area)
+
+A log-log regression was used to model weight as a function of length, expanding somewhat on the form used by Lester, et al.  Since fish-level data (lengths and weights) were available from several lakes of differing habitat, the length-weight relationships were fit separately for each lake, with slope and intercept parameters modeled hierarchically as shown below.
+
+$log(W_{j[i]}) = \beta_{0[j]} + \beta_{1[j]}log(L_{j[i]}) + \epsilon_i$
+
+which is equivalent to
+
+$W = e^{\beta_{0[j]}} \times L^{\beta_{1[j]}} \times e^{\epsilon_i}$
+
+This was extended to allow possible relationships between the lake-level intercept parameters $\beta_{0[j]}$ and slope parameters $\beta_{1[j]}$ and both lake area and latitude, expressed below.
+
+$\beta_{0[j]} \sim N(\mu_{\beta_0[j]}, \sigma_{\beta_0}) \text{ for } j \in 1...n_{lakes}$
+
+$\beta_{1[j]} \sim N(\mu_{\beta_1[j]}, \sigma_{\beta_1}) \text{ for } j \in 1...n_{lakes}$
+
+$\mu_{\beta_0[j]} = \gamma_0 + \tau_{0,Area}log(Area_j)  \text{ for } j \in 1...n_{lakes}$
+
+$\mu_{\beta_1[j]} = \gamma_1 +  \tau_{1,Lat}Latitude_j \text{ for } j \in 1...n_{lakes}$
+
+$\epsilon_i \sim N(0,\sigma_{\epsilon})$
+
+All possible relationships between intercept and slope parameters ($\beta_{0[j]}$ and $\beta_{1[j]}$, respectively) and lake-level variables lake area and latitude were explored using DIC and leave-one-out cross-validation, with the best performing model being that reported above.
+
+For lakes without paired length and weight data, parameters $\beta_{0[j]}$ and $\beta_{0[j]}$ were still modeled from the posterior predictive distribution using lake area and latitude as available.  In the cases where log lake area and latitude were not available, these were imputed for each MCMC sample using draws from Normal distributions with means and standard deviations corresponding to those of the log lake area and latitude data.  I'M NOT SURE IF THESE WERE EVEN USED.
+
+Note: Lengths were recentered by subtracting the mean measurement, in order to eliminate collinearity between the intercept and slope parameters and thus aid model convergence.  Estimates of the intercept parameters appear quite different from that reported by Lester; these were transformed later for the sake of interpretability and consistency.
+
+\pagebreak
+
+Intercept and slope parameter estimates are shown below for all lakes with associated weight and length measurements, with log area and latitude of each lake depicted on the X-axis.  Light and heavy vertical bars represent 95% and 50% credible intervals, respectively.  Overlayed trend envelopes represent 95% and 50% credible intervals for the relationships between log area and latitude, as appropriate.
+
+```{r, fig.height=12}
+load(file="WL_data_WinfRept.Rdata")
+
+par(mfrow=c(2, 2))
+# caterpillar(WL_jags_out$sims.list$b0[,WL_data$whichlakes], 
+#             x=WL_data$area[WL_data$whichlakes])
+# caterpillar(WL_jags_out$sims.list$b0[,WL_data$whichlakes], 
+#             x=WL_data$lat[WL_data$whichlakes])
+# caterpillar(WL_jags_out$sims.list$b1[,WL_data$whichlakes], 
+#             x=WL_data$area[WL_data$whichlakes])
+# caterpillar(WL_jags_out$sims.list$b1[,WL_data$whichlakes], 
+#             x=WL_data$lat[WL_data$whichlakes])
+
+lakeswithLWdata <- WL_data$whichlakes[WL_data$whichlakes %in% WL_data$lake[!is.na(WL_data$y)]]
+caterpillar(WL_jags_out$sims.list$b0[,lakeswithLWdata], 
+            x=WL_data$area[lakeswithLWdata],
+            xlab = "log(area) - recentered", main="b0 (intercept)")
+envelope(WL_jags_out$sims.list$mu_b0[,lakeswithLWdata], 
+            x=WL_data$area[lakeswithLWdata], add=TRUE, dark=.2)
+caterpillar(WL_jags_out$sims.list$b0[,lakeswithLWdata], 
+            x=WL_data$lat[lakeswithLWdata],
+            xlab = "latitude - recentered", main="b0 (intercept)")
+caterpillar(WL_jags_out$sims.list$b1[,lakeswithLWdata], 
+            x=WL_data$area[lakeswithLWdata],
+            xlab = "log(area) - recentered", main="b1 (slope)")
+caterpillar(WL_jags_out$sims.list$b1[,lakeswithLWdata], 
+            x=WL_data$lat[lakeswithLWdata],
+            xlab = "latitude - recentered", main="b1 (slope)")
+envelope(WL_jags_out$sims.list$mu_b1[,lakeswithLWdata], 
+            x=WL_data$lat[lakeswithLWdata], add=TRUE, dark=.2)
+```
+
+\pagebreak
+
+Intercept and slope parameter estimates for all lakes are plotted below, differentiated by color to express data availability.  Estimates presented in green represent lakes with paired lengths and weights; estimates presented in blue represent lakes with area and latitude only; and estimates presented in red represent lakes with no associated data.
+
+Two plots are presented for the intercept parameter: the first being the raw parameters from the model (using recentered length data), and the second being the backtransformed parameters to the original scale.
+
+Dotted horizontal lines represent values reported by Lester, et al.
+
+```{r, fig.height=12, fig.width=10}
+par(mfrow=c(3,1))
+
+## colors are differentiated by whether lat/area data and weight data are present
+LatArea_present <- sort(unique(laketrout$LakeNum)) %in% WL_data$whichlakes
+weight_present <- table(laketrout$LakeNum,!is.na(laketrout$Weight_g))[,2] > 0
+# cols <- 3 - 1*(sort(unique(laketrout$LakeNum)) %in% WL_data$whichlakesc)
+cols <- ifelse(weight_present, 3, ifelse(LatArea_present, 4, 2))
+
+caterpillar(WL_jags_out, p="b0", col=cols, ylim=c(-0.3, 0.7),
+            xlab="Lake", main="b0 (intercept) - from model")
+legend("topright", legend=c("Length & Wt", "Lat & Area only", "no data"),
+       lwd=3, col=c(3, 4, 2))
+caterpillar(WL_jags_out, p="b0_interp", col=cols, ylim=c(-25, -13),
+            xlab="Lake", main="b0 (intercept) - original scale")
+legend("topright", legend=c("Length & Wt", "Lat & Area only", "no data"),
+       lwd=3, col=c(3, 4, 2))
+abline(h=-19.56, lty=3)
+caterpillar(WL_jags_out, p="b1", col=cols, ylim=c(2.3, 4.4),
+            xlab="Lake", main="b1 (slope)")
+legend("topright", legend=c("Length & Wt", "Lat & Area only", "no data"),
+       lwd=3, col=c(3, 4, 2))
+abline(h=3.2, lty=3)
+```
+
+Finally, the relationships between length and weight are shown for each lake, overlayed with available data.  The relationship reported by Lester, et al. is overlayed as a dashed line, and fit envelope color represents the availability of data, using the same color convention as the previous set of plots (green = all data, blue = area and latitude only, red = no data).
+
+```{r, fig.width=15, fig.height=20}
+# plot regression bands for each lake, overlay data and lester line
+xpredict <- seq(from = min(log(laketrout$ForkLength_mm[!is.na(laketrout$Weight_g)]), na.rm=TRUE),
+                  to = max(log(laketrout$ForkLength_mm[!is.na(laketrout$Weight_g)]), na.rm=TRUE),
+                  length.out=50)
+par(mfrow=c(6, 5))
+par(mar=c(4,4,4,1))
+lakenames <- levels(as.factor(laketrout$LakeName))
+for(ilake in 1:max(laketrout$LakeNum)) {
+  logweight_predict <- WL_jags_out$sims.list$b0_interp[,ilake] +
+    outer(WL_jags_out$sims.list$b1[,ilake], xpredict)
+  plot(NA, xlim=range(xpredict), ylim=range(log(laketrout$Weight_g/1000), na.rm=TRUE),
+       xlab="log(Length)", ylab="log(Weight)", main=lakenames[ilake])
+  if(all(!is.na(logweight_predict))) envelope(logweight_predict, x=xpredict, add=TRUE, col=cols[ilake])
+  points(x = log(laketrout$ForkLength_mm[laketrout$LakeNum==ilake]),
+         y = log(laketrout$Weight_g[laketrout$LakeNum==ilake]/1000),
+         col=adjustcolor(1,alpha.f=.5))
+  abline(a=-19.56, b=3.2, lty=3)
+}
+```
+
+\pagebreak
+
+### Length ~ Age
+
+The relationship between length and age was modeled using a Von Bertalanffy growth model of the form below, with additive error:
+
+$L_{j[i]} = L_{\infty}[j](1-e^{-k[j](a_{j[i]}-t_0[j])}) + \epsilon_i$
+
+Growth parameters $L_{\infty}$, $k$, and $t_0$ were modeled separately for each lake, but with hierarchical distributions according to the form:
+
+$L_{\infty}[j] \sim N(\mu_{L_{\infty}} , \sigma_{L_{\infty}})$
+
+$k[j] \sim logN(\mu_{k} , \sigma_{k})$
+
+$t_0[j] \sim N(\mu_{t_0} , \sigma_{t_0})$
+
+In this case, the parameter of most inferential interest was asymptotic length $L_{\infty}$.
+
+Estimates for all parameters are plotted below for each lake.  Note that parameters were only estimated for lakes that had paired length and age data.
+
+```{r, fig.width=10, fig.height=8}
+load(file="LA_data_WinfRept.Rdata")
+
+par(mfrow=c(2,2))
+caterpillar(LA_jags_out, p="Linf", ylab="Fork Length (mm)", xlab="Lake")
+caterpillar(LA_jags_out, p="k", ylab="/year", xlab="Lake")
+caterpillar(LA_jags_out, p="t0", ylab="year", xlab="Lake")
+```
+
+\pagebreak
+
+Estimated growth curves are plotted below for all lakes with paired length and age data, with length and age data overlayed.  Shaded envelopes correspond to 50% and 95% credible intervals for mean length at a given age.
+
+```{r, fig.height=17}
+par(mfrow=c(6,4))
+par(mar=c(4,4,4,1))
+for(ilake in LA_data$whichlakes) {
+  envelope(LA_jags_out$sims.list$yfit[,,ilake],
+           ylim=c(0, max(LA_data$y[!is.na(LA_data$x)], na.rm=TRUE)),
+           main=lakenames[ilake],
+           xlab="Age", ylab="Fork Length (mm)")
+  points(x=LA_data$x[LA_data$lake==ilake], y=LA_data$y[LA_data$lake==ilake],
+         col=adjustcolor(1, alpha.f=.5))
+}
+```
+
+
+For lakes with little or no paired age and length data but sufficient length data, a more precise estimate of $L_{\infty}$ may be gained from a quantile value of the associated length sample.  To estimate the appropriate quantile value (and with error), posterior distributions of the sample quantile value associated with $L_{\infty}$ were estimated for lakes with sufficient paired age and length data (n > 100).  This was calculated for each MCMC sample as the proportion of the length sample less than the value of the MCMC sample of $L_{\infty}$.  MCMC samples were then drawn for the remaining lakes by randomly sampling from the MCMC samples of quantiles, pooled among all lakes with sufficient paired age-length data: computationally, this was analogous to two-stage sampling with all lakes with sufficient data weighted equally. 
+
+Posterior distributions of quantiles associated with $L_{\infty}$ are plotted below, before and after imputation by sampling from lakes with sufficient data.
+
+```{r, fig.height=5, fig.width=10}
+getn <- function(x) sum(!is.na(x))
+laketrout_Winf <- data.frame(n_Weight = tapply(laketrout$Weight_g, laketrout$LakeName, getn),
+                             n_Length = tapply(laketrout$ForkLength_mm, laketrout$LakeName, getn),
+                             n_Age = tapply(laketrout$Age, laketrout$LakeName, getn))
+
+## need to redo these criteria
+laketrout_Winf$Wt_quantile <- laketrout_Winf$n_Weight > 200
+laketrout_Winf$Ln_Age <- laketrout_Winf$n_Age > 150
+laketrout_Winf$Ln_quantile <- laketrout_Winf$n_Length > 200
+
+par(mfrow=c(1,1))
+cols <- 4-3*(laketrout_Winf$n_Age > 100)
+caterpillar(L_quantile, col=cols, ylim=0:1, xlab="Lake", ylab="Linf quantile")
+caterpillar(L_quantile_imputed, col=cols, ylim=0:1, xlab="Lake", ylab="Linf quantile")
+```
+
+FIGURE OUT WHY THERE ARE QUANTILES FOR ALL 84 LAKES, THAT MIGHT NOT MAKE SENSE
+
+### L_inf ~ Area
+## Multimodel synthesis & method selection
+## Data filtering
