@@ -1,6 +1,20 @@
-library(tidyverse)
-library(jagsUI)
-library(jagshelper)
+## NEED TO WRITE A HEADER
+
+
+
+## loading packages
+library(tidyverse)   # for data manipulation
+library(jagsUI)      # for running JAGS
+library(jagshelper)  # for plotting JAGS output & model diagnostics
+
+
+
+## Whether to save results from long JAGS runs, etc.  Stored objects are
+## read by markdown document Asymptotic_Weight_rept.Rmd
+save_results <- TRUE
+
+
+
 
 ## load data, filter bad observations BUT NOT observations with missing data
 ## - bad = obviously bad W~L, obviously bad L~age, outlying W, L, age
@@ -19,6 +33,9 @@ laketrout_all <- read_csv("flat_data/length_weight2.csv", skip=2) %>%
 nrow(laketrout_all)
 sapply(laketrout_all, function(x) sum(is.na(x)))
 
+summary(laketrout_all$Year)
+length(unique(laketrout_all$ProjectTitle))
+length(unique(laketrout_all$LakeName))
 
 
 ## Filtering informed by Weight ~ Length relationship
@@ -43,20 +60,22 @@ nrow(laketrout)
 
 ### plotting weight ~ length
 laketrout_all %>%
-  # ggplot(aes(x=ForkLength_mm, y=Weight_g, color=LakeName)) +
-  ggplot(aes(x=ForkLength_mm, y=Weight_g)) +
+  ggplot(aes(x=ForkLength_mm, y=Weight_g, color=LakeName)) +
+  # ggplot(aes(x=ForkLength_mm, y=Weight_g)) +
   geom_point() +
   scale_y_log10() +
   scale_x_log10() +
-  theme_bw()
+  theme_bw() +
+  theme(legend.position = 'none')
 
 laketrout %>%
-  # ggplot(aes(x=ForkLength_mm, y=Weight_g, color=LakeName)) +
-  ggplot(aes(x=ForkLength_mm, y=Weight_g)) +
+  ggplot(aes(x=ForkLength_mm, y=Weight_g, color=LakeName)) +
+  # ggplot(aes(x=ForkLength_mm, y=Weight_g)) +
   geom_point() +
   scale_y_log10() +
-  scale_x_log10() +
-  theme_bw()
+  scale_x_log10(limits=c(100,1200)) +
+  theme_bw() +
+  theme(legend.position = 'none')
 
 
 
@@ -75,11 +94,25 @@ laketrout %>%
   geom_point() +
   theme_bw()
 
+# plot(laketrout_all$ForkLength_mm)
+# plot(laketrout$ForkLength_mm)
+# plot(laketrout_all$Weight_g)
+# plot(laketrout$Weight_g)
+
 sapply(laketrout, function(x) sum(is.na(x)))
 table(is.na(laketrout$Latitude_WGS84),
       is.na(laketrout$SurfaceArea_h),
       is.na(laketrout$Weight_g))
 
+nrow(laketrout)
+
+sum(!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Weight_g))
+length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Weight_g)]))
+
+sum(!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Age))
+length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Age)]))
+
+length(unique(laketrout$LakeNum[!is.na(laketrout$Latitude_WGS84) & !is.na(laketrout$SurfaceArea_h)]))
 
 
 
@@ -179,7 +212,11 @@ nbyname(WL_jags_out)
 plotRhats(WL_jags_out)
 traceworstRhat(WL_jags_out, parmfrow=c(3,3))
 
-# save(WL_jags_out, WL_data, laketrout, file="WL_data_WinfRept.Rdata")
+# SAVING
+save_results
+if(save_results) {
+  save(WL_jags_out, WL_data, laketrout, file="WL_data_WinfRept.Rdata")
+}
 
 
 ### these can be used if post predictive (ypp) is stored
@@ -237,7 +274,9 @@ for(ilake in 1:max(laketrout$LakeNum)) {
 getn <- function(x) sum(!is.na(x))
 laketrout_Winf <- data.frame(n_Weight = tapply(laketrout$Weight_g, laketrout$LakeName, getn),
                              n_Length = tapply(laketrout$ForkLength_mm, laketrout$LakeName, getn),
-                             n_Age = tapply(laketrout$Age, laketrout$LakeName, getn))
+                             n_Age = tapply(laketrout$Age, laketrout$LakeName, getn),
+                             Lat = tapply(laketrout$Latitude_WGS84, laketrout$LakeNum, median),
+                             Area_ha = tapply(laketrout$SurfaceArea_h, laketrout$LakeNum, median))
 
 # ## need to redo these criteria
 # laketrout_Winf$Wt_quantile <- laketrout_Winf$n_Weight > 200
@@ -387,7 +426,12 @@ for(j in which(laketrout_Winf$n_Age >= 100)) {
 }
 caterpillar(L_quantile_imputed, ylim=0:1)
 
-# save(LA_jags_out, LA_data, L_quantile, L_quantile_imputed, file="LA_data_WinfRept.Rdata")
+
+## saving intermediary results
+save_results
+if(save_results) {
+  save(laketrout_Winf, LA_jags_out, LA_data, L_quantile, L_quantile_imputed, file="LA_data_WinfRept.Rdata")
+}
 
 
 par(mfrow=c(3,3))
@@ -453,7 +497,11 @@ ncores <- min(10, parallel::detectCores()-1)
 }
 
 
-# save(LinfArea_jags_out, LinfArea_data, file="LinfArea_data_WinfRept.Rdata")
+## saving intermediate results
+save_results
+if(save_results) {
+  save(LinfArea_jags_out, LinfArea_data, file="LinfArea_data_WinfRept.Rdata")
+}
 
 # nbyname(LinfArea_jags_out)
 plotRhats(LinfArea_jags_out)
@@ -661,9 +709,13 @@ data.frame(nWeight = laketrout_Winf$n_Weight,
            c3 = c3,
            Method = Winf_method)
 
-# save(Winf_method, Winf_all, Winf_all_all,
-#      n_length_accept, n_age_accept, n_weight_accept,
-#      file="Winf_method_WinfRept.Rdata")
+## saving intermediate results
+save_results
+if(save_results) {
+  save(Winf_method, Winf_all, Winf_all_all,
+     n_length_accept, n_age_accept, n_weight_accept,
+     file="Winf_method_WinfRept.Rdata")
+}
 
 par(mfrow=c(3,4))
 for(i in 1:length(Winf_method)) {
@@ -729,3 +781,10 @@ for(i in 1:4) {
 #### STILL NEED LAT AND AREA
 ### STILL NEED TO SAVE
 # save(laketrout_Winf, file="methods_WinfRept.Rdata")
+## saving intermediate results
+save_results
+if(save_results) {
+  save(laketrout_Winf, file="methods_WinfRept.Rdata")
+  write.csv(laketrout_Winf, file="Asymptotic_Weight_table.csv")
+}
+
