@@ -159,7 +159,7 @@ WL_data <- list(y = log(laketrout$Weight_g/1000),
 niter <- 20*1000
 ncores <- min(10, parallel::detectCores()-1)
 
-{
+{  # this takes 1 min at 20k iterations
   tstart <- Sys.time()
   print(tstart)
   WL_jags_out <- jagsUI::jags(model.file=WL_jags, data=WL_data,
@@ -239,10 +239,10 @@ laketrout_Winf <- data.frame(n_Weight = tapply(laketrout$Weight_g, laketrout$Lak
                              n_Length = tapply(laketrout$ForkLength_mm, laketrout$LakeName, getn),
                              n_Age = tapply(laketrout$Age, laketrout$LakeName, getn))
 
-## need to redo these criteria
-laketrout_Winf$Wt_quantile <- laketrout_Winf$n_Weight > 200
-laketrout_Winf$Ln_Age <- laketrout_Winf$n_Age > 150
-laketrout_Winf$Ln_quantile <- laketrout_Winf$n_Length > 200
+# ## need to redo these criteria
+# laketrout_Winf$Wt_quantile <- laketrout_Winf$n_Weight > 200
+# laketrout_Winf$Ln_Age <- laketrout_Winf$n_Age > 150
+# laketrout_Winf$Ln_quantile <- laketrout_Winf$n_Length > 200
 
 laketrout_Winf
 
@@ -255,7 +255,7 @@ LA_jags <- tempfile()
 cat('model {
   for(i in whichdata) {
     y[i] ~ dnorm(mu[i], tau)
-    ypp[i] ~ dnorm(mu[i], tau)
+    # ypp[i] ~ dnorm(mu[i], tau)
     mu[i] <- Linf[lake[i]]*(1-exp(-k[lake[i]]*(x[i]-t0[lake[i]])))
   }
 
@@ -312,18 +312,18 @@ LA_data$whichdata <- which((laketrout$LakeNum %in% LA_data$whichlakes) &
 niter <- 500*1000
 ncores <- min(10, parallel::detectCores()-1)
 
-{
+{  # this takes 16 min without ypp at 500k iterations
   tstart <- Sys.time()
   print(tstart)
   LA_jags_out <- jagsUI::jags(model.file=LA_jags, data=LA_data,
                               parameters.to.save=c("Linf","t0","k",
                                                    "Linf_prior","t0_prior","k_prior",
-                                                   "sig","sig_prior","ypp",
+                                                   "sig","sig_prior",
                                                    "mu_Linf","sig_Linf",
                                                    "mu_k", "sig_k",
                                                    "mu_t0","sig_t0",
                                                    "yfit",
-                                                   "L_quantile"),#
+                                                   "L_quantile"),#"ypp",
                               n.chains=ncores, parallel=T, n.iter=niter,
                               n.burnin=niter/2, n.thin=niter/2000)
   print(Sys.time() - tstart)
@@ -334,24 +334,25 @@ par(mfrow=c(1,1))
 plotRhats(LA_jags_out)
 traceworstRhat(LA_jags_out, parmfrow=c(3,3))
 
-qq_postpred(LA_jags_out, p="ypp", y=LA_data$y)
-ts_postpred(LA_jags_out$sims.list$ypp[,!is.na(LA_jags_out$q50$ypp)],
-            y=LA_data$y[!is.na(LA_jags_out$q50$ypp)])
-ts_postpred(LA_jags_out$sims.list$ypp[,!is.na(LA_jags_out$q50$ypp)],
-            y=LA_data$y[!is.na(LA_jags_out$q50$ypp)],
-            x=LA_data$x[!is.na(LA_jags_out$q50$ypp)])
-ts_postpred(LA_jags_out$sims.list$ypp[,!is.na(LA_jags_out$q50$ypp)],
-            y=LA_data$y[!is.na(LA_jags_out$q50$ypp)],
-            x=LA_data$y[!is.na(LA_jags_out$q50$ypp)])
+# ## use this when ypp is present
+# qq_postpred(LA_jags_out, p="ypp", y=LA_data$y)
+# ts_postpred(LA_jags_out$sims.list$ypp[,!is.na(LA_jags_out$q50$ypp)],
+#             y=LA_data$y[!is.na(LA_jags_out$q50$ypp)])
+# ts_postpred(LA_jags_out$sims.list$ypp[,!is.na(LA_jags_out$q50$ypp)],
+#             y=LA_data$y[!is.na(LA_jags_out$q50$ypp)],
+#             x=LA_data$x[!is.na(LA_jags_out$q50$ypp)])
+# ts_postpred(LA_jags_out$sims.list$ypp[,!is.na(LA_jags_out$q50$ypp)],
+#             y=LA_data$y[!is.na(LA_jags_out$q50$ypp)],
+#             x=LA_data$y[!is.na(LA_jags_out$q50$ypp)])
 
-
-yppthing <- LA_data$y - LA_jags_out$q50$ypp
-plot(LA_data$x, yppthing, col=rcolors(max(laketrout$LakeNum))[as.numeric(as.factor(LA_data$lake))])
-plot(LA_data$y, yppthing, col=rcolors(max(laketrout$LakeNum))[as.numeric(as.factor(LA_data$lake))])
-plot(yppthing, col=rcolors(max(laketrout$LakeNum))[as.numeric(as.factor(LA_data$lake))], pch=16)
-boxplot(yppthing ~ laketrout$LakeName, las=2)
-
-plot(tapply(yppthing, LA_data$x, sd))  #### this is super useful and I should incorporate it somehow
+# ## use this when ypp is present
+# yppthing <- LA_data$y - LA_jags_out$q50$ypp
+# plot(LA_data$x, yppthing, col=rcolors(max(laketrout$LakeNum))[as.numeric(as.factor(LA_data$lake))])
+# plot(LA_data$y, yppthing, col=rcolors(max(laketrout$LakeNum))[as.numeric(as.factor(LA_data$lake))])
+# plot(yppthing, col=rcolors(max(laketrout$LakeNum))[as.numeric(as.factor(LA_data$lake))], pch=16)
+# boxplot(yppthing ~ laketrout$LakeName, las=2)
+#
+# plot(tapply(yppthing, LA_data$x, sd))  #### this is super useful and I should incorporate it somehow
 
 
 par(mfrow=c(1,2))
@@ -381,7 +382,7 @@ L_quantile_imputed <- matrix(nrow=nrow(L_quantile), ncol=nrow(laketrout_Winf))
 for(j in which(laketrout_Winf$n_Age < 100)) {
   L_quantile_imputed[,j] <- sample(L_quantile[, which(laketrout_Winf$n_Age > 100)], nrow(L_quantile))
 }
-for(j in which(laketrout_Winf$n_Age > 100)) {
+for(j in which(laketrout_Winf$n_Age >= 100)) {
   L_quantile_imputed[,j] <- L_quantile[,j]
 }
 caterpillar(L_quantile_imputed, ylim=0:1)
@@ -439,7 +440,7 @@ niter <- 100000
 # ncores <- 3
 ncores <- min(10, parallel::detectCores()-1)
 
-{
+{  # takes 8 seconds at 100k iterations
   tstart <- Sys.time()
   print(tstart)
   LinfArea_jags_out <- jagsUI::jags(model.file=LinfArea_jags, data=LinfArea_data,
@@ -450,6 +451,10 @@ ncores <- min(10, parallel::detectCores()-1)
                                 n.burnin=niter/2, n.thin=niter/2000)
   print(Sys.time() - tstart)
 }
+
+
+# save(LinfArea_jags_out, LinfArea_data, file="LinfArea_data_WinfRept.Rdata")
+
 # nbyname(LinfArea_jags_out)
 plotRhats(LinfArea_jags_out)
 traceworstRhat(LinfArea_jags_out, parmfrow=c(3,3))
@@ -464,7 +469,7 @@ curve(957*(1-exp(-0.14*(1+log(x)))), lty=3, add=TRUE)
 
 plot(LinfArea_data$x, LinfArea_data$y, log="x",
      xlab="Lake Area (ha)", ylab="L_inf (mm)",
-     main="Trend")
+     main="Post Predictive")
 envelope(LinfArea_jags_out, p="ypp", x=LinfArea_data$x, log="x",
          xlab="Lake Area (ha)", ylab="L_inf (mm)",
          main="Post Predictive", add=TRUE)
@@ -557,9 +562,13 @@ boxplot(apply(Winf_all, 2:3, median, na.rm=TRUE))
 # Winf_all <- Winf_all_all
 Winf_all_all <- Winf_all
 
-c1 <- laketrout_Winf$n_Weight >= 300
-c2 <- laketrout_Winf$n_Age >= 10
-c3 <- laketrout_Winf$n_Length >= 300
+n_weight_accept <- 100
+n_age_accept <- 10
+n_length_accept <- 100
+
+c1 <- laketrout_Winf$n_Weight >= n_weight_accept
+c2 <- laketrout_Winf$n_Age >= n_age_accept
+c3 <- laketrout_Winf$n_Length >= n_length_accept
 
 sum(c1)
 sum(c2 & !c1)
@@ -618,31 +627,105 @@ for(i in which(!(c1 | c2 | c3))) {
 }
 
 
+
+
+## idea: accept the method (1-3) with the minimum variance, among those
+## that meet the minimum sample size.  Method 4 for the rest.
+
 # Winf from quantile
 # need sufficient weights sample + L_quantile_imputed
 Winf_all[, !c1, 1] <- NA
-Winf_all[, c1, 2:4] <- NA
+# Winf_all[, c1, 2:4] <- NA
 
 # Winf from Linf
 # need Linf + WL relationship
 Winf_all[, !c2, 2] <- NA
-Winf_all[, c2, 3:4] <- NA
+# Winf_all[, c2, 3:4] <- NA
 
 # Winf from (Linf from quantile)
 # need sufficient lengths sample + L_quantile_imputed + WL relationship
 Winf_all[, !c3, 3] <- NA
-Winf_all[, c3, 4] <- NA
+# Winf_all[, c3, 4] <- NA
 
-# Winf from (Linf from area)
-# need ypp Linf  + WL relationship
+Winf_method <- apply(Winf_all[,,1:3], 2:3, sd, na.rm=TRUE) %>%    # computing sd for methods 1-3
+  apply(1, which.min) %>%                          # returning which method had min sd
+  sapply(function(x) ifelse(is.null(x), NA, x))    # turning null into 4
+Winf_method[is.na(Winf_method)] <- 4
+
+table(Winf_method)
+data.frame(nWeight = laketrout_Winf$n_Weight,
+           c1 = c1,
+           nAge = laketrout_Winf$n_Age,
+           c2 = c2,
+           nLength = laketrout_Winf$n_Length,
+           c3 = c3,
+           Method = Winf_method)
+
+# save(Winf_method, Winf_all, Winf_all_all,
+#      n_length_accept, n_age_accept, n_weight_accept,
+#      file="Winf_method_WinfRept.Rdata")
+
+par(mfrow=c(3,4))
+for(i in 1:length(Winf_method)) {
+  cols <- rep(2,4)
+  cols[Winf_method[i]] <- 3
+  caterpillar(Winf_all_all[,i,],
+              col = cols,
+              xax = c(laketrout_Winf$n_Weight[i],
+                      laketrout_Winf$n_Age[i],
+                      laketrout_Winf$n_Length[i],
+                      "the ugly one"),
+              main = lakenames[i])
+}
 
 
-caterpillar(Winf_all[,,1], ylim=c(0,15), col=1, x=2*(1:nlake))
-caterpillar(Winf_all[,,2], add=TRUE, col=2, x=2*(1:nlake)+.3)
-caterpillar(Winf_all[,,3], add=TRUE, col=3, x=2*(1:nlake)+.6)
-caterpillar(Winf_all[,,4], add=TRUE, col=4, x=2*(1:nlake)+.9)
+# # Winf from quantile
+# # need sufficient weights sample + L_quantile_imputed
+# Winf_all[, !c1, 1] <- NA
+# Winf_all[, c1, 2:4] <- NA
+#
+# # Winf from Linf
+# # need Linf + WL relationship
+# Winf_all[, !c2, 2] <- NA
+# Winf_all[, c2, 3:4] <- NA
+#
+# # Winf from (Linf from quantile)
+# # need sufficient lengths sample + L_quantile_imputed + WL relationship
+# Winf_all[, !c3, 3] <- NA
+# Winf_all[, c3, 4] <- NA
+#
+# # Winf from (Linf from area)
+# # need ypp Linf  + WL relationship
+#
+#
+# caterpillar(Winf_all[,,1], ylim=c(0,15), col=1, x=2*(1:nlake))
+# caterpillar(Winf_all[,,2], add=TRUE, col=2, x=2*(1:nlake)+.3)
+# caterpillar(Winf_all[,,3], add=TRUE, col=3, x=2*(1:nlake)+.6)
+# caterpillar(Winf_all[,,4], add=TRUE, col=4, x=2*(1:nlake)+.9)
+#
+# boxplot(apply(Winf_all, 2:3, median, na.rm=TRUE))
+# colSums(!is.na(apply(Winf_all, 2:3, median, na.rm=TRUE)))
 
-boxplot(apply(Winf_all, 2:3, median, na.rm=TRUE))
-colSums(!is.na(apply(Winf_all, 2:3, median, na.rm=TRUE)))
+
+Winf_meds <- apply(Winf_all, 2:3, median, na.rm=TRUE)
+Winf_sds <- apply(Winf_all, 2:3, sd, na.rm=TRUE)
+Winf_ci95lo <- apply(Winf_all, 2:3, quantile, p=0.025, na.rm=TRUE)
+Winf_ci95hi <- apply(Winf_all, 2:3, quantile, p=0.975, na.rm=TRUE)
+
+laketrout_Winf$Method <- Winf_method
+
+laketrout_Winf$W_inf <- NA
+laketrout_Winf$SE_W_inf <- NA
+laketrout_Winf$CI95lo_W_inf <- NA
+laketrout_Winf$CI95hi_W_inf <- NA
+for(i in 1:4) {
+  laketrout_Winf$W_inf[Winf_method==i] <- Winf_meds[Winf_method==i, i]
+  laketrout_Winf$SE_W_inf[Winf_method==i] <- Winf_sds[Winf_method==i, i]
+  laketrout_Winf$CI95lo_W_inf[Winf_method==i] <- Winf_ci95lo[Winf_method==i, i]
+  laketrout_Winf$CI95hi_W_inf[Winf_method==i] <- Winf_ci95hi[Winf_method==i, i]
+}
 
 
+#### STILL NEED LAT AND AREA
+### STILL NEED TO SAVE
+# save(laketrout_Winf, file="methods_WinfRept.Rdata")

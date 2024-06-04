@@ -21,9 +21,9 @@ library(jagshelper)
 
 ## Purpose & general outline of methods
 
-Application of the Lester Model to Lake Trout in Alaska lakes may be substantially improved by direct estimation of asymptotic weight $W_{\infty}$ when possible.  In the Lester Model framework, $W_{\infty}$ is estimated by means of a sequence of relationships: first, the relationship observed between lake area and asymptotic length observed in Canada; then, the aggregate relationship between length and weight observed in Canada.
+Application of the Lester Model to lake trout in Alaska lakes may be substantially improved by direct estimation of asymptotic weight $W_{\infty}$ when possible.  In the computational framework presented by Lester, et al., $W_{\infty}$ is estimated by means of a sequence of relationships: first, the relationship observed between lake area and asymptotic length observed in Canada; then, the aggregate relationship between length and weight observed in Canada.
 
-We have data at a finer resolution: in addition to geographical data (lake area and latitude) for 84 lakes with documented lake trout presence, we have sampling data on 30,000+ individual fish (weight, length, age).  The relationships between length and weight and between lake area and asymptotic length can both be estimated for Alaska, and specifically for each of the 84 lakes as appropriate, and using the parameters reported by Lester as priors.  Furthermore, in some cases, asymptotic size may be estimated directly.
+We have data at a finer resolution: for 84 lakes with documented lake trout presence, in addition to geographical data (lake area and latitude) we have sampling data on 30,000+ individual fish (weight, length, age).  Not only can the relationships between length and weight and between lake area and asymptotic length be estimated for Alaska, they can be estimated specifically for each of the 84 lakes as appropriate, and parameters reported by Lester, et. al. may be incorporated as priors.  Furthermore, in some cases, asymptotic size may be estimated directly without intermediary steps.
 
 Depending on data availability for each lake, $W_{\infty}$ was estimated using one of four methods:
 
@@ -43,15 +43,15 @@ Overall, the relationships between weight and length were strong when data were 
 
 ### Weight ~ Length (+ Latitude + Area)
 
-A log-log regression was used to model weight as a function of length, expanding somewhat on the form used by Lester, et al.  Since fish-level data (lengths and weights) were available from several lakes of differing habitat, the length-weight relationships were fit separately for each lake, with slope and intercept parameters modeled hierarchically as shown below.
+A log-log regression was used to model weight as a function of length, expanding somewhat on the form used by Lester, et al.  Since fish-level data (lengths and weights) were available from several lakes of differing habitat, the length-weight relationships were estimated separately for each lake, with slope and intercept parameters modeled hierarchically as shown below.
 
 $log(W_{j[i]}) = \beta_{0[j]} + \beta_{1[j]}log(L_{j[i]}) + \epsilon_i$
 
 which is equivalent to
 
-$W = e^{\beta_{0[j]}} \times L^{\beta_{1[j]}} \times e^{\epsilon_i}$
+$W_{j[i]} = e^{\beta_{0[j]}} \times L^{\beta_{1[j]}} \times e^{\epsilon_i}$
 
-This was extended to allow possible relationships between the lake-level intercept parameters $\beta_{0[j]}$ and slope parameters $\beta_{1[j]}$ and both lake area and latitude, expressed below.
+This was extended to allow possible relationships between the lake-level intercept parameters $\beta_{0[j]}$ and slope parameters $\beta_{1[j]}$ and lake-level variables (lake area and latitude), expressed below.
 
 $\beta_{0[j]} \sim N(\mu_{\beta_0[j]}, \sigma_{\beta_0}) \text{ for } j \in 1...n_{lakes}$
 
@@ -63,15 +63,17 @@ $\mu_{\beta_1[j]} = \gamma_1 +  \tau_{1,Lat}Latitude_j \text{ for } j \in 1...n_
 
 $\epsilon_i \sim N(0,\sigma_{\epsilon})$
 
+Non-informative diffuse Normal priors were used on hyperparameters $\gamma_.$ and $\tau_.$, and appropriately bounded uniform priors were used on all standard deviation parameters $\sigma_.$ on the SD scale.
+
 All possible relationships between intercept and slope parameters ($\beta_{0[j]}$ and $\beta_{1[j]}$, respectively) and lake-level variables lake area and latitude were explored using DIC and leave-one-out cross-validation, with the best performing model being that reported above.
 
-For lakes without paired length and weight data, parameters $\beta_{0[j]}$ and $\beta_{0[j]}$ were still modeled from the posterior predictive distribution using lake area and latitude as available.  In the cases where log lake area and latitude were not available, these were imputed for each MCMC sample using draws from Normal distributions with means and standard deviations corresponding to those of the log lake area and latitude data.  I'M NOT SURE IF THESE WERE EVEN USED.
+For lakes without paired length and weight data, parameters $\beta_{0[j]}$ and $\beta_{0[j]}$ were still modeled from the posterior predictive distribution using lake area and latitude as available.  In the cases where lake area and latitude were not available, these were imputed for each MCMC sample using draws from Normal distributions with means and standard deviations corresponding to those of the log lake area and latitude data.  I'M NOT SURE IF THESE WERE EVEN USED.
 
-Note: Lengths were recentered by subtracting the mean measurement, in order to eliminate collinearity between the intercept and slope parameters and thus aid model convergence.  Estimates of the intercept parameters appear quite different from that reported by Lester; these were transformed later for the sake of interpretability and consistency.
+Note: Lengths were recentered by subtracting the mean measurement, in order to eliminate collinearity between the intercept and slope parameters and thus aid model convergence.  Estimates of the intercept parameters appear quite different from that reported by Lester, et al.; these were transformed later for the sake of interpretability and consistency.  Latitude and log area were also recentered by subtracting the respective means.
 
 \pagebreak
 
-Intercept and slope parameter estimates are shown below for all lakes with associated weight and length measurements, with log area and latitude of each lake depicted on the X-axis.  Light and heavy vertical bars represent 95% and 50% credible intervals, respectively.  Overlayed trend envelopes represent 95% and 50% credible intervals for the relationships between log area and latitude, as appropriate.
+Intercept and slope parameter estimates are shown below for all lakes with associated weight and length measurements, with log area and latitude of each lake depicted on the X-axis.  Light and heavy vertical bars represent 95% and 50% credible intervals, respectively.  Overlayed trend envelopes represent 95% and 50% credible intervals for the relationships between log area or latitude and regression parameters, as appropriate.
 
 ```{r, fig.height=12}
 load(file="WL_data_WinfRept.Rdata")
@@ -111,7 +113,7 @@ Intercept and slope parameter estimates for all lakes are plotted below, differe
 
 Two plots are presented for the intercept parameter: the first being the raw parameters from the model (using recentered length data), and the second being the backtransformed parameters to the original scale.
 
-Dotted horizontal lines represent values reported by Lester, et al.
+Dotted horizontal lines represent values reported by Lester, et al.  Note that parameter estimates are similar to those reported by Lester, et al., but in many cases are substantially different from one another, suggesting varying length-weight relationships between lakes.
 
 ```{r, fig.height=12, fig.width=10}
 par(mfrow=c(3,1))
@@ -138,7 +140,7 @@ legend("topright", legend=c("Length & Wt", "Lat & Area only", "no data"),
 abline(h=3.2, lty=3)
 ```
 
-Finally, the relationships between length and weight are shown for each lake, overlayed with available data.  The relationship reported by Lester, et al. is overlayed as a dashed line, and fit envelope color represents the availability of data, using the same color convention as the previous set of plots (green = all data, blue = area and latitude only, red = no data).
+Finally, the relationships between length and weight are shown for each lake, overlayed with available data, and plotted on the log-log scale.  The relationship reported by Lester, et al. is overlayed as a dashed line, and fit envelope color represents the availability of data, using the same color convention as the previous set of plots (green = all data, blue = area and latitude only, red = no data).
 
 ```{r, fig.width=15, fig.height=20}
 # plot regression bands for each lake, overlay data and lester line
@@ -177,7 +179,7 @@ $k[j] \sim logN(\mu_{k} , \sigma_{k})$
 
 $t_0[j] \sim N(\mu_{t_0} , \sigma_{t_0})$
 
-In this case, the parameter of most inferential interest was asymptotic length $L_{\infty}$.
+In this case, the parameter of most inferential interest was asymptotic length $L_{\infty}$.  Hyperparameter $\mu_{L_{\infty}}$ was given a weakly informative prior of $N(700, 100)$, and $\mu_{t_0}$ was mildly constrained to $N(0,1)$.  All standard deviation $\sigma_.$ parameters were modeled with uniform priors on the SD scale, constrained as appropriate.
 
 Estimates for all parameters are plotted below for each lake.  Note that parameters were only estimated for lakes that had paired length and age data.
 
@@ -208,7 +210,7 @@ for(ilake in LA_data$whichlakes) {
 ```
 
 
-For lakes with little or no paired age and length data but sufficient length data, a more precise estimate of $L_{\infty}$ may be gained from a quantile value of the associated length sample.  To estimate the appropriate quantile value (and with error), posterior distributions of the sample quantile value associated with $L_{\infty}$ were estimated for lakes with sufficient paired age and length data (n > 100).  This was calculated for each MCMC sample as the proportion of the length sample less than the value of the MCMC sample of $L_{\infty}$.  MCMC samples were then drawn for the remaining lakes by randomly sampling from the MCMC samples of quantiles, pooled among all lakes with sufficient paired age-length data: computationally, this was analogous to two-stage sampling with all lakes with sufficient data weighted equally. 
+For lakes with little or no paired age and length data but sufficient length data, a more precise estimate of $L_{\infty}$ may be gained from a quantile value of the associated length sample.  To estimate the appropriate quantile value (and with error), posterior distributions of the sample quantile value associated with $L_{\infty}$ were estimated for lakes with sufficient paired age and length data (four lakes with n > 100).  This was calculated for each MCMC sample as the proportion of the length sample less than the value of that MCMC sample of $L_{\infty}$.  MCMC samples were then drawn for the remaining lakes by randomly sampling from the MCMC samples of quantiles, pooled among all lakes with sufficient paired age-length data.  This can be thought of as was analogous to two-stage sampling, with all lakes with sufficient data weighted equally. 
 
 Posterior distributions of quantiles associated with $L_{\infty}$ are plotted below, before and after imputation by sampling from lakes with sufficient data.
 
@@ -218,19 +220,130 @@ laketrout_Winf <- data.frame(n_Weight = tapply(laketrout$Weight_g, laketrout$Lak
                              n_Length = tapply(laketrout$ForkLength_mm, laketrout$LakeName, getn),
                              n_Age = tapply(laketrout$Age, laketrout$LakeName, getn))
 
-## need to redo these criteria
-laketrout_Winf$Wt_quantile <- laketrout_Winf$n_Weight > 200
-laketrout_Winf$Ln_Age <- laketrout_Winf$n_Age > 150
-laketrout_Winf$Ln_quantile <- laketrout_Winf$n_Length > 200
+# ## need to redo these criteria
+# laketrout_Winf$Wt_quantile <- laketrout_Winf$n_Weight > 200
+# laketrout_Winf$Ln_Age <- laketrout_Winf$n_Age > 150
+# laketrout_Winf$Ln_quantile <- laketrout_Winf$n_Length > 200
 
 par(mfrow=c(1,1))
-cols <- 4-3*(laketrout_Winf$n_Age > 100)
+cols <- ifelse(laketrout_Winf$n_Age >= 100, 3, 2)
 caterpillar(L_quantile, col=cols, ylim=0:1, xlab="Lake", ylab="Linf quantile")
+legend("bottomright", legend=c("n >= 100", "n < 100"), lwd=3, col=c(3, 2))
+
+cols <- ifelse(laketrout_Winf$n_Age >= 100, 3, 4)
 caterpillar(L_quantile_imputed, col=cols, ylim=0:1, xlab="Lake", ylab="Linf quantile")
+legend("bottomright", legend=c("n >= 100", "imputed"), lwd=3, col=c(3, 4))
 ```
 
-FIGURE OUT WHY THERE ARE QUANTILES FOR ALL 84 LAKES, THAT MIGHT NOT MAKE SENSE
-
 ### L_inf ~ Area
+
+A relationship was noted between log area and asymptotic length by Lester et al. and incorporated in the computational framework they present.  The same relationship was noted in our dataset, but was not very strong.  Therefore slightly informative priors were taken from values reported by Lester et al.
+
+The model that was used is expressed below, with additive error:
+
+$L_{\infty}[j] = \beta_0 (1 - e^{-\beta_1 * (1 + log(A[j]))}) + \epsilon_j$
+
+```{r}
+load(file="LinfArea_data_WinfRept.Rdata")
+```
+
+
+Parameter $\beta_0$ was given a Normal prior with mean equal to the value reported by Lester et al. (957) with a CV (coefficient of variation, equal to SD/mean) of `r 100*LinfArea_data$cv_b0_lester`%.  Parameter $\beta_1$ was similarly given a Normal prior with mean equal to the value reported by Lester et al. (0.14) but with a CV of `r 100*LinfArea_data$cv_b1_lester`%.
+
+It should be noted that asymptotic length $L_{\infty}[j]$ for each lake $j$ was not known.  For the purpose of a data input for this model, quantile values were taken of the length samples associated with each lake, with quantile equal to the posterior median quantile value calculated in the previous section. 
+
+The respective densities of the priors and posteriors of both parameters are plotted below.  Below this, posterior envelopes are plotted for the trend and posterior predictive, respectively, with the lake area and estimated associated asymptotic lengths overlayed.  The curve reported by Lester, et al. is expressed as a dotted line.
+
+```{r, fig.height=8}
+par(mfrow=c(2,2))
+comparepriors(LinfArea_jags_out, col=c(2,4))
+plot(LinfArea_data$x, LinfArea_data$y, log="x",
+     xlab="Lake Area (ha)", ylab="L_inf (mm)",
+     main="Trend")
+envelope(LinfArea_jags_out, p="mu", x=LinfArea_data$x, add=TRUE)
+curve(957*(1-exp(-0.14*(1+log(x)))), lty=3, add=TRUE)
+
+plot(LinfArea_data$x, LinfArea_data$y, log="x",
+     xlab="Lake Area (ha)", ylab="L_inf (mm)",
+     main="Post Predictive")
+envelope(LinfArea_jags_out, p="ypp", x=LinfArea_data$x, log="x",
+         xlab="Lake Area (ha)", ylab="L_inf (mm)",
+         main="Post Predictive", add=TRUE)
+# points(LinfArea_data$x, LinfArea_data$y)
+curve(957*(1-exp(-0.14*(1+log(x)))), lty=3, add=TRUE)
+```
+
+
 ## Multimodel synthesis & method selection
+
+Asymptotic weight $W_{\infty}$ was estimated for all lakes using all four methods described above, depending on data availability.  Following this, a method was selected for each lake depending on relative sample sizes and estimated variance.
+
+### Estimation of $W_{\infty}$ 
+
+#### 1. $W_{\infty}$ from a weight sample quantile value
+
+For each lake, the vector of MCMC samples corresponding to the quantile value associated with asymptotic size for that lake was applied to the (data) sample of weights from that lake.  
+
+#### 2. $L_{\infty}$ from a length ~ age relationship, then $W_{\infty}$ from a weight ~ length relationship
+
+For each lake in which $L_{\infty}$ could be estimated from a length ~ age relationship, the vectors of MCMC samples of parameter estimates from the weight ~ length relationship were applied to the vector of MCMC samples of $L_{\infty}$.  The intent of this was to "convert" asymptotic length to asymptotic weight, while incorporating the uncertainty in estimating asymptotic length and in estimating the weight ~ length relationship. 
+
+#### 3. $L_{\infty}$ from a length sample quantile value, then $W_{\infty}$ from a weight ~ length relationship
+
+For each lake, the vector of MCMC samples corresponding to the quantile value associated with asymptotic size for that lake was applied to the (data) sample of lengths from that lake.  The vectors of MCMC samples of parameter estimates from the weight ~ length relationship were then applied to this vector, again to "convert" asymptotic length to asymptotic weight while incorporating the uncertainty in estimating asymptotic length and in estimating the weight ~ length relationship.
+
+#### 4. $L_{\infty}$ from a $L_{\infty}$ ~ lake area relationship, then $W_{\infty}$ from a weight-length relationship
+
+Finally, for each lake, the vectors of MCMC samples of parameter estimates from the weight ~ length relationship were applied to the vector of MCMC samples of posterior-predicted $L_{\infty}$ from the $L_{\infty}$ ~ lake area relationship.
+
+### Method selection
+
+Selection among available methods was motivated by a few guiding principles and assumptions: 
+
+* It would be inappropriate to consider a method that does not meet some associated sample size threshold.  
+
+* A relatively large sample size is required to accurately estimate a population quantile (methods 1 and 3), but direct estimation of asymptotic size (method 2) should be possible using a smaller sample size, particularly since the model incorporates information hierarchically. 
+
+* Methods with fewer steps should be preferred over methods with a greater number of steps: heuristically, it makes sense that methods 1-4 are essentially ranked in order of descending preference.
+
+* Since all methods presented incorporate the uncertainty in estimation due to each step, we can expect that methods incorporating fewer steps will (and should) have a smaller associated variance.
+
+* However, since many lakes have much more length samples than weight or age, it is possible that methods ranked as less preferable might result in better estimates.
+
+* Method 4 should be avoided unless there is no other viable alternative!
+
+```{r}
+load(file="Winf_method_WinfRept.Rdata")
+```
+
+
+From here, model selection proceeded according to a few discrete decision rules.  The minimum sample sizes required to accept methods 1, 2, and 3 were defined as `r n_weight_accept` weights, `r n_age_accept` ages, and `r n_length_accept` lengths, respectively.  Of the methods with minimum sample sizes being met, the method with the minimum variance in estimating $W_{\infty}$ was selected.  If none of methods 1-3 were selected, method 4 was accepted.  
+
+Estimated $W_{\infty}$ from all four methods is plotted below for all lakes, with the selected method highlighted in green and associated sample sizes for the three methods annotated along the X-axis.
+
+```{r, fig.width=12, fig.height=18}
+par(mfrow=c(6,5))
+par(mar=c(4,4,4,1))
+for(i in 1:length(Winf_method)) {
+  cols <- rep(2,4)
+  cols[Winf_method[i]] <- 3
+  caterpillar(Winf_all_all[,i,],
+              col = cols,
+              xax = c(paste0("n=",laketrout_Winf$n_Weight[i]),
+                      paste0("n=",laketrout_Winf$n_Age[i]),
+                      paste0("n=",laketrout_Winf$n_Length[i]),
+                      ""),
+              main = lakenames[i],
+              ylab="Est W_inf", xlab="Method")
+}
+```
+
+AND A BIG TABLE??
+
+```{r}
+load(file="methods_WinfRept.Rdata")
+knitr::kable(laketrout_Winf, digits=2)
+```
+
+
 ## Data filtering
