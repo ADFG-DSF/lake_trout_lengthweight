@@ -30,12 +30,12 @@ morphometry <- read_csv("flat_data/lake_morphometry2.csv", skip=2)
 #   left_join(morphometry)
 laketrout_all <- read_csv("flat_data/length_weight2.csv", skip=2) %>%
   left_join(morphometry)
-nrow(laketrout_all)
+nrow(laketrout_all)  # 35516
 sapply(laketrout_all, function(x) sum(is.na(x)))
 
-summary(laketrout_all$Year)
-length(unique(laketrout_all$ProjectTitle))
-length(unique(laketrout_all$LakeName))
+summary(laketrout_all$Year)  # 1960-2024
+length(unique(laketrout_all$ProjectTitle))  # 148
+length(unique(laketrout_all$LakeName))  # 84
 
 
 ## Filtering informed by Weight ~ Length relationship
@@ -43,11 +43,17 @@ length(unique(laketrout_all$LakeName))
 ## - outlying residuals from a log(Weight) ~ log(Length) regression
 
 laketrout1 <- laketrout_all %>%
+  mutate(Weight_g = ifelse(Weight_g < 50, Weight_g*1000, Weight_g)) %>%
+  filter(is.na(Weight_g) | Weight_g < 100000) %>%
+  # filter(is.na(ForkLength_mm) | ForkLength_mm > 150) %>%
+  # filter(is.na(Age) | Age < 50) %>%
   filter(!ProjectTitle %in% c("Mark-Recapture Event 1 - (September - 2002)",
                               "Mark-Recapture Event 1 - (September - 2003)",
                               "Mark-Recapture Event 1 - (September - 2004)",
                               "Mark-Recapture Event 2 - (May - 2003)"))
   # filter(is.na(ForkLength_mm) | ForkLength_mm )
+nrow(laketrout1) # 32539
+
 lm1 <- with(laketrout1, lm(log(Weight_g) ~ log(ForkLength_mm)))
 resids1 <- log(laketrout1$Weight_g) - predict(lm1, newdata=laketrout1)
 laketrout2 <- filter(laketrout1, is.na(resids1) | abs(resids1) < 4*sd(resids1, na.rm=TRUE))
@@ -56,7 +62,7 @@ laketrout <- laketrout2 %>%
   filter(is.na(Age) | Age < 50) %>%
   mutate(LakeNum = as.numeric(as.factor(LakeName)))
 
-nrow(laketrout)
+nrow(laketrout) # 32516
 
 ### plotting weight ~ length
 laketrout_all %>%
@@ -192,7 +198,7 @@ WL_data <- list(y = log(laketrout$Weight_g/1000),
 niter <- 20*1000
 ncores <- min(10, parallel::detectCores()-1)
 
-{  # this takes 1 min at 20k iterations
+{  # this takes 1 min at 20k iterations  (2 min on laptop)
   tstart <- Sys.time()
   print(tstart)
   WL_jags_out <- jagsUI::jags(model.file=WL_jags, data=WL_data,
@@ -351,7 +357,7 @@ LA_data$whichdata <- which((laketrout$LakeNum %in% LA_data$whichlakes) &
 niter <- 500*1000
 ncores <- min(10, parallel::detectCores()-1)
 
-{  # this takes 16 min without ypp at 500k iterations
+{  # this takes 16 min without ypp at 500k iterations  (25 min on laptop)
   tstart <- Sys.time()
   print(tstart)
   LA_jags_out <- jagsUI::jags(model.file=LA_jags, data=LA_data,
@@ -404,27 +410,34 @@ caterpillar(LA_jags_out, p="t0_prior")
 
 ## calculate a vector of Linf quantile
 L_quantile <- matrix(nrow=nrow(LA_jags_out$sims.list$Linf),
-                     ncol=ncol(LA_jags_out$sims.list$Linf))
+                     ncol=length(unique(laketrout$LakeNum)))
 # for(i in 1:nrow(L_quantile)) {
 #   for(j in 1:ncol(L_quantile)) {   # might be able to make this more efficient
 #     L_quantile[i,j] <- mean(LA_data$y[LA_data$lake==j] < LA_jags_out$sims.list$Linf[i,j], na.rm=TRUE)
 #   }
 # }
-for(j in 1:ncol(L_quantile)) {
+for(j in LA_data$whichlakes) {
   L_quantile[,j] <- colMeans(outer(LA_data$y[LA_data$lake==j], LA_jags_out$sims.list$Linf[,j], "<"), na.rm=TRUE)
   # str(LA_jags_out$sims.list$Linf[,j])
 }
-caterpillar(L_quantile, col=3-(laketrout_Winf$n_Age > 100))
+
+sufficient_data <- laketrout_Winf$n_Age >= 10 & laketrout_Winf$n_Length >= 100
+
+caterpillar(L_quantile, col=3-sufficient_data)
 
 ## imputing for data-poor lakes
 L_quantile_imputed <- matrix(nrow=nrow(L_quantile), ncol=nrow(laketrout_Winf))
-for(j in which(laketrout_Winf$n_Age < 100)) {
+for(j in which(!sufficient_data)) {
   L_quantile_imputed[,j] <- sample(L_quantile[, which(laketrout_Winf$n_Age > 100)], nrow(L_quantile))
 }
-for(j in which(laketrout_Winf$n_Age >= 100)) {
+for(j in which(sufficient_data)) {
   L_quantile_imputed[,j] <- L_quantile[,j]
 }
 caterpillar(L_quantile_imputed, ylim=0:1)
+
+
+# caterpillar(L_quantile, x=log(laketrout_Winf$n_Age+1))
+# caterpillar(L_quantile, x=log(laketrout_Winf$n_Length))
 
 
 ## saving intermediary results
