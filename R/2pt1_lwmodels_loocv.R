@@ -1,6 +1,12 @@
 ## loading all data
 source("R/1_laketrout_lwdata.R")
 
+
+# JAGS controls
+niter <- 10*1000 #20*1000                        # 2k in about 20 min
+ncores <- min(10, parallel::detectCores()-1)
+
+
 ## load full model runs for comparison
 load(file="alloutputs.Rdata")
 theDICs <- sapply(alloutputs, function(x) x$DIC)
@@ -115,9 +121,7 @@ b0_interp_arr <- b0_arr <- b1_arr <- mu_b0_arr <- mu_b1_arr <- array(dim=c(nrow(
                                                           length(lakenames_all),
                                                           length(bestmodels)))
 
-# JAGS controls
-niter <- 50*1000 #20*1000
-ncores <- min(10, parallel::detectCores()-1)  #
+
 par(mfrow=c(4,4))
 
 for(ilake in seq_along(lakenames_all)) {
@@ -190,7 +194,7 @@ for(imodel in seq_along(bestmodels)) {
 }
 
 ########################################################
-# save(b0_arr, b0_interp_arr, b1_arr, mu_b0_arr, mu_b1_arr, file="lw_loocv.Rdata")
+save(b0_arr, b0_interp_arr, b1_arr, mu_b0_arr, mu_b1_arr, file="lw_loocv.Rdata")
 
 par(mfrow=c(1,1))
 comparecat(list(as.data.frame(b0_arr[,,1]),

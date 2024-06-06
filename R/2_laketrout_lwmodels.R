@@ -20,12 +20,131 @@
 
 
 
-## loading all data
+# ## loading all data
 source("R/1_laketrout_lwdata.R")
 
 
+
+# JAGS controls
+niter <- 50*1000#100*1000 #500*1000                # 50k in about an hour
+ncores <- min(10, parallel::detectCores()-1)
+
+
+
+
+# ## loading all data - consistent with 4_Winf methods!!
+#
+# # morphometry <- read_csv("flat_data/lake_morphometry.csv", skip=2)
+# morphometry <- read_csv("flat_data/lake_morphometry2.csv", skip=2)
+#
+# # # is lake name unique?  YES
+# # sum(!is.na(morphometry$LakeName))
+# # length(unique(morphometry$LakeName))
+#
+# # laketrout_all <- read_csv("flat_data/length_weight.csv", skip=2) %>%
+# #   left_join(morphometry)
+# laketrout_all <- read_csv("flat_data/length_weight2.csv", skip=2) %>%
+#   left_join(morphometry)
+# nrow(laketrout_all)  # 35516
+# sapply(laketrout_all, function(x) sum(is.na(x)))
+#
+# summary(laketrout_all$Year)  # 1960-2024
+# length(unique(laketrout_all$ProjectTitle))  # 148
+# length(unique(laketrout_all$LakeName))  # 84
+#
+#
+# ## Filtering informed by Weight ~ Length relationship
+# ## - one problematic project
+# ## - outlying residuals from a log(Weight) ~ log(Length) regression
+#
+# laketrout1 <- laketrout_all %>%
+#   mutate(Weight_g = ifelse(Weight_g < 50, Weight_g*1000, Weight_g)) %>%
+#   filter(is.na(Weight_g) | Weight_g < 100000) %>%
+#   # filter(is.na(ForkLength_mm) | ForkLength_mm > 150) %>%
+#   # filter(is.na(Age) | Age < 50) %>%
+#   filter(!ProjectTitle %in% c("Mark-Recapture Event 1 - (September - 2002)",
+#                               "Mark-Recapture Event 1 - (September - 2003)",
+#                               "Mark-Recapture Event 1 - (September - 2004)",
+#                               "Mark-Recapture Event 2 - (May - 2003)"))
+# # filter(is.na(ForkLength_mm) | ForkLength_mm )
+# nrow(laketrout1) # 32539
+#
+# lm1 <- with(laketrout1, lm(log(Weight_g) ~ log(ForkLength_mm)))
+# resids1 <- log(laketrout1$Weight_g) - predict(lm1, newdata=laketrout1)
+# laketrout2 <- filter(laketrout1, is.na(resids1) | abs(resids1) < 4*sd(resids1, na.rm=TRUE))
+#
+# laketrout <- laketrout2 %>%
+#   filter(is.na(Age) | Age < 50) %>%
+#   mutate(LakeNum = as.numeric(as.factor(LakeName)))
+#
+# nrow(laketrout) # 32516
+#
+# ### plotting weight ~ length
+# laketrout_all %>%
+#   ggplot(aes(x=ForkLength_mm, y=Weight_g, color=LakeName)) +
+#   # ggplot(aes(x=ForkLength_mm, y=Weight_g)) +
+#   geom_point() +
+#   scale_y_log10() +
+#   scale_x_log10() +
+#   theme_bw() +
+#   theme(legend.position = 'none')
+#
+# laketrout %>%
+#   ggplot(aes(x=ForkLength_mm, y=Weight_g, color=LakeName)) +
+#   # ggplot(aes(x=ForkLength_mm, y=Weight_g)) +
+#   geom_point() +
+#   scale_y_log10() +
+#   scale_x_log10(limits=c(100,1200)) +
+#   theme_bw() +
+#   theme(legend.position = 'none')
+#
+#
+#
+# ## Filtering informed by Length ~ Age relationship
+#
+# ## plotting length ~ age
+# laketrout_all %>%
+#   # ggplot(aes(y=ForkLength_mm, x=Age, color=LakeName)) +
+#   ggplot(aes(y=ForkLength_mm, x=Age)) +
+#   geom_point() +
+#   theme_bw()
+#
+# laketrout %>%
+#   # ggplot(aes(y=ForkLength_mm, x=Age, color=LakeName)) +
+#   ggplot(aes(y=ForkLength_mm, x=Age)) +
+#   geom_point() +
+#   theme_bw()
+#
+# # plot(laketrout_all$ForkLength_mm)
+# # plot(laketrout$ForkLength_mm)
+# # plot(laketrout_all$Weight_g)
+# # plot(laketrout$Weight_g)
+#
+# sapply(laketrout, function(x) sum(is.na(x)))
+# table(is.na(laketrout$Latitude_WGS84),
+#       is.na(laketrout$SurfaceArea_h),
+#       is.na(laketrout$Weight_g))
+#
+# nrow(laketrout)
+#
+# sum(!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Weight_g))
+# length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Weight_g)]))
+#
+# sum(!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Age))
+# length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Age)]))
+#
+# length(unique(laketrout$LakeNum[!is.na(laketrout$Latitude_WGS84) & !is.na(laketrout$SurfaceArea_h)]))
+#
+# sapply(laketrout, function(x) sum(!is.na(x)))
+#
+#
+#
+# ## finally making laketrout_lw
+# laketrout_lw <- filter(laketrout, )
+
+
 # bundle data to pass into JAGS
-laketrout_lw <- filter(laketrout_lw, !is.na(SurfaceArea_h))
+# laketrout_lw <- filter(laketrout_lw, !is.na(SurfaceArea_h))
 
 logarea <- log(with(laketrout_lw, tapply(SurfaceArea_h, LakeName, median, na.rm=T)))
 lat <- with(laketrout_lw, tapply(Latitude_WGS84, LakeName, median))
@@ -278,9 +397,7 @@ cat('model {
 ## - b0_interp, b0, b1
 
 
-# JAGS controls
-niter <- 100*1000 #500*1000
-ncores <- min(10, parallel::detectCores()-1)
+
 par(mfrow=c(4,4))
 
 
@@ -311,10 +428,19 @@ for(imodel in 1:nrow(controlmat)) {
   }
 }
 
+theDICs <- sapply(alloutputs, function(x) x$DIC)
+bestmodels <- which(theDICs %in% tapply(theDICs, rowSums(controlmat), min))
+bestmodels
+
+plot(bestmodels,theDICs[bestmodels])
+
 ## saving output for big model runs
 
 ########################################################
-# save(alloutputs, file="alloutputs.Rdata")
+save(alloutputs, file="alloutputs.Rdata")
+
+
+
 
 ## post pred is currently commented out - I was satisfied with it
 # for(i in 1:length(alloutputs)) {
