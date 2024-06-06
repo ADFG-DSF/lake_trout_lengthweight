@@ -120,7 +120,7 @@ length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketro
 
 length(unique(laketrout$LakeNum[!is.na(laketrout$Latitude_WGS84) & !is.na(laketrout$SurfaceArea_h)]))
 
-
+sapply(laketrout, function(x) sum(!is.na(x)))
 
 ## run W~L model, using post predictive when no data exists
 WL_jags <- tempfile()

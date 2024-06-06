@@ -116,8 +116,8 @@ b0_interp_arr <- b0_arr <- b1_arr <- mu_b0_arr <- mu_b1_arr <- array(dim=c(nrow(
                                                           length(bestmodels)))
 
 # JAGS controls
-niter <- 10*1000#20*1000
-ncores <- min(10, parallel::detectCores()-1)
+niter <- 50*1000 #20*1000
+ncores <- min(10, parallel::detectCores()-1)  #
 par(mfrow=c(4,4))
 
 for(ilake in seq_along(lakenames_all)) {
@@ -169,6 +169,13 @@ for(imodel in seq_along(bestmodels)) {
                                                      "new_mu_b0","new_mu_b1"),#,"ypp"
                                 n.chains=ncores, parallel=T, n.iter=niter,
                                 n.burnin=niter/2, n.thin=niter/2000)
+
+    if(imodel==1 & ilake==1) {  # this is a hack but it's pretty cool
+      b0_interp_arr <- b0_arr <- b1_arr <- mu_b0_arr <- mu_b1_arr <- array(dim=c(nrow(lt_jags_out$sims.list$b0),
+                                                                                 length(lakenames_all),
+                                                                                 length(bestmodels)))
+    }
+
     print(Sys.time() - tstart)
     plotRhats(lt_jags_out)
     # alloutputs[[imodel]] <- lt_jags_out
