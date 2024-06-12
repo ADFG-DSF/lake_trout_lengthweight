@@ -509,6 +509,17 @@ model_df <- data.frame(Model=modeldescription, delta_DIC = theDIC - min(theDIC),
 # rownames(model_df) <- modeldescription
 highlight <- rep("", nrow(model_df))
 bestmodels <- which(model_df$delta_DIC %in% tapply(model_df$delta_DIC, model_df$Addl_Param, min))
+
+
+
+###############################################################
+bestmodels <- which(theDIC <= min(theDIC)+2)
+bestmodels
+## still need to do something equivalent to the .Rmd
+###############################################################
+
+
+
 highlight[bestmodels] <- " *** "
 # model_df$highlight <- highlight
 
@@ -628,16 +639,16 @@ b0_interp_truths <- sapply(alloutputs, function(x) x$q50$b0_interp)
 b1_truths <- sapply(alloutputs, function(x) x$q50$b1)
 
 # all models, all truths
-b0_rmse <- b0_interp_rmse <- b1_rmse <- matrix(nrow=ncol(b0_truths), ncol=5)
+b0_rmse <- b0_interp_rmse <- b1_rmse <- matrix(nrow=ncol(b0_truths), ncol=length(bestmodels))
 for(itruth in 1:ncol(b0_truths)) {
-  for(imodel in 1:5) {
+  for(imodel in seq_along(bestmodels)) {
     b0_rmse[itruth, imodel] <- sqrt(mean((b0_truths[,itruth]-b0_medians[,imodel])^2))
     # b0_interp_rmse[itruth, imodel] <- sqrt(mean((b0_interp_truths[,itruth]-b0_interp_medians[,imodel])^2))
     b1_rmse[itruth, imodel] <- sqrt(mean((b1_truths[,itruth]-b1_medians[,imodel])^2))
   }
 }
 thecolors <- rcolors(22)
-thecolors[bestmodels] <- 1:5
+thecolors[bestmodels] <- seq_along(bestmodels)
 
 par(mfrow=c(1,2))
 boxplot(b0_rmse, names=bestmodels, xlab="Model used for prediction", main="b0 prediction RMSE")
@@ -679,7 +690,7 @@ par(mfrow=c(1,2))
 boxplot(t(pred_rmse), names=bestmodels, xlab="Model used for prediction", main="prediction RMSE for all lakes")
 apply(pred_rmse, 1, mean) %>% lines(lwd=4)
 apply(pred_rmse, 1, mean) %>% plot(main="Mean prediction RMSE error across lakes", type="b", xaxt="n", xlab="Model used for prediction")
-axis(side=1, at=1:5, labels=bestmodels)
+axis(side=1, at=seq_along(bestmodels), labels=bestmodels)
 ```
 
 The results from cross-validation show relatively strong agreement between models, which could perhaps be interpreted as limited benefit from selecting a prediction model that includes lake area and/or latitude.  However, Model 7 (intercept depends on log area, slope depends on latitude) might be considered a "sweet spot" in predictive power: beyond this number of parameters, the predictive power drops due to overfitting.

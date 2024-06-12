@@ -26,9 +26,11 @@ source("R/1_laketrout_lwdata.R")
 
 
 # JAGS controls
-niter <- 50*1000#100*1000 #500*1000                # 50k in about an hour
-ncores <- min(10, parallel::detectCores()-1)
+niter <- 1000*1000#100*1000 #500*1000        # 50k in about an hour, 100k in 2.2 on laptop
+                                             # 1000k in 17 hrs
+ncores <- min(6, parallel::detectCores()-1)
 
+plotstuff <- FALSE
 
 
 
@@ -398,7 +400,7 @@ cat('model {
 
 
 
-par(mfrow=c(4,4))
+if(plotstuff) par(mfrow=c(4,4))
 
 
 ### defining a list to put all model outputs in
@@ -423,7 +425,7 @@ for(imodel in 1:nrow(controlmat)) {
                                 n.chains=ncores, parallel=T, n.iter=niter,
                                 n.burnin=niter/2, n.thin=niter/2000)
     print(Sys.time() - tstart)
-    plotRhats(lt_jags_out)
+    if(plotstuff) plotRhats(lt_jags_out)
     alloutputs[[imodel]] <- lt_jags_out
   }
 }

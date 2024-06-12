@@ -3,8 +3,12 @@ source("R/1_laketrout_lwdata.R")
 
 
 # JAGS controls
-niter <- 10*1000 #20*1000                        # 2k in about 20 min
-ncores <- min(10, parallel::detectCores()-1)
+niter <- 100*1000 #20*1000        # 2k in about 20 min, 20k in 3.5 on laptop
+                                  # 100k in 17 hrs
+ncores <- min(8, parallel::detectCores()-1)
+
+plotstuff <- FALSE
+
 
 
 ## load full model runs for comparison
@@ -30,6 +34,12 @@ lakenames_all <- names(lat_all)
 ## actually this is way easier!
 controlmat <- expand.grid(0:1,0:1,0:1,0:1)
 bestmodels <- which(theDICs %in% tapply(theDICs, rowSums(controlmat), min))
+
+###############################################################
+bestmodels <- which(theDICs <= min(theDICs)+2)
+bestmodels
+## still need to do something equivalent to the .Rmd
+###############################################################
 
 
 ## create a vector describing the model from the control matrix of ones and zeroes
@@ -122,7 +132,7 @@ b0_interp_arr <- b0_arr <- b1_arr <- mu_b0_arr <- mu_b1_arr <- array(dim=c(nrow(
                                                           length(bestmodels)))
 
 
-par(mfrow=c(4,4))
+if(plotstuff) par(mfrow=c(4,4))
 
 for(ilake in seq_along(lakenames_all)) {
 
@@ -181,7 +191,7 @@ for(imodel in seq_along(bestmodels)) {
     }
 
     print(Sys.time() - tstart)
-    plotRhats(lt_jags_out)
+    if(plotstuff) plotRhats(lt_jags_out)
     # alloutputs[[imodel]] <- lt_jags_out
 
     b0_arr[,ilake,imodel] <- lt_jags_out$sims.list$new_b0
