@@ -51,7 +51,7 @@ which is equivalent to
 
 $W_{j[i]} = e^{\beta_{0[j]}} \times L^{\beta_{1[j]}} \times e^{\epsilon_i}$
 
-This was extended to allow possible relationships between the lake-level intercept parameters $\beta_{0[j]}$ and slope parameters $\beta_{1[j]}$ and lake-level variables (lake area and latitude), expressed below.
+This was extended to allow possible relationships between the lake-level intercept parameters $\beta_{0[j]}$ and slope parameters $\beta_{1[j]}$ and lake-level variables (lake area and latitude), with the selected model expressed below.
 
 $\beta_{0[j]} \sim N(\mu_{\beta_0[j]}, \sigma_{\beta_0}) \text{ for } j \in 1...n_{lakes}$
 
@@ -69,7 +69,7 @@ All possible relationships between intercept and slope parameters ($\beta_{0[j]}
 
 For lakes without paired length and weight data, parameters $\beta_{0[j]}$ and $\beta_{0[j]}$ were still modeled from the posterior predictive distribution using lake area and latitude as available.  In the cases in which lake area and latitude were not available, these were imputed for each MCMC sample using draws from Normal distributions with means and standard deviations of the latitude and log area of all lakes.  
 
-Note: Lengths were recentered by subtracting the mean measurement, in order to eliminate collinearity between the intercept and slope parameters and thus aid model convergence.  Raw estimates of the intercept parameters appear quite different from that reported by Lester, et al.; these were transformed for the sake of interpretability and consistency.  Latitude and log area were also recentered by subtracting the respective means.
+Note: Lengths were recentered by subtracting the mean measurement, in order to eliminate collinearity between the intercept and slope parameters and thus aid model convergence.  Raw estimates of the intercept parameters appear quite different from that reported by Lester, et al.; these were then backtransformed for the sake of interpretability and consistency.  Latitude and log area were also recentered by subtracting the respective means.
 
 Intercept and slope parameter estimates are shown below for all lakes with associated weight and length measurements, with log area and latitude of each lake depicted on the X-axes.  Light and heavy vertical bars represent 95% and 50% credible intervals, respectively.  Overlayed trend envelopes represent 95% and 50% credible intervals for the relationships between log area or latitude and regression parameters, as appropriate.
 
@@ -111,7 +111,7 @@ Intercept and slope parameter estimates for all lakes are plotted below, with co
 
 Two plots are presented for the intercept parameters: the first being the raw parameters from the model (using recentered length data), and the second being the backtransformed parameters to the original scale.
 
-Dotted horizontal lines represent values reported by Lester, et al.  Note that parameter estimates are similar to those reported by Lester, et al., but in many cases are substantially different from one another, suggesting variation in weight ~ length relationships between lakes.
+Dotted horizontal lines represent values reported and used by Lester, et al.  Note that parameter estimates are similar to those used by Lester, et al., but in many cases are substantially different from one another, suggesting variation in weight ~ length relationships between lakes.
 
 ```{r, fig.height=11, fig.width=10}
 par(mfrow=c(3,1))
@@ -138,7 +138,7 @@ legend("topright", legend=c("Length & Wt", "Lat & Area only", "no data"),
 abline(h=3.2, lty=3)
 ```
 
-Finally, the relationships between length and weight are shown for each lake, overlayed with available data, and plotted on the log-log scale.  The relationship reported by Lester, et al. is overlayed as a dashed line, and fit envelope color represents the availability of data, using the same color convention as the previous set of plots (green = all data, blue = area and latitude only, red = no data).
+Finally, the modeled relationships between length and weight are shown for each lake, overlayed with available data, and plotted on the log-log scale.  The relationship reported by Lester, et al. is overlayed as a dashed line, and fit envelope color represents the availability of data, using the same color convention as the previous set of plots (green = all data, blue = area and latitude only, red = no data).
 
 ```{r, fig.width=15, fig.height=20}
 # plot regression bands for each lake, overlay data and lester line
@@ -169,7 +169,7 @@ The relationship between length and age was modeled using a Von Bertalanffy grow
 
 $L_{j[i]} = L_{\infty}[j](1-e^{-k[j](a_{j[i]}-t_0[j])}) + \epsilon_i$
 
-Growth parameters $L_{\infty}$, $k$, and $t_0$ were modeled separately for each lake, but with hierarchical distributions according to the form:
+Growth parameters $L_{\infty}$, $k$, and $t_0$ were modeled separately for each lake *j*, but with hierarchical distributions according to the form:
 
 $L_{\infty}[j] \sim N(\mu_{L_{\infty}} , \sigma_{L_{\infty}})$
 
@@ -177,7 +177,7 @@ $k[j] \sim logN(\mu_{k} , \sigma_{k})$
 
 $t_0[j] \sim N(\mu_{t_0} , \sigma_{t_0})$
 
-In this case, the parameter of most inferential interest was asymptotic length $L_{\infty}$.  Hyperparameter $\mu_{L_{\infty}}$ was given a weakly informative prior of $N(700, 100)$, and $\mu_{t_0}$ was mildly constrained with a prior of $N(0,1)$.  All standard deviation $\sigma_.$ parameters were modeled with uniform priors on the SD scale, constrained as appropriate.
+In this case, the parameter of most inferential interest was asymptotic length $L_{\infty}$.  Hyperparameter $\mu_{L_{\infty}}$ was given a weakly informative prior of $N(700, 100)$, and $\mu_{t_0}$ was mildly constrained by using a prior of $N(0,1)$.  All standard deviation $\sigma_.$ parameters were modeled with uniform priors on the SD scale, bounded as appropriate.
 
 Estimates for all parameters are plotted below for each lake.  Note that parameters were only estimated for lakes that had paired length and age data.
 
@@ -207,7 +207,7 @@ for(ilake in LA_data$whichlakes) {
 }
 ```
 
-For lakes with little or no paired age and length data but sufficient length data, a more precise estimate of $L_{\infty}$ may be gained from a quantile value of the associated length sample.  To estimate the appropriate quantile value (and with error), posterior distributions of the sample quantile value associated with $L_{\infty}$ were estimated for lakes with sufficient data to estimate both the length ~ age relationship and length sample quantiles (ten lakes with $n_{Age} \geq 10$ and $n_{Length} \geq 100$).  This was calculated for each MCMC sample as the proportion of the length sample less than the value of the given MCMC sample of $L_{\infty}$.  MCMC samples of quantiles were then drawn for the remaining lakes by randomly sampling from the MCMC samples, pooled among all lakes with sufficient paired age-length data.  This can be thought of as was analogous to two-stage sampling (lake then MCMC sample), with all lakes with sufficient data weighted equally. 
+For lakes with little or no paired age and length data but sufficient length data, a reasonable estimate of $L_{\infty}$ may be gained from a quantile value of the associated length sample.  To estimate the appropriate quantile value (and with error), posterior distributions of the sample quantile value associated with $L_{\infty}$ were estimated for lakes with sufficient data to estimate both the length ~ age relationship and length sample quantiles (ten lakes with $n_{Age} \geq 10$ and $n_{Length} \geq 100$).  This was calculated for each MCMC sample as the proportion of the length sample less than the value of the given MCMC sample of $L_{\infty}$.  MCMC samples of quantiles were then drawn for the remaining lakes by randomly sampling from the MCMC samples, pooled among all lakes with sufficient paired age-length data.  This can be thought of as was analogous to two-stage sampling (lake then MCMC sample), with all lakes with sufficient data weighted equally. 
 
 Posterior distributions of quantiles associated with $L_{\infty}$ are plotted below, before and after imputation by sampling from lakes with sufficient data.
 
@@ -307,7 +307,7 @@ Selection among available methods was motivated by a few guiding principles and 
 
 * Since all methods presented incorporate the uncertainty in estimation due to each step, we can expect that methods incorporating fewer steps will have a smaller associated variance.
 
-* However, since many lakes have much samples for length than for weight or age, it is possible that methods ranked as less preferable might result in better estimates.
+* However, since many lakes have much more samples for length than for weight or age, it is possible that methods ranked as less preferable might result in better estimates.
 
 * Method 4 should be avoided unless there is no other viable alternative!
 
@@ -344,7 +344,7 @@ for(i in 1:length(Winf_method)) {
 
 The raw data consisted of 35,516 measurements from 148 sampling events occurring over 84 lakes  from 1960-2024.  
 
-A few outlying measurements of either length or weight were noted.  These observations were censored rather than making assumptions at possible transformations.
+A few outlying measurements of either length or weight were noted.  
 
 ```{r}
 morphometry <- read_csv("flat_data/lake_morphometry2.csv", skip=2)
@@ -514,7 +514,7 @@ bestmodels <- which(model_df$delta_DIC %in% tapply(model_df$delta_DIC, model_df$
 
 ###############################################################
 bestmodels <- which(theDIC <= min(theDIC)+2)
-bestmodels
+# bestmodels
 ## still need to do something equivalent to the .Rmd
 ###############################################################
 
@@ -542,7 +542,7 @@ text(x=theDIC - min(theDIC), y=seq_along(theDIC),
 
 
 
-It is important to compare the differences between inferences in terms of lake-level parameters, among the models considered.  Here the lake-level intercept (b0) and slope (b1) parameters are compared, for the top-performing models for each number of additional parameters (see table below).
+It is important to compare the differences between inferences in terms of lake-level parameters, among the models considered.  Here the lake-level intercept (b0) and slope (b1) parameters are compared, for the top-performing models (see table below).
 
 ```{r}
 knitr::kable(model_df[bestmodels,], digits=2)
@@ -562,8 +562,6 @@ abline(h=3.2, lty=3)
 ```
 
 \pagebreak
-
-That said, it may be beneficial to consider the relationships with latitude and log-area when modeling the length-weight relationship for a new lake *outside* the list presented.
 
 Since model fitting was done using recentered data (log length, log area, latitude), some algebraic headache was required to backtransform all parameters back to the data scale, and is not shown here.  Since the net relationship between log length and log weight contains several sources of uncertainty (error in parameter estimation, errors in hierarchical distributions, residual error), error in expressing the length-weight relationship for a new lake is best calculated in-model or directly from the posterior.  However, the formula below should be sufficient for point estimates of regression parameters.
 
@@ -595,9 +593,9 @@ cat("$$\\hat{log(W)}=", round(p1, 2),
     "(", round(p4, 2), round(p5, 3), " lat)log(L)", "$$")
 ```
 
-The predictive power of the five top models was also compared using a cross-validation routine, in which all considered models were re-fit *excluding* the data for each lake in turn, and the model-predicted length-weight relationships were compared to the relationships actually observed at each lake.
+The predictive power of the top models was also compared using a cross-validation routine, in which all considered models were re-fit *excluding* the data for each lake in turn, and the model-predicted length-weight relationships were compared to the relationships actually observed at each lake.
 
-This was done two ways: First, the predicted intercept and slope parameters (b0 and b1) were compared to the respective parameters fit from data.  Since inferences for five different models *excluding* each lakes' data were compared to five different models *including* each lakes' data, consensus was sought among the five possible versions of "truth".
+This was done two ways: First, the predicted intercept and slope parameters (b0 and b1) were compared to the respective parameters fit from data.  Since inferences for different models *excluding* each lakes' data were compared to  different models *including* each lakes' data, consensus was sought among the ensemble of possible versions of "truth".
 
 ```{r}
 load(file="lw_loocv.Rdata")
@@ -631,7 +629,7 @@ legend("topleft", legend = c("from Data", "Model prediction"),
        lwd=c(1, 3), lty=c(1, 1), col=c(1,1), pch=c(NA,16))
 ```
 
-Root mean squared prediction error is plotted below for predictions from all five selected models, as compared to parameters fit from data.  In this case, the "truth" from all models is shown, but the five top models are highlighted.
+Root mean squared prediction error is plotted below for predictions from the ensemble of models, as compared to parameters fit from data.  In this case, the "truth" from the ensemble of models is shown (lines and boxplots), but comparison is only made for the top-performing models.
 
 ```{r, fig.height=5}
 b0_truths <- sapply(alloutputs, function(x) x$q50$b0)
@@ -693,4 +691,4 @@ apply(pred_rmse, 1, mean) %>% plot(main="Mean prediction RMSE error across lakes
 axis(side=1, at=seq_along(bestmodels), labels=bestmodels)
 ```
 
-The results from cross-validation show relatively strong agreement between models, which could perhaps be interpreted as limited benefit from selecting a prediction model that includes lake area and/or latitude.  However, Model 7 (intercept depends on log area, slope depends on latitude) might be considered a "sweet spot" in predictive power: beyond this number of parameters, the predictive power drops due to overfitting.
+The results from cross-validation show relatively strong agreement between models, which could perhaps be interpreted as limited benefit from selecting a prediction model that includes lake area and/or latitude.  However, Model 7 (intercept depends on log area, slope depends on latitude) was selected, partly because of the possible inferential benefit in predicting both regression parameters, while still exhibiting strong predictive power on the data level.  Model 7 might be considered a "sweet spot" in predictive power: beyond this number of parameters, the predictive power drops due to overfitting.

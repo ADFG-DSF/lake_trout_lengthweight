@@ -3,9 +3,9 @@ source("R/1_laketrout_lwdata.R")
 
 
 # JAGS controls
-niter <- 100*1000 #20*1000        # 2k in about 20 min, 20k in 3.5 on laptop
+niter <- 200*1000 #20*1000        # 2k in about 20 min, 20k in 3.5 on laptop
                                   # 100k in 17 hrs
-ncores <- min(8, parallel::detectCores()-1)
+ncores <- min(10, parallel::detectCores()-1)
 
 plotstuff <- FALSE
 
