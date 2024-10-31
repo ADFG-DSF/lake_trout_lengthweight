@@ -598,8 +598,8 @@ The predictive power of the top models was also compared using a cross-validatio
 This was done two ways: First, the predicted intercept and slope parameters (b0 and b1) were compared to the respective parameters fit from data.  Since inferences for different models *excluding* each lakes' data were compared to  different models *including* each lakes' data, consensus was sought among the ensemble of possible versions of "truth".
 
 ```{r}
-# load(file="lw_loocv.Rdata")
-load(file="lw_loocv_100k_topDIC.Rdata")
+load(file="lw_loocv.Rdata")
+# load(file="lw_loocv_100k_topDIC.Rdata")
 b0_medians <- apply(b0_arr, 2:3, median)
 b1_medians <- apply(b1_arr, 2:3, median)
 
