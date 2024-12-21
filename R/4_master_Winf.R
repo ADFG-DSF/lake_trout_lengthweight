@@ -547,6 +547,191 @@ ts_postpred(LinfArea_jags_out$sims.list$ypp[,!is.na(LinfArea_jags_out$q50$ypp)],
 
 
 
+######  making the Linf~area fig again, but with error bars on the Linf
+dim(LA_jags_out$sims.list$Linf)
+dim(L_quantile_imputed)
+Linf_2methods <- array(dim=dim(L_quantile_imputed))
+# for(i_lake in 1:nrow(laketrout_Winf)) {
+for(i_lake in which(!sufficient_data)) {
+  print(i_lake)
+  for(i_row in 1:nrow(L_quantile_imputed)) {
+    Linf_2methods[i_row, i_lake] <- quantile(laketrout$ForkLength_mm[laketrout$LakeNum==i_lake],
+                                             L_quantile_imputed[i_row, i_lake], na.rm=TRUE)
+  }
+}
+Linf_2methods[, which(sufficient_data)] <- LA_jags_out$sims.list$Linf[, which(sufficient_data)]
+# caterpillar(Linf_2methods, col=2+sufficient_data)
+
+par(mfrow=c(1,2))
+plot(LinfArea_data$x, LinfArea_data$y, log="x",
+     xlab="Lake Area (ha)", ylab="L_inf (mm)",
+     main="Trend", ylim=c(0,1000))
+segments(x0=larea,
+         y0=apply(Linf_2methods, 2, quantile, 0.025),
+         y1=apply(Linf_2methods, 2, quantile, 0.975),
+         col=2+sufficient_data, lwd=1)
+segments(x0=larea,
+         y0=apply(Linf_2methods, 2, quantile, 0.25),
+         y1=apply(Linf_2methods, 2, quantile, 0.75),
+         col=2+sufficient_data, lwd=3)
+envelope(LinfArea_jags_out, p="mu", x=LinfArea_data$x, add=TRUE)
+curve(957*(1-exp(-0.14*(1+log(x)))), lty=3, add=TRUE)
+plot(LinfArea_data$x, LinfArea_data$y, log="x",
+     xlab="Lake Area (ha)", ylab="L_inf (mm)",
+     main="Post Predictive", ylim=c(0,1000))
+segments(x0=larea,
+         y0=apply(Linf_2methods, 2, quantile, 0.025),
+         y1=apply(Linf_2methods, 2, quantile, 0.975),
+         col=2+sufficient_data, lwd=1)
+segments(x0=larea,
+         y0=apply(Linf_2methods, 2, quantile, 0.25),
+         y1=apply(Linf_2methods, 2, quantile, 0.75),
+         col=2+sufficient_data, lwd=3)
+envelope(LinfArea_jags_out, p="ypp", x=LinfArea_data$x, add=TRUE)
+curve(957*(1-exp(-0.14*(1+log(x)))), lty=3, add=TRUE)
+
+
+####### Linf ~ Area again, but with measurement error on Linf
+# specify model, which is written to a temporary file
+LinfArea_jags <- tempfile()
+cat('model {
+  for(i in whichlakes) {
+    ydata[i] ~ dnorm(y[i], taudata[i])
+    y[i] ~ dnorm(mu[i], tau)
+    ypp[i] ~ dnorm(mu[i], tau)
+    mu[i] <- b0 * (1 - exp(-b1 * (1 + log(x[i]))))
+  }
+
+  tau <- pow(sig, -2)
+  sig ~ dunif(0, 300)
+  b0 ~ dnorm(b0_lester, pow(cv_b0_lester*b0_lester, -2))
+  b0_prior ~ dnorm(b0_lester, pow(cv_b0_lester*b0_lester, -2))
+  b1 ~ dnorm(b1_lester, pow(cv_b1_lester*b1_lester, -2))
+  b1_prior ~ dnorm(b1_lester, pow(cv_b1_lester*b1_lester, -2))
+}', file=LinfArea_jags)
+
+# # bundle data to pass into JAGS
+# larea <- tapply(laketrout$SurfaceArea_h, laketrout$LakeNum, median, na.rm=TRUE)
+# quantile_meds <- apply(L_quantile_imputed, 2, median, na.rm=TRUE)
+# Linf_med <- rep(NA, nrow(laketrout_Winf))
+# for(ilake in 1:length(Linf_med)) {
+#   Linf_med[ilake] <- quantile(laketrout$ForkLength_mm[laketrout$LakeNum==ilake],
+#                               quantile_meds[ilake], na.rm=TRUE)
+# }
+
+cvdata <- unname(apply(Linf_2methods, 2, sd, na.rm=TRUE))/unname(apply(Linf_2methods, 2, median, na.rm=TRUE))
+nthresh <- 50
+## should actually be less with small n, but this is a starting point
+par(mfrow=c(2,2))
+plot(laketrout_Winf$n_Length, cvdata*apply(Linf_2methods, 2, median, na.rm=TRUE), log="x",
+     xlab = "n lengths", ylab = "sd L_inf", main="SD")
+abline(v=50, lty=2)
+plot(laketrout_Winf$n_Length, cvdata, log="x",
+     xlab = "n lengths", ylab = "CV L_inf", main="CV")
+abline(v=50, lty=2)
+cvdata1 <- cvdata2 <- cvdata
+cvdata1[laketrout_Winf$n_Length < nthresh] <- mean(cvdata[laketrout_Winf$n_Length >= nthresh])
+xreg <- log(laketrout_Winf$n_Length[laketrout_Winf$n_Length >= nthresh])
+yreg <- log(cvdata[laketrout_Winf$n_Length >= nthresh])
+# plot(log(laketrout_Winf$n_Length), log(cvdata))
+lm1 <- lm(yreg~xreg)
+# abline(lm1)
+cvdata2[laketrout_Winf$n_Length < nthresh] <-
+  exp(predict(lm1, newdata = data.frame(xreg=log(laketrout_Winf$n_Length[laketrout_Winf$n_Length < nthresh]))))
+plot(laketrout_Winf$n_Length, cvdata1*apply(Linf_2methods, 2, median, na.rm=TRUE), log="x",
+     xlab = "n lengths", ylab = "sd L_inf", main="imputed SD", col=2, pch=16)
+points(laketrout_Winf$n_Length, cvdata2*apply(Linf_2methods, 2, median, na.rm=TRUE), log="x",
+     xlab = "n lengths", ylab = "sd L_inf", col=4, pch=16)
+abline(v=50, lty=2)
+plot(laketrout_Winf$n_Length, cvdata1, log="x",
+     xlab = "n lengths", ylab = "CV L_inf", main="inputed CV", col=2, pch=16)
+abline(v=50, lty=2)
+points(laketrout_Winf$n_Length, cvdata2, log="x", col=4, pch=16)
+LinfArea_data <- list(x = larea,
+                      # y = Linf_med,
+                      ydata = unname(apply(Linf_2methods, 2, median, na.rm=TRUE)),
+                      taudata = (cvdata*unname(apply(Linf_2methods, 2, median, na.rm=TRUE)))^(-2),
+                      # whichlakes = which(!is.na(larea)),
+                      whichlakes = which(!is.na(larea) & laketrout_Winf$n_Length >= nthresh),
+                      b0_lester = 957,
+                      cv_b0_lester = 0.2,
+                      b1_lester = 0.14,
+                      cv_b1_lester = 1) # was 1
+
+# JAGS controls
+niter <- 100000
+# ncores <- 3
+ncores <- min(10, parallel::detectCores()-1)
+
+{  # takes 8 seconds at 100k iterations
+  tstart <- Sys.time()
+  print(tstart)
+  LinfArea_jags_out <- jagsUI::jags(model.file=LinfArea_jags, data=LinfArea_data,
+                                    parameters.to.save=c("b0","b1",
+                                                         "b0_prior","b1_prior",
+                                                         "sig", "mu","ypp"),
+                                    n.chains=ncores, parallel=T, n.iter=niter,
+                                    n.burnin=niter/2, n.thin=niter/2000)
+  print(Sys.time() - tstart)
+}
+
+
+## saving intermediate results
+save_results
+if(save_results) {
+  save(LinfArea_jags_out, LinfArea_data, file="LinfArea_data_WinfRept.Rdata")
+}
+
+# nbyname(LinfArea_jags_out)
+plotRhats(LinfArea_jags_out)
+traceworstRhat(LinfArea_jags_out, parmfrow=c(3,3))
+
+par(mfrow=c(1,2))
+plot(LinfArea_data$x, LinfArea_data$y, log="x",
+     xlab="Lake Area (ha)", ylab="L_inf (mm)",
+     main="Trend", ylim=c(0,1000))
+# segments(x0=larea,
+#          y0=apply(Linf_2methods, 2, quantile, 0.025),
+#          y1=apply(Linf_2methods, 2, quantile, 0.975),
+#          col=2+sufficient_data, lwd=1)
+# segments(x0=larea,
+#          y0=apply(Linf_2methods, 2, quantile, 0.25),
+#          y1=apply(Linf_2methods, 2, quantile, 0.75),
+#          col=2+sufficient_data, lwd=3)
+segments(x0=larea,
+         y0= (1-2*cvdata)*apply(Linf_2methods, 2, median),
+         y1= (1+2*cvdata)*apply(Linf_2methods, 2, median),
+         col=ifelse(sufficient_data, 3, ifelse(laketrout_Winf$n_Length<nthresh, 5, 2)))
+segments(x0=larea,
+         y0= (1-cvdata)*apply(Linf_2methods, 2, median),
+         y1= (1+cvdata)*apply(Linf_2methods, 2, median),
+         col=ifelse(sufficient_data, 3, ifelse(laketrout_Winf$n_Length<nthresh, 5, 2)), lwd=3)
+# envelope(LinfArea_jags_out, p="mu", x=LinfArea_data$x, add=TRUE)
+envelope(LinfArea_jags_out, p="mu", x=LinfArea_data$x[1:83], add=TRUE)
+curve(957*(1-exp(-0.14*(1+log(x)))), lty=3, add=TRUE)
+plot(LinfArea_data$x, LinfArea_data$y, log="x",
+     xlab="Lake Area (ha)", ylab="L_inf (mm)",
+     main="Post Predictive", ylim=c(0,1000))
+# segments(x0=larea,
+#          y0=apply(Linf_2methods, 2, quantile, 0.025),
+#          y1=apply(Linf_2methods, 2, quantile, 0.975),
+#          col=2+sufficient_data, lwd=1)
+# segments(x0=larea,
+#          y0=apply(Linf_2methods, 2, quantile, 0.25),
+#          y1=apply(Linf_2methods, 2, quantile, 0.75),
+#          col=2+sufficient_data, lwd=3)
+segments(x0=larea,
+         y0= (1-2*cvdata)*apply(Linf_2methods, 2, median),
+         y1= (1+2*cvdata)*apply(Linf_2methods, 2, median),
+         col=ifelse(sufficient_data, 3, ifelse(laketrout_Winf$n_Length<nthresh, 5, 2)))
+segments(x0=larea,
+         y0= (1-cvdata)*apply(Linf_2methods, 2, median),
+         y1= (1+cvdata)*apply(Linf_2methods, 2, median),
+         col=ifelse(sufficient_data, 3, ifelse(laketrout_Winf$n_Length<nthresh, 5, 2)), lwd=3)
+# envelope(LinfArea_jags_out, p="ypp", x=LinfArea_data$x, add=TRUE)
+envelope(LinfArea_jags_out, p="ypp", x=LinfArea_data$x[1:83], add=TRUE)
+curve(957*(1-exp(-0.14*(1+log(x)))), lty=3, add=TRUE)
+
 
 ### all Winf methods:
 nlake <- nrow(laketrout_Winf)
