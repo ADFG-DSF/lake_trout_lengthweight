@@ -598,7 +598,9 @@ cat('model {
   for(i in whichlakes) {
     ydata[i] ~ dnorm(y[i], taudata[i])
     y[i] ~ dnorm(mu[i], tau)
-    ypp[i] ~ dnorm(mu[i], tau)
+    # ypp[i] ~ dnorm(mu[i], tau)
+    yppnotdata[i] ~ dnorm(mu[i], tau)
+    ypp[i] ~ dnorm(yppnotdata[i], taudata[i])
     mu[i] <- b0 * (1 - exp(-b1 * (1 + log(x[i]))))
   }
 
@@ -647,12 +649,16 @@ plot(laketrout_Winf$n_Length, cvdata1, log="x",
      xlab = "n lengths", ylab = "CV L_inf", main="inputed CV", col=2, pch=16)
 abline(v=50, lty=2)
 points(laketrout_Winf$n_Length, cvdata2, log="x", col=4, pch=16)
+
+cvdata <- cvdata2  # keeping the one where CV increases with decreasing sample size
+
 LinfArea_data <- list(x = larea,
                       # y = Linf_med,
                       ydata = unname(apply(Linf_2methods, 2, median, na.rm=TRUE)),
                       taudata = (cvdata*unname(apply(Linf_2methods, 2, median, na.rm=TRUE)))^(-2),
                       # whichlakes = which(!is.na(larea)),
-                      whichlakes = which(!is.na(larea) & laketrout_Winf$n_Length >= nthresh),
+                      # whichlakes = which(!is.na(larea) & laketrout_Winf$n_Length >= nthresh),
+                      whichlakes = which(!is.na(larea)),
                       b0_lester = 957,
                       cv_b0_lester = 0.2,
                       b1_lester = 0.14,
@@ -731,6 +737,12 @@ segments(x0=larea,
 # envelope(LinfArea_jags_out, p="ypp", x=LinfArea_data$x, add=TRUE)
 envelope(LinfArea_jags_out, p="ypp", x=LinfArea_data$x[1:83], add=TRUE)
 curve(957*(1-exp(-0.14*(1+log(x)))), lty=3, add=TRUE)
+
+comparepriors(LinfArea_jags_out)
+qq_postpred(LinfArea_jags_out, p="ypp", y=LinfArea_data$ydata)
+ts_postpred(LinfArea_jags_out, p="ypp", y=LinfArea_data$ydata, x=LinfArea_data$x, log="x")
+
+
 
 
 ### all Winf methods:
@@ -986,3 +998,48 @@ if(save_results) {
   write.csv(laketrout_Winf, file="Asymptotic_Weight_table.csv")
 }
 
+
+
+
+### next big idea: model averaging
+# define weights such that the following are equivalent:
+# - 100 weight samples
+# - 10 ages
+# - 1000 length samples
+# - 10 areas (there will of course only be one area per lake!)
+equivs <- c(100, 10, 1000, 10)
+wts_vec <- 1/equivs
+wts_nmat <- cbind(laketrout_Winf$n_Weight,
+                  laketrout_Winf$n_Age,
+                  laketrout_Winf$n_Length,
+                  1*!is.na(laketrout_Winf$Area_ha))
+wts <- wts_nmat*matrix(wts_vec, nrow=nrow(wts_nmat), ncol=ncol(wts_nmat), byrow=TRUE)
+
+# ### maybe this should be on the square root scale or something?? log somehow?
+# wts <- sqrt(wts/rowSums(wts))  # this seems reasonable but will change equivalencies
+
+# did it work as desired?
+cbind(wts_nmat, NA, wts)
+
+Winf_weighted <- array(dim=dim(Winf_all_all)[1:2])
+for(ilake in 1:nlake) {
+  for(irow in 1:nrow(Winf_weighted)) {
+    Winf_weighted[irow, ilake] <- sample(Winf_all_all[irow, ilake, ], 1, prob=wts[ilake,])
+  }
+}
+par(mfrow=c(1,1))
+caterpillar(Winf_weighted)
+
+par(mfrow=c(3,4))
+for(i in 1:length(Winf_method)) {
+  cols <- c(rep(2,4),4)
+  cols[Winf_method[i]] <- 3
+  caterpillar(cbind(Winf_all_all[,i,], Winf_weighted[,i]),
+              col = cols,
+              xax = c(paste(c(laketrout_Winf$n_Weight[i],
+                      laketrout_Winf$n_Age[i],
+                      laketrout_Winf$n_Length[i],
+                      ""), round(wts[i,]/sum(wts[i,]), 2), sep=" / "),
+                      "Wt"),
+              main = lakenames[i])
+}
