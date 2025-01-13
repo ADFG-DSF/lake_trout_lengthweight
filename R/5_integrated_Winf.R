@@ -11,7 +11,7 @@ library(jagshelper)  # for plotting JAGS output & model diagnostics
 
 ## Whether to save results from long JAGS runs, etc.  Stored objects are
 ## read by markdown document Asymptotic_Weight_rept.Rmd
-save_results <- TRUE
+save_results <- FALSE
 
 
 
@@ -64,63 +64,63 @@ laketrout <- laketrout2 %>%
 
 nrow(laketrout) # 32516
 
-### plotting weight ~ length
-laketrout_all %>%
-  ggplot(aes(x=ForkLength_mm, y=Weight_g, color=LakeName)) +
-  # ggplot(aes(x=ForkLength_mm, y=Weight_g)) +
-  geom_point() +
-  scale_y_log10() +
-  scale_x_log10() +
-  theme_bw() +
-  theme(legend.position = 'none')
-
-laketrout %>%
-  ggplot(aes(x=ForkLength_mm, y=Weight_g, color=LakeName)) +
-  # ggplot(aes(x=ForkLength_mm, y=Weight_g)) +
-  geom_point() +
-  scale_y_log10() +
-  scale_x_log10(limits=c(100,1200)) +
-  theme_bw() +
-  theme(legend.position = 'none')
-
-
-
-## Filtering informed by Length ~ Age relationship
-
-## plotting length ~ age
-laketrout_all %>%
-  # ggplot(aes(y=ForkLength_mm, x=Age, color=LakeName)) +
-  ggplot(aes(y=ForkLength_mm, x=Age)) +
-  geom_point() +
-  theme_bw()
-
-laketrout %>%
-  # ggplot(aes(y=ForkLength_mm, x=Age, color=LakeName)) +
-  ggplot(aes(y=ForkLength_mm, x=Age)) +
-  geom_point() +
-  theme_bw()
-
-# plot(laketrout_all$ForkLength_mm)
-# plot(laketrout$ForkLength_mm)
-# plot(laketrout_all$Weight_g)
-# plot(laketrout$Weight_g)
-
-sapply(laketrout, function(x) sum(is.na(x)))
-table(is.na(laketrout$Latitude_WGS84),
-      is.na(laketrout$SurfaceArea_h),
-      is.na(laketrout$Weight_g))
-
-nrow(laketrout)
-
-sum(!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Weight_g))
-length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Weight_g)]))
-
-sum(!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Age))
-length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Age)]))
-
-length(unique(laketrout$LakeNum[!is.na(laketrout$Latitude_WGS84) & !is.na(laketrout$SurfaceArea_h)]))
-
-sapply(laketrout, function(x) sum(!is.na(x)))
+# ### plotting weight ~ length
+# laketrout_all %>%
+#   ggplot(aes(x=ForkLength_mm, y=Weight_g, color=LakeName)) +
+#   # ggplot(aes(x=ForkLength_mm, y=Weight_g)) +
+#   geom_point() +
+#   scale_y_log10() +
+#   scale_x_log10() +
+#   theme_bw() +
+#   theme(legend.position = 'none')
+#
+# laketrout %>%
+#   ggplot(aes(x=ForkLength_mm, y=Weight_g, color=LakeName)) +
+#   # ggplot(aes(x=ForkLength_mm, y=Weight_g)) +
+#   geom_point() +
+#   scale_y_log10() +
+#   scale_x_log10(limits=c(100,1200)) +
+#   theme_bw() +
+#   theme(legend.position = 'none')
+#
+#
+#
+# ## Filtering informed by Length ~ Age relationship
+#
+# ## plotting length ~ age
+# laketrout_all %>%
+#   # ggplot(aes(y=ForkLength_mm, x=Age, color=LakeName)) +
+#   ggplot(aes(y=ForkLength_mm, x=Age)) +
+#   geom_point() +
+#   theme_bw()
+#
+# laketrout %>%
+#   # ggplot(aes(y=ForkLength_mm, x=Age, color=LakeName)) +
+#   ggplot(aes(y=ForkLength_mm, x=Age)) +
+#   geom_point() +
+#   theme_bw()
+#
+# # plot(laketrout_all$ForkLength_mm)
+# # plot(laketrout$ForkLength_mm)
+# # plot(laketrout_all$Weight_g)
+# # plot(laketrout$Weight_g)
+#
+# sapply(laketrout, function(x) sum(is.na(x)))
+# table(is.na(laketrout$Latitude_WGS84),
+#       is.na(laketrout$SurfaceArea_h),
+#       is.na(laketrout$Weight_g))
+#
+# nrow(laketrout)
+#
+# sum(!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Weight_g))
+# length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Weight_g)]))
+#
+# sum(!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Age))
+# length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Age)]))
+#
+# length(unique(laketrout$LakeNum[!is.na(laketrout$Latitude_WGS84) & !is.na(laketrout$SurfaceArea_h)]))
+#
+# sapply(laketrout, function(x) sum(!is.na(x)))
 
 
 
@@ -254,9 +254,10 @@ nolakes <- c("1st Lake above Toolik Lake",
              "Yukon River drainages - Canadian border to Fort Yukon")
 
 yeslakes <- c("Juneau Lake (Cooper Landing)", "16.8 Mile Lake", "Petrokov Lake", "No Mercy Lake", "Susitna Lake", "Backdown Lake", "Monte Lake", "Dickey Lake", "Hanagita Lake", "Sevenmile Lake", "Big Lake (Healy)", "Ellis Lake", "Harding Lake", "Jatahmund Lake", "Crosswind Lake", "Galbraith Lake", "Hidden Lake (Kenai)", "Summit Lake (Richardson Highway near Paxson)", "Shallow Tangle Lake", "Little Chandler Lake", "Upper Tangle Lake", "Skilak Lake", "Round Tangle Lake", "Lower Tangle Lake", "Schrader Lake", "Landlocked Tangle Lake", "Two Bit Lake", "Itkillik lake", "Butte Lake", "Fielding Lake", "Chandler Lake", "Glacier Gap Lake (Denali Hwy)", "Sevenmile Lake (Denali Hwy)", "Lake Louise", "Paxson Lake",
-              "Summit Lake (Paxson)")
+              "Summit Lake (Paxson)", "Lake Schrader")
 
-
+planlakes <- c("Susitna Lake", "Hanagita Lake", "Sevenmile Lake", "Harding Lake", "Jatahmund Lake", "Crosswind Lake", "Summit Lake (Richardson Highway near Paxson)", "Shallow Tangle Lake", "Little Chandler Lake", "Upper Tangle Lake", "Round Tangle Lake", "Lower Tangle Lake", "Schrader Lake", "Landlocked Tangle Lake", "Two Bit Lake", "Itkillik lake", "Fielding Lake", "Chandler Lake", "Glacier Gap Lake (Denali Hwy)", "Sevenmile Lake (Denali Hwy)", "Lake Louise", "Paxson Lake",
+               "Summit Lake (Paxson)", "Lake Schrader")
 
 
 cindy_jags <- tempfile()
@@ -264,18 +265,23 @@ cat('model {
 
   ## ---- Length ~ Age Component ---- ##
   for(i in whichdata_LAge) {   # fish-level data from lakes with paired lengths & ages
-    L[i] ~ dnorm(mu_LAge[i], tau_LAge)
-    Lpp[i] ~ dnorm(mu_LAge[i], tau_LAge)
-    mu_LAge[i] <- Linf[lake[i]]*(1-exp(-k[lake[i]]*(Age[i]-t0[lake[i]])))
+    # L[i] ~ dnorm(mu_LAge[i], tau_LAge)
+    # Lpp[i] ~ dnorm(mu_LAge[i], tau_LAge)
+    # mu_LAge[i] <- Linf[lake[i]]*(1-exp(-k[lake[i]]*(Age[i]-t0[lake[i]])))
+    L[i] ~ dlnorm(logmu_LAge[i], tau_LAge)
+    Lpp[i] ~ dlnorm(logmu_LAge[i], tau_LAge)
+    logmu_LAge[i] <- log(Linf[lake[i]]*(1-exp(-k[lake[i]]*(Age[i]-t0[lake[i]]))))
   }
 
   tau_LAge <- pow(sig_LAge, -2)
-  sig_LAge ~ dunif(0, 100)
-  sig_LAge_prior ~ dunif(0, 100)
+  # sig_LAge ~ dunif(0, 100)
+  # sig_LAge_prior ~ dunif(0, 100)
+  sig_LAge ~ dunif(0, 3)
+  sig_LAge_prior ~ dunif(0, 3)
 
 
   for(j in whichlakes_LAge) {   # lake level
-    t0[j] ~ dnorm(mu_t0, tau_t0)
+    t0[j] ~ dnorm(mu_t0, tau_t0)T(,1)
     # t0_prior[j] ~ dnorm(mu_t0, tau_t0)
     k[j] ~ dlnorm(mu_k, tau_k)
     # k_prior[j] ~ dlnorm(mu_k, tau_k)
@@ -365,7 +371,7 @@ cat('model {
     mu_logW[i] <- b0_logW[lake[i]] + b1_logW[lake[i]]*logLc[i]
   }
 
-  # loop over lakes with data
+  # loop over lakes with lat & area data
   for(j in whichlakes_WL) {
     b0_logW[j] ~ dnorm(mu_b0_logW[j], tau_b0_logW)
     b0_logW_interp[j] <- b0_logW[j] - b1_logW[j]*meanlogLc
@@ -502,7 +508,7 @@ cindy_data <- list(Age = laketrout$Age,
                    qW = tapply(laketrout$Weight_g/1000, laketrout$LakeNum,
                                quantile, p=q_input, na.rm=TRUE),
                    nW = laketrout_Winf$n_Weight,
-                   whichlakes_W = which(laketrout_Winf$n_Weight > 10),
+                   whichlakes_W = which(laketrout_Winf$n_Weight > 10 & lakenames %in% yeslakes),
                    which_nW = rep(1,nrow(laketrout_Winf)),
                    # which_nW = 1 + (laketrout_Winf$n_Age > 0 & laketrout_Winf$n_Wength > 0),
                    sig_W0_cap = 5,
@@ -521,8 +527,8 @@ cindy_data$max_nW <- max(cindy_data$which_nW, na.rm=TRUE)
 
 
 # JAGS controls
-niter <- 20*1000
-# niter <- 50*1000
+# niter <- 20*1000
+niter <- 50*1000
 # niter <- 100*1000
 # ncores <- 3
 ncores <- min(10, parallel::detectCores()-1)
@@ -569,6 +575,7 @@ cindy_jags_out$DIC
 #### global model diagnostics and summary
 
 # nbyname(cindy_jags_out)
+par(mfrow=c(1,1))
 plotRhats(cindy_jags_out)
 traceworstRhat(cindy_jags_out, parmfrow=c(3,3))
 
@@ -601,6 +608,30 @@ par(mfrow=c(1,2))
 caterpillar(cindy_jags_out, "sig_Lj")
 envelope(cindy_jags_out$sims.list$sig_Lj[, cindy_data$whichlakes_L],
          x=cindy_data$nL[cindy_data$whichlakes_L], log="x",
+         xlab="n Length for quantiles")
+
+
+
+### Posterior predictive for qW
+par(mfrow=c(1,2))
+qq_postpred(cindy_jags_out$sims.list$qWpp[,cindy_data$whichlakes_W],
+            y=cindy_data$qW[cindy_data$whichlakes_W],
+            main="Post predictive for qW")
+ts_postpred(cindy_jags_out$sims.list$qWpp[,cindy_data$whichlakes_W],
+            y=cindy_data$qW[cindy_data$whichlakes_W],
+            x=cindy_data$nW[cindy_data$whichlakes_W], log="x",
+            xlab="n Wength for quantiles")
+par(mfcol=c(3,3))
+plot_postpred(cindy_jags_out$sims.list$qWpp[,cindy_data$whichlakes_W],
+              y=cindy_data$qW[cindy_data$whichlakes_W],
+              x=log(cindy_data$nW[cindy_data$whichlakes_W]))
+
+
+### plot how sig_Lj varies by lake
+par(mfrow=c(1,2))
+caterpillar(cindy_jags_out, "sig_Wj")
+envelope(cindy_jags_out$sims.list$sig_Wj[, cindy_data$whichlakes_W],
+         x=cindy_data$nW[cindy_data$whichlakes_W], log="x",
          xlab="n Length for quantiles")
 
 
@@ -640,6 +671,8 @@ caterpillar(cindy_jags_out, "Linf", col=3+cindy_data$alllakes %in% cindy_data$wh
 legend("topleft", legend=c("has AREA", "no AREA"), col=4:3, lwd=3, cex=0.5)
 caterpillar(cindy_jags_out, "Linf", col=3+cindy_data$alllakes %in% cindy_data$whichlakes_L)
 legend("topleft", legend=c("has Lq", "no Lq"), col=4:3, lwd=3, cex=0.5)
+caterpillar(cindy_jags_out, "Linf", col=3+cindy_data$alllakes %in% cindy_data$whichlakes_W)
+legend("topleft", legend=c("has Wq", "no Wq"), col=4:3, lwd=3, cex=0.5)
 
 # # ages and lq
 # caterpillar(cindy_jags_out, "Linf", col=3+(cindy_data$alllakes %in%
@@ -663,6 +696,7 @@ caterpillar(cindy_jags_out, "Linf", x=theorder,
                                                ifelse(cindy_data$alllakes %in% cindy_data$whichlakes_L, 2,
                                                       ifelse(cindy_data$alllakes %in% cindy_data$whichlakes_LArea, 3, 1))))
 legend("topleft", legend=c("AGES, then","Lq, then","AREA, then","nothing"), col=c(4,2,3,1), lwd=3, cex=0.5)
+points(x=theorder[cindy_data$whichlakes_W], y=cindy_jags_out$q50$Linf[cindy_data$whichlakes_W])#, col=cindy_data$alllakes %in% cindy_data$whichlakes_W)
 
 plot(NA, xlim=range(cindy_data$qL, na.rm=T),
      ylim=range(cindy_jags_out$q2.5$Linf, cindy_jags_out$q97.5$Linf, na.rm=TRUE),
@@ -759,25 +793,24 @@ for(ilake in 1:max(laketrout$LakeNum)) {
 }
 
 par(mfrow=c(2,2))
-caterpillar(cindy_jags_out$sims.list$b0_logW[, cindy_data$whichlakes_WL],
-            x=cindy_data$latc[cindy_data$whichlakes_WL],
+caterpillar(cindy_jags_out$sims.list$b0_logW[, weight_present & LatArea_present],
+            x=cindy_data$latc[weight_present & LatArea_present],
             xlab="Lat c", main="b0")
-caterpillar(cindy_jags_out$sims.list$b1_logW[, cindy_data$whichlakes_WL],
-            x=cindy_data$latc[cindy_data$whichlakes_WL],
+caterpillar(cindy_jags_out$sims.list$b1_logW[, weight_present & LatArea_present],
+            x=cindy_data$latc[weight_present & LatArea_present],
             xlab="Lat c", main="b1")
-envelope(cindy_jags_out$sims.list$mu_b1_logW[, cindy_data$whichlakes_WL],
-         x=cindy_data$latc[cindy_data$whichlakes_WL],
+envelope(cindy_jags_out$sims.list$mu_b1_logW[, weight_present & LatArea_present],
+         x=cindy_data$latc[weight_present & LatArea_present],
          add=TRUE)
-caterpillar(cindy_jags_out$sims.list$b0_logW[, cindy_data$whichlakes_WL],
-            x=cindy_data$logareac[cindy_data$whichlakes_WL],
+caterpillar(cindy_jags_out$sims.list$b0_logW[, weight_present & LatArea_present],
+            x=cindy_data$logareac[weight_present & LatArea_present],
             xlab="Log Area c", main="b0")
-envelope(cindy_jags_out$sims.list$mu_b0_logW[, cindy_data$whichlakes_WL],
-         x=cindy_data$logareac[cindy_data$whichlakes_WL],
+envelope(cindy_jags_out$sims.list$mu_b0_logW[, weight_present & LatArea_present],
+         x=cindy_data$logareac[weight_present & LatArea_present],
          add=TRUE)
-caterpillar(cindy_jags_out$sims.list$b1_logW[, cindy_data$whichlakes_WL],
-            x=cindy_data$logareac[cindy_data$whichlakes_WL],
+caterpillar(cindy_jags_out$sims.list$b1_logW[, weight_present & LatArea_present],
+            x=cindy_data$logareac[weight_present & LatArea_present],
             xlab="Log Area c", main="b1")
-#################################################### this doesn't seem right
 
 
 
@@ -835,19 +868,83 @@ legend("topleft", legend=c("Wq, then","AGES, then","Lq, then","AREA, then","noth
 #
 
 
-### Posterior predictive for qW
-par(mfrow=c(1,2))
-qq_postpred(cindy_jags_out$sims.list$qWpp[,cindy_data$whichlakes_W],
-            y=cindy_data$qW[cindy_data$whichlakes_W],
-            main="Post predictive for qW")
-ts_postpred(cindy_jags_out$sims.list$qWpp[,cindy_data$whichlakes_W],
-            y=cindy_data$qW[cindy_data$whichlakes_W],
-            x=cindy_data$nW[cindy_data$whichlakes_W], log="x",
-            xlab="n Wength for quantiles")
-par(mfcol=c(3,3))
-plot_postpred(cindy_jags_out$sims.list$qWpp[,cindy_data$whichlakes_W],
-              y=cindy_data$qW[cindy_data$whichlakes_W],
-              x=log(cindy_data$nW[cindy_data$whichlakes_W]))
+
+
+
+
+
 
 # somehow compare sources of information for Winf
 # compare to previous methods!!
+load(file="Winf_all_comparison1.Rdata")
+equivs <- c(100, 10, 1000, 10)
+wts_vec <- 1/equivs
+wts_nmat <- cbind(laketrout_Winf$n_Weight,
+                  laketrout_Winf$n_Age,
+                  laketrout_Winf$n_Length,
+                  1*!is.na(laketrout_Winf$Area_ha))
+wts <- wts_nmat*matrix(wts_vec, nrow=nrow(wts_nmat), ncol=ncol(wts_nmat), byrow=TRUE)
+par(mfrow=c(3,4))
+for(i in 1:length(Winf_method)) {
+  cols <- c(rep(2,4),4,1)
+  cols[Winf_method[i]] <- 3
+  caterpillar(cbind(Winf_all_all[,i,], Winf_weighted[,i], cindy_jags_out$sims.list$Winf[,i]),
+              col = cols,
+              xax = c(paste(c(laketrout_Winf$n_Weight[i],
+                              laketrout_Winf$n_Age[i],
+                              laketrout_Winf$n_Length[i],
+                              ""), round(wts[i,]/sum(wts[i,]), 2), sep=" / "),
+                      "Wt","Int"),
+              main = lakenames[i])
+  abline(h=cindy_jags_out$q50$Winf[i], lty=2, lwd=1+(lakenames[i] %in% planlakes))
+}
+
+
+
+# still to do:
+# - long runs with a vector of q_input, compare DICs
+# - refine choice of priors & choice of error distributions
+
+# to do when the new data comes...
+# - investigate possible relationships:
+#   . Elevation instead of Latitude in logW ~ logL
+#   . t0 & k ~ elevation & area
+#   . (Linf~area) ~ elevation
+
+
+
+
+
+niter1 <- 1000*1000
+ncores1 <- 8
+q_inputs <- seq(from=0.9, to=0.99, by=0.01)   # length 10 x 50k with 5 cores took 1.4 hrs on laptop
+                                              # length 10 x 500k with 8 cores took 20 hrs
+length(q_inputs)
+DICs <- mnL <- mnW <- NA*q_inputs
+cindy_data1 <- cindy_data
+for(i in seq_along(q_inputs)) {
+  cindy_data1$qL = tapply(laketrout$ForkLength_mm, laketrout$LakeNum,
+                          quantile, p=q_inputs[i], na.rm=TRUE)
+  cindy_data1$qW = tapply(laketrout$Weight_g/1000, laketrout$LakeNum,
+                          quantile, p=q_inputs[i], na.rm=TRUE)
+  tstart <- Sys.time()
+  print(tstart)
+  cindy_jags_out1 <- jagsUI::jags(model.file=cindy_jags, data=cindy_data1,
+                                 parameters.to.save=parameters,
+                                 n.chains=ncores1, parallel=T, n.iter=niter1,
+                                 n.burnin=niter1/2, n.thin=niter1/2000)
+  print(Sys.time() - tstart)
+  print(i)
+  DICs[i] <- cindy_jags_out1$DIC
+  mnL[i] <- mean(cindy_jags_out1$q50$qLpp > cindy_data1$qL[seq_along(cindy_jags_out1$q50$qLpp)], na.rm=TRUE)
+  mnW[i] <- mean(cindy_jags_out1$q50$qWpp > cindy_data1$qW[seq_along(cindy_jags_out1$q50$qWpp)], na.rm=TRUE)
+}
+DICs - min(DICs)  # 22.07259 22.05110 10.91344  0.00000 19.77171 49.50245 68.75798 61.41945 34.86005 31.63211
+mnL  # 0.6571429 0.6571429 0.6285714 0.6000000 0.5142857 0.4857143 0.4285714 0.4000000 0.3714286 0.2571429
+mnW  # 0.7142857 0.7142857 0.7142857 0.6190476 0.6190476 0.6190476 0.5714286 0.5714286 0.3809524 0.3333333
+par(mfrow=c(2,2))
+plot(q_inputs, DICs - min(DICs))
+plot(q_inputs, mnL, ylim=0:1)
+abline(h=.5, lty=2)
+plot(q_inputs, mnW, ylim=0:1)
+abline(h=.5, lty=2)

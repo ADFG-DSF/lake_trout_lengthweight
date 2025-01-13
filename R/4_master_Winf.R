@@ -1043,3 +1043,5 @@ for(i in 1:length(Winf_method)) {
                       "Wt"),
               main = lakenames[i])
 }
+
+save(Winf_all_all, Winf_weighted, Winf_method, file="Winf_all_comparison1.Rdata")
