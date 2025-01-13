@@ -4,5 +4,6 @@
 .Ruserdata
 *.Rproj
 *.docx
+*.xlsx
 *.html
 *.Rdata

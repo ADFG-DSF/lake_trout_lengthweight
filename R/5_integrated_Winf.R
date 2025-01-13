@@ -20,7 +20,16 @@ save_results <- FALSE
 ## - bad = obviously bad W~L, obviously bad L~age, outlying W, L, age
 
 # morphometry <- read_csv("flat_data/lake_morphometry.csv", skip=2)
-morphometry <- read_csv("flat_data/lake_morphometry2.csv", skip=2)
+# morphometry <- read_csv("flat_data/lake_morphometry2.csv", skip=2)
+morphometry <- read_csv("flat_data/lake_morphometry3.csv", skip=1) %>%
+  filter(!is.na(LakeName)) %>%
+  filter(!(is.na(Latitude_WGS84) & is.na(`Elevation (m)`) & is.na(`Temp (C)`) & is.na(SurfaceArea_h))) %>%
+  # filter(`Include in "Alaskanizing" Modeling Exercise` != "No") %>%
+  filter(`Include in "Alaskanizing" Modeling Exercise` %in% c("yes", "Yes"))
+
+table(morphometry$`Include in "Alaskanizing" Modeling Exercise`,
+      morphometry$`Potentially Include in Lake Trout Management Plan`,
+      useNA = "ifany")
 
 # # is lake name unique?  YES
 # sum(!is.na(morphometry$LakeName))
@@ -28,7 +37,9 @@ morphometry <- read_csv("flat_data/lake_morphometry2.csv", skip=2)
 
 # laketrout_all <- read_csv("flat_data/length_weight.csv", skip=2) %>%
 #   left_join(morphometry)
-laketrout_all <- read_csv("flat_data/length_weight2.csv", skip=2) %>%
+# laketrout_all <- read_csv("flat_data/length_weight2.csv", skip=2) %>%
+#   left_join(morphometry)
+laketrout_all <- read_csv("flat_data/length_weight3.csv", skip=1) %>%
   left_join(morphometry)
 nrow(laketrout_all)  # 35516
 sapply(laketrout_all, function(x) sum(is.na(x)))
@@ -56,71 +67,78 @@ nrow(laketrout1) # 32539
 
 lm1 <- with(laketrout1, lm(log(Weight_g) ~ log(ForkLength_mm)))
 resids1 <- log(laketrout1$Weight_g) - predict(lm1, newdata=laketrout1)
-laketrout2 <- filter(laketrout1, is.na(resids1) | abs(resids1) < 4*sd(resids1, na.rm=TRUE))
+laketrout2 <- filter(laketrout1, is.na(resids1) | abs(resids1) < 5*sd(resids1, na.rm=TRUE))
+with(laketrout1, plot(log(Weight_g) ~ log(ForkLength_mm),
+                      pch=ifelse(is.na(resids1) | abs(resids1) < 5*sd(resids1, na.rm=TRUE), 1, 16)))
 
 laketrout <- laketrout2 %>%
   filter(is.na(Age) | Age < 50) %>%
+  filter(`Include in "Alaskanizing" Modeling Exercise` %in% c("yes", "Yes")) %>%
   mutate(LakeNum = as.numeric(as.factor(LakeName)))
 
-nrow(laketrout) # 32516
+nrow(laketrout) # 33466 # was 32516
 
-# ### plotting weight ~ length
-# laketrout_all %>%
-#   ggplot(aes(x=ForkLength_mm, y=Weight_g, color=LakeName)) +
-#   # ggplot(aes(x=ForkLength_mm, y=Weight_g)) +
-#   geom_point() +
-#   scale_y_log10() +
-#   scale_x_log10() +
-#   theme_bw() +
-#   theme(legend.position = 'none')
-#
-# laketrout %>%
-#   ggplot(aes(x=ForkLength_mm, y=Weight_g, color=LakeName)) +
-#   # ggplot(aes(x=ForkLength_mm, y=Weight_g)) +
-#   geom_point() +
-#   scale_y_log10() +
-#   scale_x_log10(limits=c(100,1200)) +
-#   theme_bw() +
-#   theme(legend.position = 'none')
-#
-#
-#
-# ## Filtering informed by Length ~ Age relationship
-#
-# ## plotting length ~ age
-# laketrout_all %>%
-#   # ggplot(aes(y=ForkLength_mm, x=Age, color=LakeName)) +
-#   ggplot(aes(y=ForkLength_mm, x=Age)) +
-#   geom_point() +
-#   theme_bw()
-#
-# laketrout %>%
-#   # ggplot(aes(y=ForkLength_mm, x=Age, color=LakeName)) +
-#   ggplot(aes(y=ForkLength_mm, x=Age)) +
-#   geom_point() +
-#   theme_bw()
-#
-# # plot(laketrout_all$ForkLength_mm)
-# # plot(laketrout$ForkLength_mm)
-# # plot(laketrout_all$Weight_g)
-# # plot(laketrout$Weight_g)
-#
-# sapply(laketrout, function(x) sum(is.na(x)))
-# table(is.na(laketrout$Latitude_WGS84),
-#       is.na(laketrout$SurfaceArea_h),
-#       is.na(laketrout$Weight_g))
-#
-# nrow(laketrout)
-#
-# sum(!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Weight_g))
-# length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Weight_g)]))
-#
-# sum(!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Age))
-# length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Age)]))
-#
-# length(unique(laketrout$LakeNum[!is.na(laketrout$Latitude_WGS84) & !is.na(laketrout$SurfaceArea_h)]))
-#
-# sapply(laketrout, function(x) sum(!is.na(x)))
+### plotting weight ~ length
+laketrout_all %>%
+  # filter(ForkLength_mm > 100) %>%
+  # filter(LakeName == "Paxson Lake") %>%
+  ggplot(aes(x=ForkLength_mm, y=Weight_g, color=LakeName)) +
+  # ggplot(aes(x=ForkLength_mm, y=Weight_g)) +
+  # facet_wrap(~LakeName) +
+  # facet_wrap(~ProjectTitle) +
+  geom_point() +
+  scale_y_log10() +
+  scale_x_log10() +
+  theme_bw() +
+  theme(legend.position = 'none')
+
+laketrout %>%
+  ggplot(aes(x=ForkLength_mm, y=Weight_g, color=LakeName)) +
+  # ggplot(aes(x=ForkLength_mm, y=Weight_g)) +
+  geom_point() +
+  scale_y_log10() +
+  scale_x_log10(limits=c(100,1200)) +
+  theme_bw() +
+  theme(legend.position = 'none')
+
+
+
+## Filtering informed by Length ~ Age relationship
+
+## plotting length ~ age
+laketrout_all %>%
+  # ggplot(aes(y=ForkLength_mm, x=Age, color=LakeName)) +
+  ggplot(aes(y=ForkLength_mm, x=Age)) +
+  geom_point() +
+  theme_bw()
+
+laketrout %>%
+  # ggplot(aes(y=ForkLength_mm, x=Age, color=LakeName)) +
+  ggplot(aes(y=ForkLength_mm, x=Age)) +
+  geom_point() +
+  theme_bw()
+
+# plot(laketrout_all$ForkLength_mm)
+# plot(laketrout$ForkLength_mm)
+# plot(laketrout_all$Weight_g)
+# plot(laketrout$Weight_g)
+
+sapply(laketrout, function(x) sum(is.na(x)))
+table(is.na(laketrout$Latitude_WGS84),
+      is.na(laketrout$SurfaceArea_h),
+      is.na(laketrout$Weight_g))
+
+nrow(laketrout)
+
+sum(!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Weight_g))
+length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Weight_g)]))
+
+sum(!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Age))
+length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Age)]))
+
+length(unique(laketrout$LakeNum[!is.na(laketrout$Latitude_WGS84) & !is.na(laketrout$SurfaceArea_h)]))
+
+sapply(laketrout, function(x) sum(!is.na(x)))
 
 
 
@@ -138,127 +156,127 @@ laketrout_Winf <- data.frame(n_Weight = tapply(laketrout$Weight_g, laketrout$Lak
 
 
 
-nolakes <- c("1st Lake above Toolik Lake",
-             "36 Mile Lake","Ackerman Lake","Agiak Lake",
-             "Alatna River","Amiloyak Lake","Amos Lakes","Andi Lake",
-             "Aniak Lake","Aniak River","Antelope Lake","April Lake",
-             "Arolik Lake","Arolik River","Beaver Lake (near Chisana)",
-             "Beaver Lake (near Susitna L)","Bell Lake",
-             "Bernard Lake","Betty Lake","Big Lake (Bob Johnson Lake)",
-             "Birch Lake (U)","Black Lake (Talkeetna Mtns)","Bolio Lake",
-             "Boulder Lake (SW of Sourdough)","Braye Lakes",
-             "Brian Lake","Broad Pass lakes (near Cantwell)","Bullwinkle Lake",
-             "C-116","C-117","C-119","C-120","C-121","C-122",
-             "C-124","C-125","C-126","C-40","C-41","C-50","C-52",
-             "C-57","C-58","C-59","Campsite Lake","Canyon Lake",
-             "Caribou Lake","Caribou Pass Lake (into Jack River)",
-             "Carlson Lake","Cascade Lake","Chandalar Lake",
-             "Chandalar River North Fork","Chelle Lake",
-             "Chelle Lake (Chaleau Lake or Hot Dog Lake)","Cheryl Lake","Chet Lake",
-             "Cindy Lake","Clarence Lake","Coal Mine 5",
-             "Coal Mine Road lakes (Richardson Highway)","Colville River",
-             "Copper Lake","Copper River","Craig Lake","Crater Lake (Dickey)",
-             "Crazy Lake","Crystal Lake","Curtis Lake",
-             "Dalton Highway lakes","Dalton Highway other lakes",
-             "David Lake (near Y Lk)","Deadman Lake (Healy)","Dee Lake",
-             "Deep Lake","Delta River (below Tangle Lakes)",
-             "Denali Highway streams and lakes","Desperation Lake",
-             "Dog Lake (near Lk Louise)","Donnelly Lake (Richardson Highway)",
-             "Elusive Lake","Ernie Lake","Etivluk Lake","Farewell Lake",
-             "Feniak Lake","Final Lake","Fish Lake (Chandler)",
-             "Fish Lake (Mt Hayes)","Flat Lake",
-             "Fourmile Lake (Taylor Highway)","Fourteen Mile Lake","George Creek",
-             "Ghost Lake","Ghost Lake (Meadows Road)","Goldstream Creek",
-             "Goodnews Lake","Goodnews River","Graphite Lake",
-             "Grayling Lake (Glennallen)","Grizzly Lake (Tok Cut-off)",
-             "Gulkana River (above Paxson)","Gulkana River (above Paxson",
-             "West Fork","Middle Fork)",
-             "Gulkana River (Paxson to ADFG Tower)","Gulkana River (Paxson to Sourdough)",
-             "Gulkana River (Paxson to West Fork)",
-             "Gulkana River (Sourdough to Highway)",
-             "Gulkana River mainstem (reach unspecified)","Gulkana River Middle Fork","Gunn Creek",
-             "Helpmejack Lake","High Lake (Glennallen)","Horseshoe Lake",
-             "Imiaknikpak Lake","Indian Pass Lake","Indiana Lake",
-             "Iniakuk Lake","Inyorurak Pass Lake","Irgnyivik Lake",
-             "Island Lake (Glennallen)","Island Lake (Philip Smith Mts)",
-             "Island Lake (Richardson Highway","S of Donnelly Dome)",
-             "J Lake (Meadows Road)","Jack Lake (Nabesna)",
-             "Janelle Lake","Joanne Lake","Joy Lake","Julie Lake",
-             "Kagati Lake","Kaina Creek (Kaina River","Upper Kaina Creek)",
-             "Kaina Lake","Kanektok River (Quinhagak","Chosen)",
-             "Kanuktik Lake","Kelly Lake","Kenna Lake","Kettle Lake",
-             "Kiingyak Lake","Kikitaliorak Lake",
-             "Kimball Pass streams","Kisaralik Lake","Kisaralik Lake II",
-             "Kisaralik River","Klak Lake","Klutina Lake","Klutina River",
-             "Kobuk River",
-             "Koyukuk R. Middle Fork (not accessed from Dalton Highway)","Koyukuk River drainage","Kukaktlim Lake",
-             "Kuparuk Lake","Kurupa Lake",
-             "Kuskokwim River - reach not specified","Kwethluk River","Lake Betty",
-             "Lake Isiak","Lake Kipmik","Lake Matcharak","Lake Peters",
-             "Lake Selby","Lake Udrivik","Landmark Gap Lake",
-             "Laura Lake","Lee's Lake","Little Dog Lake",
-             "Little Lake Louise","Little Swede Lake","Little Tok River",
-             "Long Lake (McCarthy Rd)","Long Lake (Nabesna Road near Slana)",
-             "Lost Bob Lake","Lost Haller Lake",
-             "Lost Lake  (Chisholm Lake) (near Birch Lake)","Lower Anayak Lake",
-             "Lower Trail Lake","Lower Twelve Mile Lake",
-             "Lupine Lake (North Slope)","M-72","M-73","M-74","M-77","Mankomen Lake",
-             "Meadows Road lakes (Fort Greely Lakes",
-             "Richardson Highway)","Medicine Lake","Michigan Lake","Middle Fork Lake",
-             "Middle Hanagita Lake","Minakokosa Lake",
-             "Minnesota Lake","Mirror Lake (Broad Pass)","Monsoon Lake",
-             "Moose Lake (Eielson AFB)","Nabesna Twin 2 Lake","Nancy Lake",
-             "Nanushuk Lake","Nathan Lake","Natvakruak Lake",
-             "Nenana River drainage","Nickel Lake","Nigu Lake",
-             "Noatak River","Non-Yukon River drainages - Other",
-             "North Fork Lakes","North Itgaknit Lake","North Lake",
-             "North Lime Lake","North Middle Fork Lake of Goodnews River",
-             "North Twin Lake (Meadows Road)","Nutuvuki Lake",
-             "Octopus Lake","Octopus Lake (Denali Hwy)","Ohio Lake",
-             "Ohnlik Lake","Old John Lake","Oolah area streams","Other lakes",
-             "Other lakes","Other lakes Kuskokwim Bay",
-             "Other lakes Kuskokwim drainage above Aniak",
-             "Other lakes Kuskokwim drainage below Aniak","Other streams",
-             "Other streams Kuskokwim drainages above Aniak",
-             "Pauls Pond (Coal Mine Road)","Pegati Lake","Ptarmigan Lake",
-             "Ptarmigan Lake (14 miles northeast of Healy)","Pup Lake","Raindrop Lake",
-             "Rangeview Lake","Rapids Lake (Richardson Highway)",
-             "Roberta Lake","Rock Lake","Rockhound Lake","Rolo Lake",
-             "Roosevelt Lake","Ross Lake","Round Lake (Chandler)",
-             "Rusty Lake","Sagavanirktok River (Dalton Highway)",
-             "Sandy Lake","Scott Lake","Selawik Lake",
-             "Sevenmile Lake (SE of Anderson","no fish)","Shainin Lake",
-             "Snodgrass Lake","Soule Lake",
-             "South Middle Fork Lake of Goodnews River","South Twin Lake","Squaw Lake","Stan Lake",
-             "Steese Highway Mile 33.5 Pit","Suluklak Lake",
-             "Summit Lake (Parks Hwy)","Sunny Lake","Susan Lake",
-             "Swallow Tail Lake","Swan Lake (by Lake Louise)",
-             "Swan Lake (Cooper Landing)","Swede Lake (Big Swede Lake)","Takahula Lake",
-             "Tanada Creek","Tanada Lake",
-             "Tangle Lakes and Tangle River","Tazlina Lake","Telequana Lake",
-             "Ten Mile Lake","Tenas Lake","Teshekpuk Lake","Thing Two Lake",
-             "Timber Lake","Tonsina Lake",
-             "Tonsina River (Lower Tonsina River)","Toolik Lake (Dalton Highway)","Triangle Lake",
-             "Tsusena Butte Lake","Tukuto Lake","Tulugak Lake",
-             "Tustumena Lake","Twin Lake East (west of Kantishna River)",
-             "Twin Lakes","Twin Lakes (Chandalar)",
-             "Twin Lakes (N. and S.) (Meadows Road)","Twin Lakes (Nabesna Road)",
-             "Twin Lakes (West of Kantishna River)","Tyone Lake",
-             "Unnamed (F-26)","Unnamed (Philip Smith Mountains)",
-             "Unspecified lakes","Upper Landmark Gap Lake",
-             "Upper Summit Lake","Upper Trail Lake (Moose Pass)","Vicki Lake",
-             "Wait-A-Bit Lake","Walker Lake","Watana Lake",
-             "Whitefish Lake (Hoholitna)","Wild Lake","Wild River",
-             "Wisconsin Lake","Wonder Lake","Y Lake (Gulkana)",
-             "Yukon River - Fort Yukon to Koyukuk River",
-             "Yukon River drainages - Canadian border to Fort Yukon")
-
-yeslakes <- c("Juneau Lake (Cooper Landing)", "16.8 Mile Lake", "Petrokov Lake", "No Mercy Lake", "Susitna Lake", "Backdown Lake", "Monte Lake", "Dickey Lake", "Hanagita Lake", "Sevenmile Lake", "Big Lake (Healy)", "Ellis Lake", "Harding Lake", "Jatahmund Lake", "Crosswind Lake", "Galbraith Lake", "Hidden Lake (Kenai)", "Summit Lake (Richardson Highway near Paxson)", "Shallow Tangle Lake", "Little Chandler Lake", "Upper Tangle Lake", "Skilak Lake", "Round Tangle Lake", "Lower Tangle Lake", "Schrader Lake", "Landlocked Tangle Lake", "Two Bit Lake", "Itkillik lake", "Butte Lake", "Fielding Lake", "Chandler Lake", "Glacier Gap Lake (Denali Hwy)", "Sevenmile Lake (Denali Hwy)", "Lake Louise", "Paxson Lake",
-              "Summit Lake (Paxson)", "Lake Schrader")
-
-planlakes <- c("Susitna Lake", "Hanagita Lake", "Sevenmile Lake", "Harding Lake", "Jatahmund Lake", "Crosswind Lake", "Summit Lake (Richardson Highway near Paxson)", "Shallow Tangle Lake", "Little Chandler Lake", "Upper Tangle Lake", "Round Tangle Lake", "Lower Tangle Lake", "Schrader Lake", "Landlocked Tangle Lake", "Two Bit Lake", "Itkillik lake", "Fielding Lake", "Chandler Lake", "Glacier Gap Lake (Denali Hwy)", "Sevenmile Lake (Denali Hwy)", "Lake Louise", "Paxson Lake",
-               "Summit Lake (Paxson)", "Lake Schrader")
-
+# nolakes <- c("1st Lake above Toolik Lake",
+#              "36 Mile Lake","Ackerman Lake","Agiak Lake",
+#              "Alatna River","Amiloyak Lake","Amos Lakes","Andi Lake",
+#              "Aniak Lake","Aniak River","Antelope Lake","April Lake",
+#              "Arolik Lake","Arolik River","Beaver Lake (near Chisana)",
+#              "Beaver Lake (near Susitna L)","Bell Lake",
+#              "Bernard Lake","Betty Lake","Big Lake (Bob Johnson Lake)",
+#              "Birch Lake (U)","Black Lake (Talkeetna Mtns)","Bolio Lake",
+#              "Boulder Lake (SW of Sourdough)","Braye Lakes",
+#              "Brian Lake","Broad Pass lakes (near Cantwell)","Bullwinkle Lake",
+#              "C-116","C-117","C-119","C-120","C-121","C-122",
+#              "C-124","C-125","C-126","C-40","C-41","C-50","C-52",
+#              "C-57","C-58","C-59","Campsite Lake","Canyon Lake",
+#              "Caribou Lake","Caribou Pass Lake (into Jack River)",
+#              "Carlson Lake","Cascade Lake","Chandalar Lake",
+#              "Chandalar River North Fork","Chelle Lake",
+#              "Chelle Lake (Chaleau Lake or Hot Dog Lake)","Cheryl Lake","Chet Lake",
+#              "Cindy Lake","Clarence Lake","Coal Mine 5",
+#              "Coal Mine Road lakes (Richardson Highway)","Colville River",
+#              "Copper Lake","Copper River","Craig Lake","Crater Lake (Dickey)",
+#              "Crazy Lake","Crystal Lake","Curtis Lake",
+#              "Dalton Highway lakes","Dalton Highway other lakes",
+#              "David Lake (near Y Lk)","Deadman Lake (Healy)","Dee Lake",
+#              "Deep Lake","Delta River (below Tangle Lakes)",
+#              "Denali Highway streams and lakes","Desperation Lake",
+#              "Dog Lake (near Lk Louise)","Donnelly Lake (Richardson Highway)",
+#              "Elusive Lake","Ernie Lake","Etivluk Lake","Farewell Lake",
+#              "Feniak Lake","Final Lake","Fish Lake (Chandler)",
+#              "Fish Lake (Mt Hayes)","Flat Lake",
+#              "Fourmile Lake (Taylor Highway)","Fourteen Mile Lake","George Creek",
+#              "Ghost Lake","Ghost Lake (Meadows Road)","Goldstream Creek",
+#              "Goodnews Lake","Goodnews River","Graphite Lake",
+#              "Grayling Lake (Glennallen)","Grizzly Lake (Tok Cut-off)",
+#              "Gulkana River (above Paxson)","Gulkana River (above Paxson",
+#              "West Fork","Middle Fork)",
+#              "Gulkana River (Paxson to ADFG Tower)","Gulkana River (Paxson to Sourdough)",
+#              "Gulkana River (Paxson to West Fork)",
+#              "Gulkana River (Sourdough to Highway)",
+#              "Gulkana River mainstem (reach unspecified)","Gulkana River Middle Fork","Gunn Creek",
+#              "Helpmejack Lake","High Lake (Glennallen)","Horseshoe Lake",
+#              "Imiaknikpak Lake","Indian Pass Lake","Indiana Lake",
+#              "Iniakuk Lake","Inyorurak Pass Lake","Irgnyivik Lake",
+#              "Island Lake (Glennallen)","Island Lake (Philip Smith Mts)",
+#              "Island Lake (Richardson Highway","S of Donnelly Dome)",
+#              "J Lake (Meadows Road)","Jack Lake (Nabesna)",
+#              "Janelle Lake","Joanne Lake","Joy Lake","Julie Lake",
+#              "Kagati Lake","Kaina Creek (Kaina River","Upper Kaina Creek)",
+#              "Kaina Lake","Kanektok River (Quinhagak","Chosen)",
+#              "Kanuktik Lake","Kelly Lake","Kenna Lake","Kettle Lake",
+#              "Kiingyak Lake","Kikitaliorak Lake",
+#              "Kimball Pass streams","Kisaralik Lake","Kisaralik Lake II",
+#              "Kisaralik River","Klak Lake","Klutina Lake","Klutina River",
+#              "Kobuk River",
+#              "Koyukuk R. Middle Fork (not accessed from Dalton Highway)","Koyukuk River drainage","Kukaktlim Lake",
+#              "Kuparuk Lake","Kurupa Lake",
+#              "Kuskokwim River - reach not specified","Kwethluk River","Lake Betty",
+#              "Lake Isiak","Lake Kipmik","Lake Matcharak","Lake Peters",
+#              "Lake Selby","Lake Udrivik","Landmark Gap Lake",
+#              "Laura Lake","Lee's Lake","Little Dog Lake",
+#              "Little Lake Louise","Little Swede Lake","Little Tok River",
+#              "Long Lake (McCarthy Rd)","Long Lake (Nabesna Road near Slana)",
+#              "Lost Bob Lake","Lost Haller Lake",
+#              "Lost Lake  (Chisholm Lake) (near Birch Lake)","Lower Anayak Lake",
+#              "Lower Trail Lake","Lower Twelve Mile Lake",
+#              "Lupine Lake (North Slope)","M-72","M-73","M-74","M-77","Mankomen Lake",
+#              "Meadows Road lakes (Fort Greely Lakes",
+#              "Richardson Highway)","Medicine Lake","Michigan Lake","Middle Fork Lake",
+#              "Middle Hanagita Lake","Minakokosa Lake",
+#              "Minnesota Lake","Mirror Lake (Broad Pass)","Monsoon Lake",
+#              "Moose Lake (Eielson AFB)","Nabesna Twin 2 Lake","Nancy Lake",
+#              "Nanushuk Lake","Nathan Lake","Natvakruak Lake",
+#              "Nenana River drainage","Nickel Lake","Nigu Lake",
+#              "Noatak River","Non-Yukon River drainages - Other",
+#              "North Fork Lakes","North Itgaknit Lake","North Lake",
+#              "North Lime Lake","North Middle Fork Lake of Goodnews River",
+#              "North Twin Lake (Meadows Road)","Nutuvuki Lake",
+#              "Octopus Lake","Octopus Lake (Denali Hwy)","Ohio Lake",
+#              "Ohnlik Lake","Old John Lake","Oolah area streams","Other lakes",
+#              "Other lakes","Other lakes Kuskokwim Bay",
+#              "Other lakes Kuskokwim drainage above Aniak",
+#              "Other lakes Kuskokwim drainage below Aniak","Other streams",
+#              "Other streams Kuskokwim drainages above Aniak",
+#              "Pauls Pond (Coal Mine Road)","Pegati Lake","Ptarmigan Lake",
+#              "Ptarmigan Lake (14 miles northeast of Healy)","Pup Lake","Raindrop Lake",
+#              "Rangeview Lake","Rapids Lake (Richardson Highway)",
+#              "Roberta Lake","Rock Lake","Rockhound Lake","Rolo Lake",
+#              "Roosevelt Lake","Ross Lake","Round Lake (Chandler)",
+#              "Rusty Lake","Sagavanirktok River (Dalton Highway)",
+#              "Sandy Lake","Scott Lake","Selawik Lake",
+#              "Sevenmile Lake (SE of Anderson","no fish)","Shainin Lake",
+#              "Snodgrass Lake","Soule Lake",
+#              "South Middle Fork Lake of Goodnews River","South Twin Lake","Squaw Lake","Stan Lake",
+#              "Steese Highway Mile 33.5 Pit","Suluklak Lake",
+#              "Summit Lake (Parks Hwy)","Sunny Lake","Susan Lake",
+#              "Swallow Tail Lake","Swan Lake (by Lake Louise)",
+#              "Swan Lake (Cooper Landing)","Swede Lake (Big Swede Lake)","Takahula Lake",
+#              "Tanada Creek","Tanada Lake",
+#              "Tangle Lakes and Tangle River","Tazlina Lake","Telequana Lake",
+#              "Ten Mile Lake","Tenas Lake","Teshekpuk Lake","Thing Two Lake",
+#              "Timber Lake","Tonsina Lake",
+#              "Tonsina River (Lower Tonsina River)","Toolik Lake (Dalton Highway)","Triangle Lake",
+#              "Tsusena Butte Lake","Tukuto Lake","Tulugak Lake",
+#              "Tustumena Lake","Twin Lake East (west of Kantishna River)",
+#              "Twin Lakes","Twin Lakes (Chandalar)",
+#              "Twin Lakes (N. and S.) (Meadows Road)","Twin Lakes (Nabesna Road)",
+#              "Twin Lakes (West of Kantishna River)","Tyone Lake",
+#              "Unnamed (F-26)","Unnamed (Philip Smith Mountains)",
+#              "Unspecified lakes","Upper Landmark Gap Lake",
+#              "Upper Summit Lake","Upper Trail Lake (Moose Pass)","Vicki Lake",
+#              "Wait-A-Bit Lake","Walker Lake","Watana Lake",
+#              "Whitefish Lake (Hoholitna)","Wild Lake","Wild River",
+#              "Wisconsin Lake","Wonder Lake","Y Lake (Gulkana)",
+#              "Yukon River - Fort Yukon to Koyukuk River",
+#              "Yukon River drainages - Canadian border to Fort Yukon")
+#
+# yeslakes <- c("Juneau Lake (Cooper Landing)", "16.8 Mile Lake", "Petrokov Lake", "No Mercy Lake", "Susitna Lake", "Backdown Lake", "Monte Lake", "Dickey Lake", "Hanagita Lake", "Sevenmile Lake", "Big Lake (Healy)", "Ellis Lake", "Harding Lake", "Jatahmund Lake", "Crosswind Lake", "Galbraith Lake", "Hidden Lake (Kenai)", "Summit Lake (Richardson Highway near Paxson)", "Shallow Tangle Lake", "Little Chandler Lake", "Upper Tangle Lake", "Skilak Lake", "Round Tangle Lake", "Lower Tangle Lake", "Schrader Lake", "Landlocked Tangle Lake", "Two Bit Lake", "Itkillik lake", "Butte Lake", "Fielding Lake", "Chandler Lake", "Glacier Gap Lake (Denali Hwy)", "Sevenmile Lake (Denali Hwy)", "Lake Louise", "Paxson Lake",
+#               "Summit Lake (Paxson)", "Lake Schrader")
+#
+# planlakes <- c("Susitna Lake", "Hanagita Lake", "Sevenmile Lake", "Harding Lake", "Jatahmund Lake", "Crosswind Lake", "Summit Lake (Richardson Highway near Paxson)", "Shallow Tangle Lake", "Little Chandler Lake", "Upper Tangle Lake", "Round Tangle Lake", "Lower Tangle Lake", "Schrader Lake", "Landlocked Tangle Lake", "Two Bit Lake", "Itkillik lake", "Fielding Lake", "Chandler Lake", "Glacier Gap Lake (Denali Hwy)", "Sevenmile Lake (Denali Hwy)", "Lake Louise", "Paxson Lake",
+#                "Summit Lake (Paxson)", "Lake Schrader")
+#
 
 cindy_jags <- tempfile()
 cat('model {
@@ -482,10 +500,8 @@ cindy_data <- list(Age = laketrout$Age,
                    qL = tapply(laketrout$ForkLength_mm, laketrout$LakeNum,
                                quantile, p=q_input, na.rm=TRUE),
                    nL = laketrout_Winf$n_Length,
-                   # whichlakes_L = which(laketrout_Winf$n_Length > 10),  # should probably try > 10 or something
-                   # whichlakes_L = which(!lakenames %in% nolakes),
-                   whichlakes_L = which(lakenames %in% yeslakes),
-                   # which_nL = as.numeric(cut(laketrout_Winf$n_Length, c(0, 5, 150, 50000))),
+                   # whichlakes_L = which(lakenames %in% yeslakes),
+                   whichlakes_L =1:nrow(laketrout_Winf),
                    which_nL = rep(1,nrow(laketrout_Winf)),
                    # which_nL = 1 + (laketrout_Winf$n_Age > 0 & laketrout_Winf$n_Length > 0),
                    sig_L0_cap = 500,
@@ -508,7 +524,8 @@ cindy_data <- list(Age = laketrout$Age,
                    qW = tapply(laketrout$Weight_g/1000, laketrout$LakeNum,
                                quantile, p=q_input, na.rm=TRUE),
                    nW = laketrout_Winf$n_Weight,
-                   whichlakes_W = which(laketrout_Winf$n_Weight > 10 & lakenames %in% yeslakes),
+                   # whichlakes_W = which(laketrout_Winf$n_Weight > 10 & lakenames %in% yeslakes),
+                   whichlakes_W = which(laketrout_Winf$n_Weight > 10),
                    which_nW = rep(1,nrow(laketrout_Winf)),
                    # which_nW = 1 + (laketrout_Winf$n_Age > 0 & laketrout_Winf$n_Wength > 0),
                    sig_W0_cap = 5,
