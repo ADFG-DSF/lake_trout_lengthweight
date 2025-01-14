@@ -17,18 +17,25 @@ save_results <- FALSE
 
 ## load data, filter bad observations BUT NOT observations with missing data
 
-morphometry <- read_csv("flat_data/lake_morphometry3.csv", skip=1) %>%
+# read lake-level data
+morphometry1 <- read_csv("flat_data/lake_morphometry3.csv", skip=1) %>%
   filter(!is.na(LakeName)) %>%
   filter(!(is.na(Latitude_WGS84) & is.na(`Elevation (m)`) & is.na(`Temp (C)`) & is.na(SurfaceArea_h))) %>%
   mutate(use_fish = `Include in "Alaskanizing" Modeling Exercise` %in% c("Yes","yes")) %>%
   mutate(make_estimates = `Potentially Include in Lake Trout Management Plan` != "No") %>%
   arrange(LakeName)
-morphometry$LakeNum <- 1:nrow(morphometry)
+
+# need to take out lakes that are !make_estimates AND !%in% laketrout_all$LakeName
+
+# morphometry$LakeNum <- 1:nrow(morphometry)
 
 # # is lake name unique?  YES
-# sum(!is.na(morphometry$LakeName))
-# length(unique(morphometry$LakeName))
+# sum(!is.na(morphometry1$LakeName))
+# length(unique(morphometry1$LakeName))
 
+# read fish-level data
+# match lake names to lake-level (morphometry) data as needed
+# take out rows where !use_fish
 laketrout_all <- read_csv("flat_data/length_weight3.csv", skip=1) %>%
   mutate(LakeName = ifelse(LakeName == "Donnelly Lake", "Donnelly Lake (Richardson Highway)", LakeName)) %>%
   mutate(LakeName = ifelse(LakeName == "Four Mile Lake", "Fourmile Lake (Taylor Highway)", LakeName)) %>%
@@ -36,19 +43,29 @@ laketrout_all <- read_csv("flat_data/length_weight3.csv", skip=1) %>%
   mutate(LakeName = ifelse(LakeName == "North Twin Lake", "North Twin Lake (Meadows Road)", LakeName)) %>%
   mutate(LakeName = ifelse(LakeName == "Paul's Pond", "Pauls Pond (Coal Mine Road)", LakeName)) %>%
   mutate(LakeName = ifelse(LakeName == "Rapids Lake", "Rapids Lake (Richardson Highway)", LakeName)) %>%
-  mutate(LakeName = ifelse(LakeName == "Summit Lake (Paxson)", "Summit Lake (Richardson Highway near Paxson)", LakeName))
+  mutate(LakeName = ifelse(LakeName == "Summit Lake (Paxson)", "Summit Lake (Richardson Highway near Paxson)", LakeName)) %>%
+  left_join(morphometry1) %>%
+  filter(make_estimates | use_fish)
 
+# table(morphometry1$make_estimates, morphometry1$LakeName %in% laketrout_all$LakeName, morphometry1$use_fish)
+morphometry <- morphometry1 %>%
+  filter(make_estimates | use_fish)
+morphometry$LakeNum <- 1:nrow(morphometry)
+nrow(morphometry)
+
+# filling in numerical lake identifier in fish-level data, consistent with lake-level data
 laketrout_all$LakeNum <- NA
 for(i in 1:nrow(morphometry)) {
   laketrout_all$LakeNum[laketrout_all$LakeName == morphometry$LakeName[i]] <- i
 }
+table(laketrout_all$LakeNum)
 
-nrow(laketrout_all)  # 36460, was 35516
+nrow(laketrout_all)  # 35674, was 35516
 sapply(laketrout_all, function(x) sum(is.na(x)))
 
 summary(laketrout_all$Year)  # 1960-2024
-length(unique(laketrout_all$ProjectTitle))  # 154, was 148
-length(unique(laketrout_all$LakeName))  # 86, was 84
+length(unique(laketrout_all$ProjectTitle))  # 116, was 148
+length(unique(laketrout_all$LakeName))  # 35, was 84
 
 # making sure that all lake names in laketrout_all are contained in morphometry
 sort(unique(laketrout_all$LakeName))[!(sort(unique(laketrout_all$LakeName)) %in% morphometry$LakeName)]
@@ -68,7 +85,7 @@ laketrout1 <- laketrout_all %>%
                               "Mark-Recapture Event 1 - (September - 2004)",
                               "Mark-Recapture Event 2 - (May - 2003)"))
 # filter(is.na(ForkLength_mm) | ForkLength_mm )
-nrow(laketrout1) # 33483, was 32539
+nrow(laketrout1) # 32697, was 32539
 
 lm1 <- with(laketrout1, lm(log(Weight_g) ~ log(ForkLength_mm)))
 resids1 <- log(laketrout1$Weight_g) - predict(lm1, newdata=laketrout1)
@@ -77,21 +94,19 @@ with(laketrout1, plot(log(Weight_g) ~ log(ForkLength_mm),
                       pch=ifelse(is.na(resids1) | abs(resids1) < 5*sd(resids1, na.rm=TRUE), 1, 16)))
 
 laketrout <- laketrout2 %>%
-  filter(is.na(Age) | Age < 50) %>%
-  # filter(`Include in "Alaskanizing" Modeling Exercise` %in% c("yes", "Yes")) %>%
-  mutate(LakeNum = as.numeric(as.factor(LakeName))) %>%
-  mutate(use_fish = `Include in "Alaskanizing" Modeling Exercise` %in% c("Yes","yes")) %>%
-  mutate(make_estimates = `Potentially Include in Lake Trout Management Plan` != "No")
+  filter(is.na(Age) | Age < 50) # %>%
+  # filter(`Include in "Alaskanizing" Modeling Exercise` %in% c("yes", "Yes"))# %>%
+  # mutate(LakeNum = as.numeric(as.factor(LakeName)))
 
-nrow(laketrout) # 33466 # was 32516
+nrow(laketrout) # 32680 # was 32516
 
-lakenames <- levels(as.factor(laketrout$LakeName))
-length(lakenames) # 86 was 84
+# lakenames <- levels(as.factor(laketrout$LakeName))
+length(levels(as.factor(laketrout$LakeName))) # 35 was 84
 
-sort(unique(laketrout$LakeName[laketrout$use_fish]))
-sort(unique(laketrout$LakeName[laketrout$make_estimates]))
-morphometry$LakeName[morphometry$`Include in "Alaskanizing" Modeling Exercise` %in% c("Yes","yes")]
-morphometry$LakeName[morphometry$`Potentially Include in Lake Trout Management Plan` != "No"]
+# sort(unique(laketrout$LakeName[laketrout$use_fish]))
+# sort(unique(laketrout$LakeName[laketrout$make_estimates]))
+# morphometry$LakeName[morphometry$`Include in "Alaskanizing" Modeling Exercise` %in% c("Yes","yes")]
+# morphometry$LakeName[morphometry$`Potentially Include in Lake Trout Management Plan` != "No"]
 
 
 
@@ -141,9 +156,9 @@ laketrout %>%
 # plot(laketrout$Weight_g)
 
 sapply(laketrout, function(x) sum(is.na(x)))
-table(is.na(laketrout$Latitude_WGS84),
-      is.na(laketrout$SurfaceArea_h),
-      is.na(laketrout$Weight_g))
+# table(is.na(laketrout$Latitude_WGS84),
+#       is.na(laketrout$SurfaceArea_h),
+#       is.na(laketrout$Weight_g))
 
 nrow(laketrout)
 
@@ -153,145 +168,29 @@ length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketro
 sum(!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Age))
 length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Age)]))
 
-length(unique(laketrout$LakeNum[!is.na(laketrout$Latitude_WGS84) & !is.na(laketrout$SurfaceArea_h)]))
+# length(unique(laketrout$LakeNum[!is.na(laketrout$Latitude_WGS84) & !is.na(laketrout$SurfaceArea_h)]))
 
 sapply(laketrout, function(x) sum(!is.na(x)))
 
 
 
 
-##### THIS NEEDS TO BE UPDATED TO FIT WITH morphometry!!!
+##### starting a summarized data.frame
 getn <- function(x) sum(!is.na(x))
-laketrout_Winf <- data.frame(n_Weight = tapply(laketrout$Weight_g, laketrout$LakeName, getn),
-                             n_Length = tapply(laketrout$ForkLength_mm, laketrout$LakeName, getn),
-                             n_Age = tapply(laketrout$Age, laketrout$LakeName, getn),
-                             Lat = tapply(laketrout$Latitude_WGS84, laketrout$LakeNum, median),
-                             Area_ha = tapply(laketrout$SurfaceArea_h, laketrout$LakeNum, median))
+lakenums <- factor(laketrout$LakeNum, levels=1:nrow(morphometry))
+laketrout$LakeNum <- factor(laketrout$LakeNum, levels=1:nrow(morphometry))
+laketrout_Winf <- data.frame(LakeName = morphometry$LakeName,
+                             LakeNum = morphometry$LakeNum,
+                             n_Weight = tapply(laketrout$Weight_g, lakenums, getn),
+                             n_Length = tapply(laketrout$ForkLength_mm, lakenums, getn),
+                             n_Age = tapply(laketrout$Age, lakenums, getn),
+                             Latitude = morphometry$Latitude_WGS84,
+                             Area_ha = morphometry$SurfaceArea_h,
+                             Elevation = morphometry$`Elevation (m)`,
+                             Temperature = morphometry$`Temp (C)`)
 
 
 
-
-# nolakes <- c("1st Lake above Toolik Lake",
-#              "36 Mile Lake","Ackerman Lake","Agiak Lake",
-#              "Alatna River","Amiloyak Lake","Amos Lakes","Andi Lake",
-#              "Aniak Lake","Aniak River","Antelope Lake","April Lake",
-#              "Arolik Lake","Arolik River","Beaver Lake (near Chisana)",
-#              "Beaver Lake (near Susitna L)","Bell Lake",
-#              "Bernard Lake","Betty Lake","Big Lake (Bob Johnson Lake)",
-#              "Birch Lake (U)","Black Lake (Talkeetna Mtns)","Bolio Lake",
-#              "Boulder Lake (SW of Sourdough)","Braye Lakes",
-#              "Brian Lake","Broad Pass lakes (near Cantwell)","Bullwinkle Lake",
-#              "C-116","C-117","C-119","C-120","C-121","C-122",
-#              "C-124","C-125","C-126","C-40","C-41","C-50","C-52",
-#              "C-57","C-58","C-59","Campsite Lake","Canyon Lake",
-#              "Caribou Lake","Caribou Pass Lake (into Jack River)",
-#              "Carlson Lake","Cascade Lake","Chandalar Lake",
-#              "Chandalar River North Fork","Chelle Lake",
-#              "Chelle Lake (Chaleau Lake or Hot Dog Lake)","Cheryl Lake","Chet Lake",
-#              "Cindy Lake","Clarence Lake","Coal Mine 5",
-#              "Coal Mine Road lakes (Richardson Highway)","Colville River",
-#              "Copper Lake","Copper River","Craig Lake","Crater Lake (Dickey)",
-#              "Crazy Lake","Crystal Lake","Curtis Lake",
-#              "Dalton Highway lakes","Dalton Highway other lakes",
-#              "David Lake (near Y Lk)","Deadman Lake (Healy)","Dee Lake",
-#              "Deep Lake","Delta River (below Tangle Lakes)",
-#              "Denali Highway streams and lakes","Desperation Lake",
-#              "Dog Lake (near Lk Louise)","Donnelly Lake (Richardson Highway)",
-#              "Elusive Lake","Ernie Lake","Etivluk Lake","Farewell Lake",
-#              "Feniak Lake","Final Lake","Fish Lake (Chandler)",
-#              "Fish Lake (Mt Hayes)","Flat Lake",
-#              "Fourmile Lake (Taylor Highway)","Fourteen Mile Lake","George Creek",
-#              "Ghost Lake","Ghost Lake (Meadows Road)","Goldstream Creek",
-#              "Goodnews Lake","Goodnews River","Graphite Lake",
-#              "Grayling Lake (Glennallen)","Grizzly Lake (Tok Cut-off)",
-#              "Gulkana River (above Paxson)","Gulkana River (above Paxson",
-#              "West Fork","Middle Fork)",
-#              "Gulkana River (Paxson to ADFG Tower)","Gulkana River (Paxson to Sourdough)",
-#              "Gulkana River (Paxson to West Fork)",
-#              "Gulkana River (Sourdough to Highway)",
-#              "Gulkana River mainstem (reach unspecified)","Gulkana River Middle Fork","Gunn Creek",
-#              "Helpmejack Lake","High Lake (Glennallen)","Horseshoe Lake",
-#              "Imiaknikpak Lake","Indian Pass Lake","Indiana Lake",
-#              "Iniakuk Lake","Inyorurak Pass Lake","Irgnyivik Lake",
-#              "Island Lake (Glennallen)","Island Lake (Philip Smith Mts)",
-#              "Island Lake (Richardson Highway","S of Donnelly Dome)",
-#              "J Lake (Meadows Road)","Jack Lake (Nabesna)",
-#              "Janelle Lake","Joanne Lake","Joy Lake","Julie Lake",
-#              "Kagati Lake","Kaina Creek (Kaina River","Upper Kaina Creek)",
-#              "Kaina Lake","Kanektok River (Quinhagak","Chosen)",
-#              "Kanuktik Lake","Kelly Lake","Kenna Lake","Kettle Lake",
-#              "Kiingyak Lake","Kikitaliorak Lake",
-#              "Kimball Pass streams","Kisaralik Lake","Kisaralik Lake II",
-#              "Kisaralik River","Klak Lake","Klutina Lake","Klutina River",
-#              "Kobuk River",
-#              "Koyukuk R. Middle Fork (not accessed from Dalton Highway)","Koyukuk River drainage","Kukaktlim Lake",
-#              "Kuparuk Lake","Kurupa Lake",
-#              "Kuskokwim River - reach not specified","Kwethluk River","Lake Betty",
-#              "Lake Isiak","Lake Kipmik","Lake Matcharak","Lake Peters",
-#              "Lake Selby","Lake Udrivik","Landmark Gap Lake",
-#              "Laura Lake","Lee's Lake","Little Dog Lake",
-#              "Little Lake Louise","Little Swede Lake","Little Tok River",
-#              "Long Lake (McCarthy Rd)","Long Lake (Nabesna Road near Slana)",
-#              "Lost Bob Lake","Lost Haller Lake",
-#              "Lost Lake  (Chisholm Lake) (near Birch Lake)","Lower Anayak Lake",
-#              "Lower Trail Lake","Lower Twelve Mile Lake",
-#              "Lupine Lake (North Slope)","M-72","M-73","M-74","M-77","Mankomen Lake",
-#              "Meadows Road lakes (Fort Greely Lakes",
-#              "Richardson Highway)","Medicine Lake","Michigan Lake","Middle Fork Lake",
-#              "Middle Hanagita Lake","Minakokosa Lake",
-#              "Minnesota Lake","Mirror Lake (Broad Pass)","Monsoon Lake",
-#              "Moose Lake (Eielson AFB)","Nabesna Twin 2 Lake","Nancy Lake",
-#              "Nanushuk Lake","Nathan Lake","Natvakruak Lake",
-#              "Nenana River drainage","Nickel Lake","Nigu Lake",
-#              "Noatak River","Non-Yukon River drainages - Other",
-#              "North Fork Lakes","North Itgaknit Lake","North Lake",
-#              "North Lime Lake","North Middle Fork Lake of Goodnews River",
-#              "North Twin Lake (Meadows Road)","Nutuvuki Lake",
-#              "Octopus Lake","Octopus Lake (Denali Hwy)","Ohio Lake",
-#              "Ohnlik Lake","Old John Lake","Oolah area streams","Other lakes",
-#              "Other lakes","Other lakes Kuskokwim Bay",
-#              "Other lakes Kuskokwim drainage above Aniak",
-#              "Other lakes Kuskokwim drainage below Aniak","Other streams",
-#              "Other streams Kuskokwim drainages above Aniak",
-#              "Pauls Pond (Coal Mine Road)","Pegati Lake","Ptarmigan Lake",
-#              "Ptarmigan Lake (14 miles northeast of Healy)","Pup Lake","Raindrop Lake",
-#              "Rangeview Lake","Rapids Lake (Richardson Highway)",
-#              "Roberta Lake","Rock Lake","Rockhound Lake","Rolo Lake",
-#              "Roosevelt Lake","Ross Lake","Round Lake (Chandler)",
-#              "Rusty Lake","Sagavanirktok River (Dalton Highway)",
-#              "Sandy Lake","Scott Lake","Selawik Lake",
-#              "Sevenmile Lake (SE of Anderson","no fish)","Shainin Lake",
-#              "Snodgrass Lake","Soule Lake",
-#              "South Middle Fork Lake of Goodnews River","South Twin Lake","Squaw Lake","Stan Lake",
-#              "Steese Highway Mile 33.5 Pit","Suluklak Lake",
-#              "Summit Lake (Parks Hwy)","Sunny Lake","Susan Lake",
-#              "Swallow Tail Lake","Swan Lake (by Lake Louise)",
-#              "Swan Lake (Cooper Landing)","Swede Lake (Big Swede Lake)","Takahula Lake",
-#              "Tanada Creek","Tanada Lake",
-#              "Tangle Lakes and Tangle River","Tazlina Lake","Telequana Lake",
-#              "Ten Mile Lake","Tenas Lake","Teshekpuk Lake","Thing Two Lake",
-#              "Timber Lake","Tonsina Lake",
-#              "Tonsina River (Lower Tonsina River)","Toolik Lake (Dalton Highway)","Triangle Lake",
-#              "Tsusena Butte Lake","Tukuto Lake","Tulugak Lake",
-#              "Tustumena Lake","Twin Lake East (west of Kantishna River)",
-#              "Twin Lakes","Twin Lakes (Chandalar)",
-#              "Twin Lakes (N. and S.) (Meadows Road)","Twin Lakes (Nabesna Road)",
-#              "Twin Lakes (West of Kantishna River)","Tyone Lake",
-#              "Unnamed (F-26)","Unnamed (Philip Smith Mountains)",
-#              "Unspecified lakes","Upper Landmark Gap Lake",
-#              "Upper Summit Lake","Upper Trail Lake (Moose Pass)","Vicki Lake",
-#              "Wait-A-Bit Lake","Walker Lake","Watana Lake",
-#              "Whitefish Lake (Hoholitna)","Wild Lake","Wild River",
-#              "Wisconsin Lake","Wonder Lake","Y Lake (Gulkana)",
-#              "Yukon River - Fort Yukon to Koyukuk River",
-#              "Yukon River drainages - Canadian border to Fort Yukon")
-#
-# yeslakes <- c("Juneau Lake (Cooper Landing)", "16.8 Mile Lake", "Petrokov Lake", "No Mercy Lake", "Susitna Lake", "Backdown Lake", "Monte Lake", "Dickey Lake", "Hanagita Lake", "Sevenmile Lake", "Big Lake (Healy)", "Ellis Lake", "Harding Lake", "Jatahmund Lake", "Crosswind Lake", "Galbraith Lake", "Hidden Lake (Kenai)", "Summit Lake (Richardson Highway near Paxson)", "Shallow Tangle Lake", "Little Chandler Lake", "Upper Tangle Lake", "Skilak Lake", "Round Tangle Lake", "Lower Tangle Lake", "Schrader Lake", "Landlocked Tangle Lake", "Two Bit Lake", "Itkillik lake", "Butte Lake", "Fielding Lake", "Chandler Lake", "Glacier Gap Lake (Denali Hwy)", "Sevenmile Lake (Denali Hwy)", "Lake Louise", "Paxson Lake",
-#               "Summit Lake (Paxson)", "Lake Schrader")
-#
-# planlakes <- c("Susitna Lake", "Hanagita Lake", "Sevenmile Lake", "Harding Lake", "Jatahmund Lake", "Crosswind Lake", "Summit Lake (Richardson Highway near Paxson)", "Shallow Tangle Lake", "Little Chandler Lake", "Upper Tangle Lake", "Round Tangle Lake", "Lower Tangle Lake", "Schrader Lake", "Landlocked Tangle Lake", "Two Bit Lake", "Itkillik lake", "Fielding Lake", "Chandler Lake", "Glacier Gap Lake (Denali Hwy)", "Sevenmile Lake (Denali Hwy)", "Lake Louise", "Paxson Lake",
-#                "Summit Lake (Paxson)", "Lake Schrader")
-#
 
 cindy_jags <- tempfile()
 cat('model {
@@ -500,11 +399,12 @@ cat('model {
 q_input <- 0.95   # assumed quantile value for asymptotic size
 cindy_data <- list(Age = laketrout$Age,
                    L = laketrout$ForkLength_mm,
-                   lake = laketrout$LakeNum,
+                   lake = as.numeric(as.character(laketrout$LakeNum)),
                    Area = laketrout_Winf$Area_ha,
-                   whichlakes_LAge = which(laketrout_Winf$n_Age > 0 & laketrout_Winf$n_Length > 0),
-                   whichlakes_LArea = which(!is.na(laketrout_Winf$Area_ha) & laketrout_Winf$n_Length > 0),
-                   whichlakes_LArea_c = which(!(!is.na(laketrout_Winf$Area_ha) & laketrout_Winf$n_Length > 0)),
+                   whichlakes_LAge = which(morphometry$use_fish &
+                                             laketrout_Winf$n_Age > 0 & laketrout_Winf$n_Length > 0),
+                   whichlakes_LArea = which(!is.na(laketrout_Winf$Area_ha)),# & laketrout_Winf$n_Length > 0),
+                   whichlakes_LArea_c = which(!(!is.na(laketrout_Winf$Area_ha))),# & laketrout_Winf$n_Length > 0)),
                    alllakes = 1:nrow(laketrout_Winf),
                    Agefit = 1:max(laketrout$Age, na.rm=TRUE),
                    nfit = max(laketrout$Age, na.rm=TRUE),
@@ -516,7 +416,7 @@ cindy_data <- list(Age = laketrout$Age,
                                quantile, p=q_input, na.rm=TRUE),
                    nL = laketrout_Winf$n_Length,
                    # whichlakes_L = which(lakenames %in% yeslakes),
-                   whichlakes_L =1:nrow(laketrout_Winf),
+                   whichlakes_L = which(morphometry$use_fish & laketrout_Winf$n_Length > 10),
                    # which_nL = rep(1,nrow(laketrout_Winf)),
                    # which_nL = 1 + (laketrout_Winf$n_Age > 0 & laketrout_Winf$n_Length > 0),
                    sig_L0_cap = 500,
@@ -525,22 +425,25 @@ cindy_data <- list(Age = laketrout$Age,
                    logW = log(laketrout$Weight_g/1000),
                    logLc = log(laketrout$ForkLength_mm) - mean(log(laketrout$ForkLength_mm), na.rm=TRUE),
                    meanlogLc = mean(log(laketrout$ForkLength_mm), na.rm=TRUE),
-                   whichdata_WL = which(!is.na(laketrout$ForkLength_mm) &
+                   whichdata_WL = which(laketrout$use_fish &
+                                          !is.na(laketrout$ForkLength_mm) &
                                        !is.na(laketrout$SurfaceArea_h) &
                                        !is.na(laketrout$Latitude_WGS84)),
                    # whichlakes = sort(unique(laketrout$LakeNum[!is.na(laketrout$Latitude_WGS84) & !is.na(laketrout$SurfaceArea_h)])),
                    # whichlakesc = sort(unique(laketrout$LakeNum[is.na(laketrout$Latitude_WGS84) | is.na(laketrout$SurfaceArea_h)])),
                    whichlakes_WL = which(!is.na(laketrout_Winf$Lat) & !is.na(laketrout_Winf$Area_ha)),
                    whichlakes_WL_c = which(is.na(laketrout_Winf$Lat) | is.na(laketrout_Winf$Area_ha)),
-                   latc = tapply(laketrout$Latitude_WGS84, laketrout$LakeNum, median) -
-                     mean(tapply(laketrout$Latitude_WGS84, laketrout$LakeNum, median), na.rm=TRUE),
-                   logareac = log(tapply(laketrout$SurfaceArea_h, laketrout$LakeNum, median)) -
-                     mean(log(tapply(laketrout$SurfaceArea_h, laketrout$LakeNum, median)), na.rm=TRUE),
+                   # latc = tapply(laketrout$Latitude_WGS84, laketrout$LakeNum, median) -
+                   #   mean(tapply(laketrout$Latitude_WGS84, laketrout$LakeNum, median), na.rm=TRUE),
+                   # logareac = log(tapply(laketrout$SurfaceArea_h, laketrout$LakeNum, median)) -
+                   #   mean(log(tapply(laketrout$SurfaceArea_h, laketrout$LakeNum, median)), na.rm=TRUE),
+                   latc = morphometry$Latitude_WGS84 - mean(morphometry$Latitude_WGS84, na.rm=TRUE),
+                   logareac = log(morphometry$SurfaceArea_h) - mean(log(morphometry$SurfaceArea_h), na.rm=TRUE),
                    qW = tapply(laketrout$Weight_g/1000, laketrout$LakeNum,
                                quantile, p=q_input, na.rm=TRUE),
                    nW = laketrout_Winf$n_Weight,
                    # whichlakes_W = which(laketrout_Winf$n_Weight > 10 & lakenames %in% yeslakes),
-                   whichlakes_W = which(laketrout_Winf$n_Weight > 10),
+                   whichlakes_W = which(morphometry$use_fish & laketrout_Winf$n_Weight > 10),
                    # which_nW = rep(1,nrow(laketrout_Winf)),
                    # which_nW = 1 + (laketrout_Winf$n_Age > 0 & laketrout_Winf$n_Wength > 0),
                    sig_W0_cap = 5,
@@ -559,9 +462,9 @@ cindy_data$whichdata_LAge <- which((laketrout$LakeNum %in% cindy_data$whichlakes
 
 
 # JAGS controls
-niter <- 2*1000
+# niter <- 2*1000
 # niter <- 20*1000
-# niter <- 50*1000
+niter <- 50*1000
 # niter <- 100*1000
 # ncores <- 3
 ncores <- min(10, parallel::detectCores()-1)
@@ -638,7 +541,8 @@ plot_postpred(cindy_jags_out$sims.list$qLpp[,cindy_data$whichlakes_L],
 
 ### plot how sig_Lj varies by lake
 par(mfrow=c(1,2))
-caterpillar(cindy_jags_out, "sig_Lj")
+estcols <- ifelse(morphometry$make_estimates, 4, 3)
+caterpillar(cindy_jags_out, "sig_Lj", col=estcols)
 envelope(cindy_jags_out$sims.list$sig_Lj[, cindy_data$whichlakes_L],
          x=cindy_data$nL[cindy_data$whichlakes_L], log="x",
          xlab="n Length for quantiles")
@@ -662,7 +566,7 @@ plot_postpred(cindy_jags_out$sims.list$qWpp[,cindy_data$whichlakes_W],
 
 ### plot how sig_Lj varies by lake
 par(mfrow=c(1,2))
-caterpillar(cindy_jags_out, "sig_Wj")
+caterpillar(cindy_jags_out, "sig_Wj", col=estcols)
 envelope(cindy_jags_out$sims.list$sig_Wj[, cindy_data$whichlakes_W],
          x=cindy_data$nW[cindy_data$whichlakes_W], log="x",
          xlab="n Length for quantiles")
@@ -679,8 +583,10 @@ envelope(cindy_jags_out$sims.list$sig_Wj[, cindy_data$whichlakes_W],
 
 ### LVB parameters
 par(mfrow=c(1,2))
-caterpillar(cindy_jags_out, "t0", col=3+cindy_data$alllakes %in% cindy_data$whichlakes_LAge)
-caterpillar(cindy_jags_out, "k", col=3+cindy_data$alllakes %in% cindy_data$whichlakes_LAge)
+caterpillar(cindy_jags_out, "t0",
+            col=estcols)
+caterpillar(cindy_jags_out, "k",
+            col=estcols)
 
 ## length ~ age (plots for all lakes where there are lengths and ages)
 par(mfrow=c(3,3))
@@ -730,6 +636,7 @@ caterpillar(cindy_jags_out, "Linf", x=theorder,
                                                       ifelse(cindy_data$alllakes %in% cindy_data$whichlakes_LArea, 3, 1))))
 legend("topleft", legend=c("AGES, then","Lq, then","AREA, then","nothing"), col=c(4,2,3,1), lwd=3, cex=0.5)
 points(x=theorder[cindy_data$whichlakes_W], y=cindy_jags_out$q50$Linf[cindy_data$whichlakes_W])#, col=cindy_data$alllakes %in% cindy_data$whichlakes_W)
+points(x=theorder[morphometry$make_estimates], y=cindy_jags_out$q50$Linf[morphometry$make_estimates], pch=16)
 
 plot(NA, xlim=range(cindy_data$qL, na.rm=T),
      ylim=range(cindy_jags_out$q2.5$Linf, cindy_jags_out$q97.5$Linf, na.rm=TRUE),
@@ -766,7 +673,8 @@ legend("topleft", legend=c("AGES, then","Lq, then","AREA, then","nothing","Leste
 
 points(x=(ifelse(is.na(cindy_data$Area), -1, log(cindy_data$Area)))[cindy_data$whichlakes_L],
        y=cindy_data$qL[cindy_data$whichlakes_L])
-
+points(x=(ifelse(is.na(cindy_data$Area), -1, log(cindy_data$Area)))[morphometry$make_estimates],
+       y=cindy_jags_out$q50$Linf[morphometry$make_estimates], pch=16)
 
 # more of the same, maybe these thoughts can be combined?
 # caterpillar(cindy_jags_out$sims.list$Linf[,cindy_data$whichlakes_L],
@@ -848,7 +756,7 @@ caterpillar(cindy_jags_out$sims.list$b1_logW[, weight_present & LatArea_present]
 
 
 par(mfrow=c(1,1))
-caterpillar(cindy_jags_out, "Winf")
+caterpillar(cindy_jags_out, "Winf", col=estcols)
 
 # wq, then ages, then lq, then area
 par(mfrow=c(1,1))
@@ -862,6 +770,10 @@ caterpillar(cindy_jags_out, "Winf", x=theorder,
                               ifelse(cindy_data$alllakes %in% cindy_data$whichlakes_L, 2,
                               ifelse(cindy_data$alllakes %in% cindy_data$whichlakes_LArea, 3, 1)))))
 legend("topleft", legend=c("Wq, then","AGES, then","Lq, then","AREA, then","nothing"), col=c(5,4,2,3,1), lwd=3, cex=0.5)
+points(x=theorder[morphometry$make_estimates],
+       y=cindy_jags_out$q50$Winf[morphometry$make_estimates],
+       pch=16)
+
 #
 # plot(NA, xlim=range(cindy_data$qL, na.rm=T),
 #      ylim=range(cindy_jags_out$q2.5$Winf, cindy_jags_out$q97.5$Winf, na.rm=TRUE),
