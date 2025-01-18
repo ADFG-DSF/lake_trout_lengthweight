@@ -1,0 +1,88 @@
+---
+title: "Untitled"
+output: word_document
+date: "2025-01-18"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Weight ~ Length component
+
+$log(W\left[j[i]\right]) \sim N \left(\mu_{WL} [j[i]], \sigma_{WL}\right)$
+
+$\mu_{WL} [j[i]] = \beta_0[j] + \beta_1[j]\times log(L[j[i]])$
+
+$\sigma_{WL} \sim Diffuse Unif$
+
+$\beta_0[j] \sim N(\mu_{\beta_0}, \sigma_{\beta_0})$
+
+$\mu_{\beta_0} \sim Diffuse Norm$
+
+$\sigma_{\beta_0} \sim Diffuse Unif$
+
+$\beta_1[j] \sim N(\mu_{\beta_1}, \sigma_{\beta_1})$
+
+$\mu_{\beta_1} \sim Diffuse Norm$
+
+$\sigma_{\beta_1} \sim Diffuse Unif$
+
+
+## Length ~ Age component
+
+$L[j[i]] \sim LN(log(\mu_{Lt}[j[i]]), \sigma_{Lt})$
+
+$\mu_{Lt}[j[i]] = L_{\infty}[j](1-e^{-k[j](t[j[i]]-t_0[j])})$
+
+$t_0[j] \sim N(\mu_{t_0}, \sigma_{t_0})$
+
+$\mu_{t_0} ~ N(0,1)$
+
+$\sigma_{t_0} \sim Diffuse Unif$
+
+$k[j] \sim N(\mu_{k}, \sigma_{k})$
+
+$\mu_{k} ~ N(0,\sqrt{10})$
+
+$\sigma_{k} \sim Unif(0,1)$
+
+
+## $L_{\infty}$ ~ Area component
+
+$L_{\infty} \sim LN(log(\mu_{LA}[j]), \sigma_{LA})$
+
+$log(\mu_{LA}[j]) = \gamma(1-e^{-\lambda(1+log(A[j]))})$
+
+$\sigma_{LA} \sim Diffuse Unif$
+
+$\gamma \sim N(\gamma_{Lester}, 100\% \times \gamma_{Lester})$
+
+$\lambda \sim N(\lambda_{Lester}, 250\% \times \lambda_{Lester})$
+
+
+## Length Quantile ~ $L_{\infty}$ component
+
+$q_L[j] \sim N(L_{\infty}, \sigma_L[j])$
+
+$\sigma_L[j] = \sqrt{\eta_L^2 + \frac{\zeta_L^2}{n_L[j]}}$
+
+$\eta_L \sim Diffuse Unif$
+
+$\zeta_L \sim Diffuse Unif$
+
+
+## Weight Quantile ~ $W_{\infty}$ component
+
+$q_W[j] \sim N(W_{\infty}, \sigma_W[j])$
+
+$\sigma_W[j] = \sqrt{\eta_W^2 + \frac{\zeta_W^2}{n_W[j]}}$
+
+$\eta_W \sim Diffuse Unif$
+
+$\zeta_W \sim Diffuse Unif$
+
+
+## $W_{\infty} \sim L_{\infty}$ relationship
+
+$log(W_{\infty}[j]) = \beta_0[j] + \beta_1[j] \times log(L_{\infty}[j])$
