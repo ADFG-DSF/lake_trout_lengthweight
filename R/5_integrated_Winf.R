@@ -25,13 +25,12 @@ morphometry1 <- read_csv("flat_data/lake_morphometry3.csv", skip=1) %>%
   mutate(make_estimates = `Potentially Include in Lake Trout Management Plan` != "No") %>%
   arrange(LakeName)
 
-# need to take out lakes that are !make_estimates AND !%in% laketrout_all$LakeName
-
-# morphometry$LakeNum <- 1:nrow(morphometry)
-
 # # is lake name unique?  YES
 # sum(!is.na(morphometry1$LakeName))
 # length(unique(morphometry1$LakeName))
+
+
+
 
 # read fish-level data
 # match lake names to lake-level (morphometry) data as needed
@@ -47,11 +46,14 @@ laketrout_all <- read_csv("flat_data/length_weight3.csv", skip=1) %>%
   left_join(morphometry1) %>%
   filter(make_estimates | use_fish)
 
+
+
 # table(morphometry1$make_estimates, morphometry1$LakeName %in% laketrout_all$LakeName, morphometry1$use_fish)
 morphometry <- morphometry1 %>%
   filter(make_estimates | use_fish)
 morphometry$LakeNum <- 1:nrow(morphometry)
-nrow(morphometry)
+nrow(morphometry)  # 58
+
 
 # filling in numerical lake identifier in fish-level data, consistent with lake-level data
 laketrout_all$LakeNum <- NA
@@ -60,12 +62,13 @@ for(i in 1:nrow(morphometry)) {
 }
 table(laketrout_all$LakeNum)
 
-nrow(laketrout_all)  # 35674, was 35516
+nrow(laketrout_all)  # 35691, was 35516
 sapply(laketrout_all, function(x) sum(is.na(x)))
 
 summary(laketrout_all$Year)  # 1960-2024
-length(unique(laketrout_all$ProjectTitle))  # 116, was 148
-length(unique(laketrout_all$LakeName))  # 35, was 84
+length(unique(laketrout_all$ProjectTitle))  # 118, was 148
+length(unique(laketrout_all$LakeName))  # 41, was 84
+
 
 # making sure that all lake names in laketrout_all are contained in morphometry
 sort(unique(laketrout_all$LakeName))[!(sort(unique(laketrout_all$LakeName)) %in% morphometry$LakeName)]
@@ -85,23 +88,26 @@ laketrout1 <- laketrout_all %>%
                               "Mark-Recapture Event 1 - (September - 2004)",
                               "Mark-Recapture Event 2 - (May - 2003)"))
 # filter(is.na(ForkLength_mm) | ForkLength_mm )
-nrow(laketrout1) # 32697, was 32539
+nrow(laketrout1) # 32714, was 32539
 
 lm1 <- with(laketrout1, lm(log(Weight_g) ~ log(ForkLength_mm)))
 resids1 <- log(laketrout1$Weight_g) - predict(lm1, newdata=laketrout1)
-laketrout2 <- filter(laketrout1, is.na(resids1) | abs(resids1) < 5*sd(resids1, na.rm=TRUE))
+
+# how many residual SDs to include
+sdcutoff <- 5
+laketrout2 <- filter(laketrout1, is.na(resids1) | abs(resids1) < sdcutoff*sd(resids1, na.rm=TRUE))
 with(laketrout1, plot(log(Weight_g) ~ log(ForkLength_mm),
-                      pch=ifelse(is.na(resids1) | abs(resids1) < 5*sd(resids1, na.rm=TRUE), 1, 16)))
+                      pch=ifelse(is.na(resids1) | abs(resids1) < sdcutoff*sd(resids1, na.rm=TRUE), 1, 16)))
 
 laketrout <- laketrout2 %>%
   filter(is.na(Age) | Age < 50) # %>%
   # filter(`Include in "Alaskanizing" Modeling Exercise` %in% c("yes", "Yes"))# %>%
   # mutate(LakeNum = as.numeric(as.factor(LakeName)))
 
-nrow(laketrout) # 32680 # was 32516
+nrow(laketrout) # 32697 # was 32516
 
 # lakenames <- levels(as.factor(laketrout$LakeName))
-length(levels(as.factor(laketrout$LakeName))) # 35 was 84
+length(levels(as.factor(laketrout$LakeName))) # 41 was 84
 
 # sort(unique(laketrout$LakeName[laketrout$use_fish]))
 # sort(unique(laketrout$LakeName[laketrout$make_estimates]))
@@ -162,11 +168,11 @@ sapply(laketrout, function(x) sum(is.na(x)))
 
 nrow(laketrout)
 
-sum(!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Weight_g))
-length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Weight_g)]))
+sum(!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Weight_g))  # 4607 paired weight~length obs
+length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Weight_g)]))  # 26 lakes
 
-sum(!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Age))
-length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Age)]))
+sum(!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Age))  # 1517 paired length~age obs
+length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Age)]))  # 19 lakes
 
 # length(unique(laketrout$LakeNum[!is.na(laketrout$Latitude_WGS84) & !is.na(laketrout$SurfaceArea_h)]))
 
@@ -188,7 +194,7 @@ laketrout_Winf <- data.frame(LakeName = morphometry$LakeName,
                              Area_ha = morphometry$SurfaceArea_h,
                              Elevation = morphometry$`Elevation (m)`,
                              Temperature = morphometry$`Temp (C)`)
-
+lakenames <- morphometry$LakeName
 
 
 
@@ -225,7 +231,8 @@ cat('model {
   }
 
   mu_t0 ~ dnorm(0, 1)
-  sig_t0 ~ dunif(0, 0.2) #dunif(0, 10) # ~
+  # sig_t0 ~ dunif(0, 0.2)
+  sig_t0 ~ dunif(0, 10)
   # sig_t0 ~ dexp(10)
   tau_t0 <- pow(sig_t0, -2)
 
@@ -237,9 +244,9 @@ cat('model {
 
   ## ---- Linf ~ Area component ---- ##
   for(j in whichlakes_LArea) {  # lake-level data where there are areas
-    Linf[j] ~ dnorm(mu_LArea[j], tau_LArea)T(1,)
-    mu_LArea[j] <- b0_LArea * (1 - exp(-b1_LArea * (1 + log(Area[j]))))
-    # Linf[j] ~ dlnorm(logmu_LArea[j], tau_LArea)
+    # Linf[j] ~ dnorm(mu_LArea[j], tau_LArea)T(1,)
+    # mu_LArea[j] <- b0_LArea * (1 - exp(-b1_LArea * (1 + log(Area[j]))))
+    Linf[j] ~ dlnorm(logmu_LArea[j], tau_LArea)
     logmu_LArea[j] <- log(b0_LArea * (1 - exp(-b1_LArea * (1 + log(Area[j])))))
   }
   for(j in whichlakes_LArea_c) {  # lake-level priors where there are no areas
@@ -252,10 +259,10 @@ cat('model {
   # sig_Linf_noarea_prior ~ dunif(0, 500)
 
   tau_LArea <- pow(sig_LArea, -2)
-  sig_LArea ~ dunif(0, 300)
-  sig_LArea_prior ~ dunif(0, 300)
-  # sig_LArea ~ dunif(0, 3)
-  # sig_LArea_prior ~ dunif(0, 3)
+  # sig_LArea ~ dunif(0, 300)
+  # sig_LArea_prior ~ dunif(0, 300)
+  sig_LArea ~ dunif(0, 3)
+  sig_LArea_prior ~ dunif(0, 3)
   # sig_LArea ~ dexp(0.05)
   # sig_LArea_prior ~ dexp(0.05)
 
@@ -271,17 +278,8 @@ cat('model {
     qL[j] ~ dnorm(Linf[j], tau_Lj[j])
     qLpp[j] ~ dnorm(Linf[j], tau_Lj[j])
     tau_Lj[j] <- pow(sig_Lj[j], -2)
-    # sig_Lj[j] <- sig_L0 + sig_L1*pow(nL[j], -0.5)
     sig_Lj[j] <- pow((sig_L0^2) + ((sig_L1^2)/nL[j]), 0.5)
-    # sig_Lj[j] <- sig_L0[which_nL[j]]
-    # sig_Lj[j] <- pow((sig_L0[which_nL[j]]^2) + ((sig_L1^2)/nL[j]), 0.5)
   }
-  # for(i in 1:max_nL) {
-  #   sig_L0[i] ~ dunif(0, sig_L0_cap)
-  #   sig_L0_prior[i] ~ dunif(0, sig_L0_cap)
-  #   # sig_L0[i] ~ dexp(0.2)
-  #   # sig_L0_prior[i] ~ dexp(0.2)
-  # }
 
   sig_L0 ~ dunif(0, sig_L0_cap)
   sig_L0_prior ~ dunif(0, sig_L0_cap)
@@ -361,17 +359,8 @@ cat('model {
     qW[j] ~ dnorm(Winf[j], tau_Wj[j])
     qWpp[j] ~ dnorm(Winf[j], tau_Wj[j])
     tau_Wj[j] <- pow(sig_Wj[j], -2)
-    # sig_Wj[j] <- sig_W0 + sig_W1*pow(nW[j], -0.5)
     sig_Wj[j] <- pow((sig_W0^2) + ((sig_W1^2)/nW[j]), 0.5)
-    # sig_Wj[j] <- sig_W0[which_nW[j]]
-    # sig_Wj[j] <- pow((sig_W0[which_nW[j]]^2) + ((sig_W1^2)/nW[j]), 0.5)
   }
-  # for(i in 1:max_nW) {
-  #   sig_W0[i] ~ dunif(0, sig_W0_cap)
-  #   sig_W0_prior[i] ~ dunif(0, sig_W0_cap)
-  #   # sig_W0[i] ~ dexp(0.2)
-  #   # sig_W0_prior[i] ~ dexp(0.2)
-  # }
 
   sig_W0 ~ dunif(0, sig_W0_cap)
   sig_W0_prior ~ dunif(0, sig_W0_cap)
@@ -415,10 +404,7 @@ cindy_data <- list(Age = laketrout$Age,
                    qL = tapply(laketrout$ForkLength_mm, laketrout$LakeNum,
                                quantile, p=q_input, na.rm=TRUE),
                    nL = laketrout_Winf$n_Length,
-                   # whichlakes_L = which(lakenames %in% yeslakes),
                    whichlakes_L = which(morphometry$use_fish & laketrout_Winf$n_Length > 10),
-                   # which_nL = rep(1,nrow(laketrout_Winf)),
-                   # which_nL = 1 + (laketrout_Winf$n_Age > 0 & laketrout_Winf$n_Length > 0),
                    sig_L0_cap = 500,
                    sig_L1_cap = 2000,
 
@@ -429,23 +415,14 @@ cindy_data <- list(Age = laketrout$Age,
                                           !is.na(laketrout$ForkLength_mm) &
                                        !is.na(laketrout$SurfaceArea_h) &
                                        !is.na(laketrout$Latitude_WGS84)),
-                   # whichlakes = sort(unique(laketrout$LakeNum[!is.na(laketrout$Latitude_WGS84) & !is.na(laketrout$SurfaceArea_h)])),
-                   # whichlakesc = sort(unique(laketrout$LakeNum[is.na(laketrout$Latitude_WGS84) | is.na(laketrout$SurfaceArea_h)])),
                    whichlakes_WL = which(!is.na(laketrout_Winf$Lat) & !is.na(laketrout_Winf$Area_ha)),
                    whichlakes_WL_c = which(is.na(laketrout_Winf$Lat) | is.na(laketrout_Winf$Area_ha)),
-                   # latc = tapply(laketrout$Latitude_WGS84, laketrout$LakeNum, median) -
-                   #   mean(tapply(laketrout$Latitude_WGS84, laketrout$LakeNum, median), na.rm=TRUE),
-                   # logareac = log(tapply(laketrout$SurfaceArea_h, laketrout$LakeNum, median)) -
-                   #   mean(log(tapply(laketrout$SurfaceArea_h, laketrout$LakeNum, median)), na.rm=TRUE),
                    latc = morphometry$Latitude_WGS84 - mean(morphometry$Latitude_WGS84, na.rm=TRUE),
                    logareac = log(morphometry$SurfaceArea_h) - mean(log(morphometry$SurfaceArea_h), na.rm=TRUE),
                    qW = tapply(laketrout$Weight_g/1000, laketrout$LakeNum,
                                quantile, p=q_input, na.rm=TRUE),
                    nW = laketrout_Winf$n_Weight,
-                   # whichlakes_W = which(laketrout_Winf$n_Weight > 10 & lakenames %in% yeslakes),
                    whichlakes_W = which(morphometry$use_fish & laketrout_Winf$n_Weight > 10),
-                   # which_nW = rep(1,nrow(laketrout_Winf)),
-                   # which_nW = 1 + (laketrout_Winf$n_Age > 0 & laketrout_Winf$n_Wength > 0),
                    sig_W0_cap = 5,
                    sig_W1_cap = 20
                    )
@@ -721,8 +698,7 @@ xpredict <- seq(from = min(log(laketrout$ForkLength_mm[!is.na(laketrout$Weight_g
                 to = max(log(laketrout$ForkLength_mm[!is.na(laketrout$Weight_g)]), na.rm=TRUE),
                 length.out=50)
 par(mfrow=c(3,3))
-lakenames <- levels(as.factor(laketrout$LakeName))
-for(ilake in 1:max(laketrout$LakeNum)) {
+for(ilake in 1:nrow(laketrout_Winf)) {   ### I don't think colors are right
   logweight_predict <- cindy_jags_out$sims.list$b0_logW_interp[,ilake] +
     outer(cindy_jags_out$sims.list$b1_logW[,ilake], xpredict)
   plot(NA, xlim=range(xpredict), ylim=range(log(laketrout$Weight_g/1000), na.rm=TRUE),
