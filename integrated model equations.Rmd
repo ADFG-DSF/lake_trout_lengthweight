@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 $log(W\left[j[i]\right]) \sim N \left(\mu_{WL} [j[i]], \sigma_{WL}\right)$
 
-$\mu_{WL} [j[i]] = \beta_0[j] + \beta_1[j]\times log(L[j[i]])$
+$\mu_{WL} [j[i]] = \beta_0[j] + \beta_1[j] log(L[j[i]])$
 
 $\sigma_{WL} \sim Diffuse Unif$
 
@@ -31,7 +31,7 @@ $\sigma_{\beta_1} \sim Diffuse Unif$
 
 ## Length ~ Age component
 
-$L[j[i]] \sim LN(log(\mu_{Lt}[j[i]]), \sigma_{Lt})$
+$L[j[i]] \sim LogN(log(\mu_{Lt}[j[i]]), \sigma_{Lt})$
 
 $\mu_{Lt}[j[i]] = L_{\infty}[j](1-e^{-k[j](t[j[i]]-t_0[j])})$
 
@@ -43,14 +43,14 @@ $\sigma_{t_0} \sim Diffuse Unif$
 
 $k[j] \sim N(\mu_{k}, \sigma_{k})$
 
-$\mu_{k} ~ N(0,\sqrt{10})$
+$\mu_{k} \sim Diffuse Norm$
 
-$\sigma_{k} \sim Unif(0,1)$
+$\sigma_{k} \sim Diffuse Unif$
 
 
 ## $L_{\infty}$ ~ Area component
 
-$L_{\infty} \sim LN(log(\mu_{LA}[j]), \sigma_{LA})$
+$L_{\infty} \sim LogN(log(\mu_{LA}[j]), \sigma_{LA})$
 
 $log(\mu_{LA}[j]) = \gamma(1-e^{-\lambda(1+log(A[j]))})$
 
@@ -85,4 +85,4 @@ $\zeta_W \sim Diffuse Unif$
 
 ## $W_{\infty} \sim L_{\infty}$ relationship
 
-$log(W_{\infty}[j]) = \beta_0[j] + \beta_1[j] \times log(L_{\infty}[j])$
+$log(W_{\infty}[j]) = \beta_0[j] + \beta_1[j] log(L_{\infty}[j])$

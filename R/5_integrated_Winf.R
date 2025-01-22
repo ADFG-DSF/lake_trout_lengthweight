@@ -230,14 +230,18 @@ cat('model {
     }
   }
 
-  mu_t0 ~ dnorm(0, 1)
+  mu_t0 ~ dnorm(0, 1)   # was 1
+  mu_t0_prior ~ dnorm(0, 1)
   # sig_t0 ~ dunif(0, 0.2)
   sig_t0 ~ dunif(0, 10)
+  sig_t0_prior ~ dunif(0, 10)
   # sig_t0 ~ dexp(10)
   tau_t0 <- pow(sig_t0, -2)
 
   mu_k ~ dnorm(0, 0.1)
-  sig_k ~ dunif(0, 1)
+  mu_k_prior ~ dnorm(0, 0.1)
+  sig_k ~ dunif(0, 3)
+  sig_k_prior ~ dunif(0, 3)
   tau_k <- pow(sig_k, -2)
 
 
@@ -441,8 +445,8 @@ cindy_data$whichdata_LAge <- which((laketrout$LakeNum %in% cindy_data$whichlakes
 # JAGS controls
 # niter <- 2*1000
 # niter <- 20*1000
-niter <- 50*1000
-# niter <- 100*1000
+# niter <- 50*1000      # 50k in 9 minutes
+niter <- 100*1000
 # ncores <- 3
 ncores <- min(10, parallel::detectCores()-1)
 
@@ -453,6 +457,10 @@ ncores <- min(10, parallel::detectCores()-1)
   parameters <- c("sig_LAge", "sig_LAge_prior",
                   "t0", "t0_prior",
                   "k", "k_prior",
+                  "mu_t0","mu_t0_prior",
+                  "sig_t0","sig_t0_prior",
+                  "mu_k","mu_k_prior",
+                  "sig_k","sig_k_prior",
                   "Lfit",
                   "Linf", "Winf",
                   "mu_LArea",
@@ -484,6 +492,13 @@ ncores <- min(10, parallel::detectCores()-1)
   print(Sys.time() - tstart)
 }
 cindy_jags_out$DIC
+
+# winf_list <- list()
+# i_list <- 1
+i_list <- i_list+1
+winf_list[[i_list]] <- cindy_jags_out$sims.list$Winf
+par(mfrow=c(1,1))
+comparecat(winf_list)
 
 #### global model diagnostics and summary
 
