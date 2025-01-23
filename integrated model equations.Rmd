@@ -1,5 +1,6 @@
 ---
-title: "Untitled"
+title: "An Integrated Model for Estimating Asymptotic Weight of Lake Trout"
+author: "Matt Tyers"
 output: word_document
 date: "2025-01-18"
 ---
@@ -8,7 +9,21 @@ date: "2025-01-18"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Weight ~ Length component
+## Purpose & general outline of methods
+
+Application of the Lester Model to lake trout in Alaska lakes may be substantially improved by direct estimation of asymptotic weight $W_{\infty}$ when possible.  In the computational framework presented by Lester, et al., $W_{\infty}$ is estimated by means of a sequence of relationships: first, the relationship observed between lake area and asymptotic length observed in Canada; then, the aggregate relationship between length and weight observed in Canada.
+
+We have data at a finer resolution: for the subset of 41 lakes with documented lake trout presence and of inferential interest, we have sampling data on 30,000+ individual fish (4615 weights; 32,417 lengths; 1517 ages), which can be used to gain inference on pairwise relationships between variables (4607 paired length x weight observations from 26 lakes; 1517 paired length x age observations from 19 lakes).  Not only can the relationships between length and weight and between lake area and asymptotic length be estimated for Alaska, they can be estimated specifically for each of the 41 lakes as appropriate, and parameters reported by Lester, et. al. may be incorporated as priors.  
+
+Implementation of an integrated model as outlined below allows simultaneous use of all available information, as well as appropriate propagation of all uncertainty in estimation.  This should represent an improvement over a previous modeling exercise that estimated each relationship in sequence and then employed heuristic rules to select among available methods for estimating asymptotic size: rather, all available information is used simultaneously.
+
+The model can be conceptualized as consisting of six inter-related components:
+
+### Weight ~ Length component
+
+A log-log regression was used to model weight as a function of length, expanding somewhat on the form used by Lester, et al.  Since fish-level data (lengths and weights) were available from several lakes of differing habitat, the length-weight relationships were estimated separately for each lake, with slope and intercept parameters modeled hierarchically as further described.  For fish *i* within lake *j*: 
+
+THIS WHOLE DARN PIECE WILL PROBABLY NEED TO BE REFINED AFTER MODEL SELECTION
 
 $log(W\left[j[i]\right]) \sim N \left(\mu_{WL} [j[i]], \sigma_{WL}\right)$
 
@@ -29,15 +44,19 @@ $\mu_{\beta_1} \sim Diffuse Norm$
 $\sigma_{\beta_1} \sim Diffuse Unif$
 
 
-## Length ~ Age component
+### Length ~ Age component
+
+The relationship between length and age was modeled using a Von Bertalanffy growth function, with multiplicative (lognormal) error.  For fish *i* within lake *j*:
 
 $L[j[i]] \sim LogN(log(\mu_{Lt}[j[i]]), \sigma_{Lt})$
 
 $\mu_{Lt}[j[i]] = L_{\infty}[j](1-e^{-k[j](t[j[i]]-t_0[j])})$
 
+Growth parameters $L_{\infty}$, $k$, and $t_0$ were modeled separately for each lake *j*, with hierarchical distributions according to the form below.  Note that the hierarchical mean $t_0$ is mildly constrained to be near zero; this is to aid convergence and to ensure that it falls within a biologically reasonable range.
+
 $t_0[j] \sim N(\mu_{t_0}, \sigma_{t_0})$
 
-$\mu_{t_0} ~ N(0,1)$
+$\mu_{t_0} \sim N(0,1)$
 
 $\sigma_{t_0} \sim Diffuse Unif$
 
@@ -48,7 +67,9 @@ $\mu_{k} \sim Diffuse Norm$
 $\sigma_{k} \sim Diffuse Unif$
 
 
-## $L_{\infty}$ ~ Area component
+### $L_{\infty}$ ~ Area component
+
+Growth parameter $L_{\infty}$ may be thought of as hierarchically distributed, but with a central trend defined not by a global mean but according to the relationship with lake area reported by Lester, et al., and with multiplicative (lognormal) process error.  Parameters $\gamma$ and $\lambda$ were given weakly informative priors centered on the values reported by Lester, et al., and with coefficients of variation given below.  For lake *j*:
 
 $L_{\infty} \sim LogN(log(\mu_{LA}[j]), \sigma_{LA})$
 
@@ -61,7 +82,13 @@ $\gamma \sim N(\gamma_{Lester}, 100\% \times \gamma_{Lester})$
 $\lambda \sim N(\lambda_{Lester}, 250\% \times \lambda_{Lester})$
 
 
-## Length Quantile ~ $L_{\infty}$ component
+### Length Quantile ~ $L_{\infty}$ component
+
+In the absence of sufficient paired age and length data, it is common practice to use a quantile (percentile) value from a length sample as a proxy for asymptotic length.  Given the relative wealth of length samples within our dataset, it is certainly worth incorporating this information into an integrated model.
+
+Length quantile values for each lake *j* were treated as observations of asymptotic length, with additive (normal) error.  The error standard deviation was conceptualized as consisting of two independent components: the uncertainty due to estimation of a population length quantile, which will be approximately proportional to the inverse square root of the sample size, and the uncertainty within the relationship between the population length quantile and asymptotic length.  
+
+The model was run for a sequence of trial percentile values in sequence, ranging from the 85th to 99th percentiles, and data values (length percentiles) were compared to the respective posterior predictive distributions.  For this dataset, using the 95th percentile to estimate asymptotic length resulted in the best agreement between data values and posterior predictive distributions, which can be taken as evidence of consistency among all available sources of information.
 
 $q_L[j] \sim N(L_{\infty}, \sigma_L[j])$
 
@@ -72,7 +99,9 @@ $\eta_L \sim Diffuse Unif$
 $\zeta_L \sim Diffuse Unif$
 
 
-## Weight Quantile ~ $W_{\infty}$ component
+### Weight Quantile ~ $W_{\infty}$ component
+
+Similarly, weight quantiles were treated as observations of asymptotic weight as available, with estimable error according to the same form.  The relationship between length and weight is non-linear; however, quantile values are invariant to monotonic transformations.  Therefore, the 95th percentile values of weight were used.
 
 $q_W[j] \sim N(W_{\infty}, \sigma_W[j])$
 
@@ -83,6 +112,8 @@ $\eta_W \sim Diffuse Unif$
 $\zeta_W \sim Diffuse Unif$
 
 
-## $W_{\infty} \sim L_{\infty}$ relationship
+### $W_{\infty} \sim L_{\infty}$ relationship
+
+Finally, the relationship between asymptotic length and asymptotic weight for lake *j* was treated as deterministic (that is, without additional observation error), according to the log-log regression parameters estimated for that lake.  Since asymptotic size functions as a central trend that is not subject to fish-level variability, the only variability that is necessary to incorporate is that due to estimation of the regression parameters themselves.  Inclusion of this step in the same model that is also estimating the length-weight relationship will therefore propagate this uncertainty.
 
 $log(W_{\infty}[j]) = \beta_0[j] + \beta_1[j] log(L_{\infty}[j])$

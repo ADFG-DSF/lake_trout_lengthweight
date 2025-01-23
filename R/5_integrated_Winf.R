@@ -30,7 +30,46 @@ morphometry1 <- read_csv("flat_data/lake_morphometry3.csv", skip=1) %>%
 # length(unique(morphometry1$LakeName))
 
 
+## adding Lester equations for comparison
+morphometry1 <- morphometry1 %>%
+  mutate(DR_lester = MaximumDepth_m/MeanDepth_m) %>%
+  mutate(D_th_lester = 3.26*SurfaceArea_h^0.109*MeanDepth_m^0.213*exp(-0.0263*`Temp (C)`)) %>%
+  mutate(pV_hy_lester = (1-D_th_lester/MaximumDepth_m)^DR_lester) %>%
+  mutate(pV_eb_lester = exp(-4.63*pV_hy_lester)) %>%
+  mutate(L_inf_lester = 957*(1-exp(-0.14*(1+log(SurfaceArea_h))))) %>%
+  mutate(W_inf_lester = (L_inf_lester/451)^3.2) %>%
+  mutate(S_lester = 1/(1+exp(2.47+0.386*`Temp (C)`-16.8*pV_hy_lester))) %>%
+  mutate(B_msy_lester = 8.47*(MeanDepth_m*pV_eb_lester*S_lester)/W_inf_lester^1.33) %>%
+  mutate(M_lester = 0.26*(exp(0.021*`Temp (C)`+0.0004*`Temp (C)`^2))/W_inf_lester^0.30) %>%
+  mutate(msy_ha_lester = B_msy_lester*M_lester) %>%
+  mutate(msy_lester = round(msy_ha_lester*SurfaceArea_h, 2))
 
+# lester_msy <- function(lake, temp, area, mean_depth, max_depth) {
+#   Temp <- temp
+#   A <- area
+#   D_max <- max_depth
+#   D_mn <- mean_depth
+#   DR <- D_max/D_mn
+#   D_th <- 3.26*A^0.109*D_mn^0.213*exp(-0.0263*Temp)
+#   pV_hy <- (1-D_th/D_max)^DR
+#   pV_eb <- exp(-4.63*pV_hy)
+#   L_inf <- 957*(1-exp(-0.14*(1+log(A))))
+#   W_inf <- (L_inf/451)^3.2
+#   S <- 1/(1+exp(2.47+0.386*Temp-16.8*pV_hy))
+#   B_msy <- 8.47*(D_mn*pV_eb*S)/W_inf^1.33
+#   M <- 0.26*(exp(0.021*Temp+0.0004*Temp^2))/W_inf^0.30
+#   msy_ha <- B_msy*M
+#   msy <- round(msy_ha*area, 2)
+#   return(data.frame(lake = lake, Temp = temp, A = area, D_mn = mean_depth, D_max = max_depth,
+#                     DR = DR, D_th = D_th, pV_hy = pV_hy, pV_eb = pV_eb, L_inf = L_inf, W_inf = W_inf, S = S,
+#                     B_msy = B_msy, M = M, msy_ha = msy_ha, msy = msy))
+# }
+# msy_test <- lester_msy(lake=morphometry1$LakeName,
+#                        temp=morphometry1$`Temp (C)`,
+#                        area=morphometry1$SurfaceArea_h,
+#                        mean_depth = morphometry1$MeanDepth_m,
+#                        max_depth = morphometry1$MaximumDepth_m)
+# all(msy_test$msy == morphometry2$msy_lester, na.rm=TRUE)
 
 # read fish-level data
 # match lake names to lake-level (morphometry) data as needed
@@ -166,7 +205,11 @@ sapply(laketrout, function(x) sum(is.na(x)))
 #       is.na(laketrout$SurfaceArea_h),
 #       is.na(laketrout$Weight_g))
 
-nrow(laketrout)
+nrow(laketrout) # 32697
+
+sum(!is.na(laketrout$ForkLength_mm))  # 32417 lengths
+sum(!is.na(laketrout$Weight_g))  # 4615 weights
+sum(!is.na(laketrout$Age)) # 1517 ages
 
 sum(!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Weight_g))  # 4607 paired weight~length obs
 length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Weight_g)]))  # 26 lakes
@@ -630,6 +673,8 @@ legend("topleft", legend=c("AGES, then","Lq, then","AREA, then","nothing"), col=
 points(x=theorder[cindy_data$whichlakes_W], y=cindy_jags_out$q50$Linf[cindy_data$whichlakes_W])#, col=cindy_data$alllakes %in% cindy_data$whichlakes_W)
 points(x=theorder[morphometry$make_estimates], y=cindy_jags_out$q50$Linf[morphometry$make_estimates], pch=16)
 
+points(x=theorder, y=morphometry$L_inf_lester, pch="x")
+
 plot(NA, xlim=range(cindy_data$qL, na.rm=T),
      ylim=range(cindy_jags_out$q2.5$Linf, cindy_jags_out$q97.5$Linf, na.rm=TRUE),
      main="Linf", xlab="qL", ylab="")
@@ -667,6 +712,8 @@ points(x=(ifelse(is.na(cindy_data$Area), -1, log(cindy_data$Area)))[cindy_data$w
        y=cindy_data$qL[cindy_data$whichlakes_L])
 points(x=(ifelse(is.na(cindy_data$Area), -1, log(cindy_data$Area)))[morphometry$make_estimates],
        y=cindy_jags_out$q50$Linf[morphometry$make_estimates], pch=16)
+
+points(x=ifelse(is.na(cindy_data$Area), -1, log(cindy_data$Area)), y=morphometry$L_inf_lester, pch="x")
 
 # more of the same, maybe these thoughts can be combined?
 # caterpillar(cindy_jags_out$sims.list$Linf[,cindy_data$whichlakes_L],
@@ -764,6 +811,8 @@ legend("topleft", legend=c("Wq, then","AGES, then","Lq, then","AREA, then","noth
 points(x=theorder[morphometry$make_estimates],
        y=cindy_jags_out$q50$Winf[morphometry$make_estimates],
        pch=16)
+
+points(x=theorder, y=morphometry$W_inf_lester, pch="x")
 
 #
 # plot(NA, xlim=range(cindy_data$qL, na.rm=T),
