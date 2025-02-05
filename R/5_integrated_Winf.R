@@ -774,11 +774,11 @@ for(ilake in 1:nrow(laketrout_Winf)) {   ### I don't think colors are right
   if(all(!is.na(logweight_predict))) envelope(logweight_predict, x=xpredict, add=TRUE, col=cols[ilake])
   points(x = log(laketrout$ForkLength_mm[laketrout$LakeNum==ilake]),
          y = log(laketrout$Weight_g[laketrout$LakeNum==ilake]/1000),
-         col=adjustcolor(1, alpha.f = 0.4))
+         col=adjustcolor(1, alpha.f = 0.1))
   abline(a=-19.56, b=3.2, lty=3)
   crossplot(dfx=log(cindy_jags_out$sims.list$Linf[,ilake]),
             dfy=log(cindy_jags_out$sims.list$Winf[,ilake]),
-            col=cols[ilake], add=T)
+            col=1, add=T)
 }
 
 par(mfrow=c(2,2))
@@ -870,8 +870,55 @@ colsfrombefore <- ifelse(cindy_data$alllakes %in% cindy_data$whichlakes_W, 5,
   adjustcolor(alpha.f = .5)
 par(mfrow=c(1,1))
 crossplot(cindy_jags_out, p=c("Linf", "Winf"), col=colsfrombefore)
-crossplot(cindy_jags_out, p=c("Linf", "Winf"), drawcross = FALSE, drawx = TRUE)
-crossplot(cindy_jags_out, p=c("Linf", "Winf"), drawcross = FALSE, drawblob = TRUE)
+crossplot(cindy_jags_out, p=c("Linf", "Winf"), col=colsfrombefore,
+          drawcross = FALSE, drawx = TRUE)
+crossplot(cindy_jags_out, p=c("Linf", "Winf"), col=colsfrombefore,
+          drawcross = FALSE, drawblob = TRUE)
+
+
+
+
+
+# lester_msy <- function(lake, temp, area, mean_depth, max_depth) {
+#   Temp <- temp
+#   A <- area
+#   D_max <- max_depth
+#   D_mn <- mean_depth
+#   DR <- D_max/D_mn
+#   D_th <- 3.26*A^0.109*D_mn^0.213*exp(-0.0263*Temp)
+#   pV_hy <- (1-D_th/D_max)^DR
+#   pV_eb <- exp(-4.63*pV_hy)
+#   L_inf <- 957*(1-exp(-0.14*(1+log(A))))
+#   W_inf <- (L_inf/451)^3.2
+#   S <- 1/(1+exp(2.47+0.386*Temp-16.8*pV_hy))
+#   B_msy <- 8.47*(D_mn*pV_eb*S)/W_inf^1.33
+#   M <- 0.26*(exp(0.021*Temp+0.0004*Temp^2))/W_inf^0.30
+#   msy_ha <- B_msy*M
+#   msy <- round(msy_ha*area, 2)
+#   return(data.frame(lake = lake, Temp = temp, A = area, D_mn = mean_depth, D_max = max_depth,
+#                     DR = DR, D_th = D_th, pV_hy = pV_hy, pV_eb = pV_eb, L_inf = L_inf, W_inf = W_inf, S = S,
+#                     B_msy = B_msy, M = M, msy_ha = msy_ha, msy = msy))
+# }
+
+W_inf <- cindy_jags_out$sims.list$Winf
+mkmt <- function(x, suffix="_lester") matrix(morphometry[[paste0(x, suffix)]],
+                           nrow=nrow(W_inf), ncol=ncol(Winf), byrow=TRUE)
+str(mkmt("S"))
+
+B_msy_post <- 8.47*(mkmt("MeanDepth_m","")*mkmt("pV_eb")*mkmt("S"))/W_inf^1.33
+M_post <- 0.26*(exp(0.021*mkmt("Temp", " (C)")+0.0004*mkmt("Temp", " (C)")^2))/W_inf^0.30
+msy_ha_post <- B_msy_post*M_post
+msy_post <- msy_ha_post*mkmt("SurfaceArea_h", "")
+
+caterpillar(msy_ha_post, x=theorder, col=colsfrombefore)
+points(morphometry$msy_ha_lester)
+caterpillar(msy_post, x=theorder, col=colsfrombefore)
+points(morphometry$msy_lester)
+
+
+
+
+
 
 
 
