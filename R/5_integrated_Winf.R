@@ -902,19 +902,102 @@ crossplot(cindy_jags_out, p=c("Linf", "Winf"), col=colsfrombefore,
 
 W_inf <- cindy_jags_out$sims.list$Winf
 mkmt <- function(x, suffix="_lester") matrix(morphometry[[paste0(x, suffix)]],
-                           nrow=nrow(W_inf), ncol=ncol(Winf), byrow=TRUE)
-str(mkmt("S"))
-
+                           nrow=nrow(W_inf), ncol=ncol(W_inf), byrow=TRUE)
+#   B_msy <- 8.47*(D_mn*pV_eb*S)/W_inf^1.33
 B_msy_post <- 8.47*(mkmt("MeanDepth_m","")*mkmt("pV_eb")*mkmt("S"))/W_inf^1.33
+#   M <- 0.26*(exp(0.021*Temp+0.0004*Temp^2))/W_inf^0.30
 M_post <- 0.26*(exp(0.021*mkmt("Temp", " (C)")+0.0004*mkmt("Temp", " (C)")^2))/W_inf^0.30
+#   msy_ha <- B_msy*M
 msy_ha_post <- B_msy_post*M_post
+#   msy <- round(msy_ha*area, 2)
 msy_post <- msy_ha_post*mkmt("SurfaceArea_h", "")
 
-caterpillar(msy_ha_post, x=theorder, col=colsfrombefore)
-points(morphometry$msy_ha_lester)
-caterpillar(msy_post, x=theorder, col=colsfrombefore)
-points(morphometry$msy_lester)
+mn_weight_vec <- unname(tapply(laketrout$Weight_g, lakenums, mean, na.rm=TRUE)/1000)
+se_weight_vec <- unname(tapply(laketrout$Weight_g, lakenums, dsftools::se, na.rm=TRUE)/1000)
+mn_weight_mat <- mn_weight_vec %>%
+  matrix(nrow=nrow(W_inf), ncol=ncol(W_inf), byrow=TRUE)   # estimate mean weight bayesianly?
+mn_weight_estmat <- NA*mn_weight_mat
+for(j in 1:ncol(mn_weight_estmat)) {
+  mn_weight_estmat[,j] <- rnorm(n=nrow(mn_weight_estmat),
+                                mean=mn_weight_vec[j],
+                                sd=se_weight_vec[j])
+}
 
+# specify model, which is written to a temporary file
+mnwt_jags <- tempfile()
+cat('model {
+  for(i in whichdata) {
+    y[i] ~ dnorm(mu[lake[i]], tau[lake[i]])
+  }
+
+  for(j in 1:ngrp) {
+    mu[j] ~ dunif(0,20)
+    # mu[j] ~ dnorm(mumu, sigmu)
+    sig[j] ~ dunif(0,5)
+    tau[j] <- pow(sig[j], -2)
+  }
+  mumu ~ dunif(0,20)
+  sigmu ~ dunif(0,10)
+}', file=mnwt_jags)
+
+
+
+# bundle data to pass into JAGS
+mnwt_data <- list(y=laketrout$Weight_g/1000,
+                  whichdata=which(!is.na(laketrout$Weight_g)),
+                  lake=as.numeric(laketrout$LakeNum),
+                  ngrp=max(as.numeric(laketrout$LakeNum)))
+
+# JAGS controls
+niter <- 10000
+# ncores <- 3
+ncores <- min(10, parallel::detectCores()-1)
+
+{
+  tstart <- Sys.time()
+  print(tstart)
+  mnwt_jags_out <- jagsUI::jags(model.file=mnwt_jags, data=mnwt_data,
+                                parameters.to.save=c("sig","mu", "mumu", "sigmu"),
+                                n.chains=ncores, parallel=T, n.iter=niter,
+                                n.burnin=niter/2, n.thin=niter/2000)
+  print(Sys.time() - tstart)
+}
+
+nbyname(mnwt_jags_out)
+plotRhats(mnwt_jags_out)
+traceworstRhat(mnwt_jags_out, parmfrow = c(3, 3))
+# caterpillar(mnwt_jags_out, "mu")
+# caterpillar(mnwt_jags_out, "sig")
+# mn_weight_estmat_jags <- mnwt_jags_out$sims.list$mu
+# sd_weight_estmat_jags <- mnwt_jags_out$sims.list$sig
+# mn_weight_estmat_jags[, 1:ncol(mn_weight_estmat_jags) %in% which(is.na(se_weight_vec))] <- NA
+# sd_weight_estmat_jags[, 1:ncol(mn_weight_estmat_jags) %in% which(is.na(se_weight_vec))] <- NA
+mn_weight_estmat_jags <- sd_weight_estmat_jags <- NA*mn_weight_estmat
+mn_weight_estmat_jags[, !is.na(se_weight_vec)] <-
+  mnwt_jags_out$sims.list$mu[, which(!is.na(se_weight_vec))]
+sd_weight_estmat_jags[, !is.na(se_weight_vec)] <-
+  mnwt_jags_out$sims.list$sig[, which(!is.na(se_weight_vec))]
+caterpillar(mn_weight_estmat_jags)
+caterpillar(mn_weight_estmat)
+caterpillar(sd_weight_estmat_jags)
+
+caterpillar(msy_ha_post, x=theorder, col=colsfrombefore)
+points(y=morphometry$msy_ha_lester, x=theorder)
+caterpillar(msy_post, x=theorder, col=colsfrombefore)
+points(y=morphometry$msy_lester, x=theorder)
+caterpillar(msy_post/mn_weight_mat, col=colsfrombefore, x=theorder)
+points(y=morphometry$msy_lester/mn_weight_vec, x=theorder)
+caterpillar(msy_post/mn_weight_estmat_jags, col=colsfrombefore, x=theorder)
+points(y=morphometry$msy_lester/mn_weight_vec, x=theorder)
+
+caterpillar(msy_ha_post, col=colsfrombefore)
+points(morphometry$msy_ha_lester)
+caterpillar(msy_post, col=colsfrombefore)
+points(morphometry$msy_lester)
+caterpillar(msy_post/mn_weight_mat, col=colsfrombefore)
+points(morphometry$msy_lester/mn_weight_vec)
+caterpillar(msy_post/mn_weight_estmat_jags, col=colsfrombefore)
+points(morphometry$msy_lester/mn_weight_vec)
 
 
 
