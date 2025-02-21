@@ -824,6 +824,37 @@ points(x=theorder[morphometry$make_estimates],
 
 points(x=theorder, y=morphometry$W_inf_lester, pch="x")
 
+
+
+par(mfrow=c(1,1))
+plot(NA,
+     ylim=range(cindy_jags_out$q2.5$Winf, cindy_jags_out$q97.5$Winf, na.rm=TRUE),
+     xlim=range(log(cindy_data$Area), -1, na.rm=TRUE),
+     main="Winf", xlab="Area (ha)", ylab="", xaxt="n")
+lbls <- c(1, 5, 10, 50, 100, 500, 1000, 5000)
+axis(side=1, at=log(lbls), labels=lbls)
+thecols <- ifelse(cindy_data$alllakes %in% cindy_data$whichlakes_Lt, 4,
+                  ifelse(cindy_data$alllakes %in% cindy_data$whichlakes_L, 2,
+                         ifelse(cindy_data$alllakes %in% cindy_data$whichlakes_LA, 3, 1)))
+caterpillar(cindy_jags_out, "Winf", col=thecols,
+            x=ifelse(is.na(cindy_data$Area), -1, log(cindy_data$Area)),
+            add=TRUE)
+points(x=ifelse(is.na(cindy_data$Area), -1, log(cindy_data$Area)),
+       y=cindy_jags_out$q50$Winf,
+       col=thecols, pch=16)
+# curve(cindy_data$gam_lester * (1 - exp(-cindy_data$lam_lester * (1 + x))), add=TRUE, lty=2)
+legend("topleft", legend=c("AGES, then","Lq, then","AREA, then","nothing","Lester priors"),
+       col=c(4,2,3,1,1), lwd=c(rep(3,4),1), lty=c(rep(1,4),2), cex=0.5)
+
+points(x=(ifelse(is.na(cindy_data$Area), -1, log(cindy_data$Area)))[cindy_data$whichlakes_L],
+       y=cindy_data$qL[cindy_data$whichlakes_L])
+points(x=(ifelse(is.na(cindy_data$Area), -1, log(cindy_data$Area)))[morphometry$make_estimates],
+       y=cindy_jags_out$q50$Winf[morphometry$make_estimates], pch=16)
+
+points(x=ifelse(is.na(cindy_data$Area), -1, log(cindy_data$Area)), y=morphometry$W_inf_lester, pch="x")
+
+
+
 #
 # plot(NA, xlim=range(cindy_data$qL, na.rm=T),
 #      ylim=range(cindy_jags_out$q2.5$Winf, cindy_jags_out$q97.5$Winf, na.rm=TRUE),
@@ -1000,7 +1031,15 @@ caterpillar(msy_post/mn_weight_estmat_jags, col=colsfrombefore)
 points(morphometry$msy_lester/mn_weight_vec)
 
 
-
+# not sure if this will work in sequence with the rest
+xx <- ifelse(is.na(cindy_data$Area), -1, log(cindy_data$Area))
+yy <- c(1, 10, 100, 1000, 10000)
+plot(NA, xlim=range(xx), ylim=c(1, 40000), main="MSY (kg)", log="y", xaxt="n", yaxt="n",
+     xlab="Area (ha)", ylab="")
+caterpillar(msy_post, x=xx, log="y", col=thecols, add=T)
+axis(side=1, at=log(lbls), labels=lbls)
+axis(side=2, at=yy, labels=yy)
+points(xx, morphometry$msy_lester, pch="x")
 
 
 
