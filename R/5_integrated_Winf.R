@@ -584,7 +584,7 @@ estcols <- ifelse(morphometry$make_estimates, 4, 3)
 caterpillar(cindy_jags_out, "sig_L", col=estcols)
 envelope(cindy_jags_out$sims.list$sig_L[, cindy_data$whichlakes_L],
          x=cindy_data$nL[cindy_data$whichlakes_L], log="x",
-         xlab="n Length for quantiles")
+         xlab="n Length for quantiles", ylab="sig_L")
 
 
 
@@ -603,12 +603,12 @@ plot_postpred(cindy_jags_out$sims.list$qWpp[,cindy_data$whichlakes_W],
               x=log(cindy_data$nW[cindy_data$whichlakes_W]))
 
 
-### plot how sig_L varies by lake
+### plot how sig_W varies by lake
 par(mfrow=c(1,2))
 caterpillar(cindy_jags_out, "sig_W", col=estcols)
 envelope(cindy_jags_out$sims.list$sig_W[, cindy_data$whichlakes_W],
          x=cindy_data$nW[cindy_data$whichlakes_W], log="x",
-         xlab="n Length for quantiles")
+         xlab="n Weight for quantiles", ylab="sig_W")
 
 
 ### Posterior predictive for L
