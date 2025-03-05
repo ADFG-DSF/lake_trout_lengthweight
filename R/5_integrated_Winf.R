@@ -74,7 +74,7 @@ morphometry1 <- morphometry1 %>%
 # read fish-level data
 # match lake names to lake-level (morphometry) data as needed
 # take out rows where !use_fish
-laketrout_all <- read_csv("flat_data/length_weight3.csv", skip=1) %>%
+laketrout_all <- read_csv("flat_data/length_weight4.csv", skip=1) %>%  #"flat_data/length_weight3.csv"
   mutate(LakeName = ifelse(LakeName == "Donnelly Lake", "Donnelly Lake (Richardson Highway)", LakeName)) %>%
   mutate(LakeName = ifelse(LakeName == "Four Mile Lake", "Fourmile Lake (Taylor Highway)", LakeName)) %>%
   mutate(LakeName = ifelse(LakeName == "Lost Lake", "Lost Lake  (Chisholm Lake) (near Birch Lake)", LakeName)) %>%
@@ -539,6 +539,12 @@ ncores <- min(10, parallel::detectCores()-1)
   print(Sys.time() - tstart)
 }
 cindy_jags_out$DIC
+
+
+# save(cindy_jags_out, file="modelpost_3_4_25.Rdata")
+# load(file="modelpost_3_4_25.Rdata")
+
+
 
 # # winf_list <- list()
 # # i_list <- 1
@@ -1154,29 +1160,69 @@ for(ilake in 1:nrow(laketrout_Winf)) {
   envelope(cindy_jags_out$sims.list$Lfit[,,ilake], main=lakenames[ilake],
            ylim=range(cindy_data$L[!is.na(cindy_data$Age)]),
            # col=ifelse(j %in% cindy_data$whichlakes_L, 2, 4),
+           xlab="Age", ylab="FL (mm)",
            col=datacols[ilake])
   points(cindy_data$Age[cindy_data$lake==ilake], cindy_data$L[cindy_data$lake==ilake])
   # legend("topleft", legend=c("L ~ Age only", "qL also"),
   #        fill=adjustcolor(c(4,2), alpha.f=.3), border=c(4,2), cex=.6)
   datalegend()
+  caterpillar(x=48, df=cindy_jags_out$sims.list$Linf[,ilake], col=1, lwd=2, add=TRUE)
+  abline(h=morphometry$L_inf_lester[ilake], lty=3)
   } else {
     plot(NA, xlim=0:1, ylim=0:1)
   }
 
+  hh <- 0.6
   if(sum(!is.na(cindy_data$L[cindy_data$lake==ilake]))>0) {
     hist(cindy_data$L[cindy_data$lake==ilake], xlim=c(0, 1500),
          xlab="FL (mm)", main=paste0("Length (n=",sum(!is.na(cindy_data$L[cindy_data$lake==ilake])),")"),
-         col=0)
+         col=0, border="grey40")
+    points(x=cindy_data$L[cindy_data$lake==ilake],
+           y=runif(sum(cindy_data$lake==ilake), par("usr")[3], 0.1*par("usr")[4]))
+    lines(x=c(cindy_jags_out$q2.5$Linf[ilake], cindy_jags_out$q97.5$Linf[ilake]),
+             y=rep(hh*par("usr")[4], 2),
+             col=1, lwd=2, lend=1)
+    lines(x=c(cindy_jags_out$q25$Linf[ilake], cindy_jags_out$q75$Linf[ilake]),
+             y=rep(hh*par("usr")[4], 2),
+             col=1, lwd=7, lend=1)
+    lines(x=rep(cindy_jags_out$q50$Linf[ilake], 2), y=c(hh-.05, hh+.05)*par("usr")[4], lwd=2, lend=1)
+    abline(v=morphometry$L_inf_lester[ilake], lty=3)
   } else {
-    plot(NA, xlim=0:1, ylim=0:1)
+    plot(NA, xlim=c(0, 1500), ylim=0:1, main="Length (n=0)")
+    lines(x=c(cindy_jags_out$q2.5$Linf[ilake], cindy_jags_out$q97.5$Linf[ilake]),
+          y=rep(0.1*par("usr")[4], 2),
+          col=1, lwd=2, lend=1)
+    lines(x=c(cindy_jags_out$q25$Linf[ilake], cindy_jags_out$q75$Linf[ilake]),
+          y=rep(0.1*par("usr")[4], 2),
+          col=1, lwd=7, lend=1)
+    lines(x=rep(cindy_jags_out$q50$Linf[ilake], 2), y=c(0.05,0.15)*par("usr")[4], lwd=2, lend=1)
+    abline(v=morphometry$L_inf_lester[ilake], lty=3)
   }
 
   if(sum(!is.na(cindy_data$logW[cindy_data$lake==ilake]))>0) {
     hist(exp(cindy_data$logW[cindy_data$lake==ilake]), xlim=c(0, 14),
          xlab="Weight (kg)", main=paste0("Weight (n=",sum(!is.na(cindy_data$logW[cindy_data$lake==ilake])),")"),
-         col=0)
+         col=0, border="grey40")
+    points(x=exp(cindy_data$logW[cindy_data$lake==ilake]),
+           y=runif(sum(cindy_data$lake==ilake), par("usr")[3], 0.1*par("usr")[4]))
+    lines(x=c(cindy_jags_out$q2.5$Winf[ilake], cindy_jags_out$q97.5$Winf[ilake]),
+          y=rep(hh*par("usr")[4], 2),
+          col=1, lwd=2, lend=1)
+    lines(x=c(cindy_jags_out$q25$Winf[ilake], cindy_jags_out$q75$Winf[ilake]),
+          y=rep(hh*par("usr")[4], 2),
+          col=1, lwd=7, lend=1)
+    lines(x=rep(cindy_jags_out$q50$Winf[ilake], 2), y=c(hh-.05, hh+.05)*par("usr")[4], lwd=2, lend=1)
+    abline(v=morphometry$W_inf_lester[ilake], lty=3)
   } else {
-    plot(NA, xlim=0:1, ylim=0:1)
+    plot(NA, xlim=c(0, 14), ylim=0:1, main="Weight (n=0)")
+    lines(x=c(cindy_jags_out$q2.5$Winf[ilake], cindy_jags_out$q97.5$Winf[ilake]),
+          y=rep(0.1*par("usr")[4], 2),
+          col=1, lwd=2, lend=1)
+    lines(x=c(cindy_jags_out$q25$Winf[ilake], cindy_jags_out$q75$Winf[ilake]),
+          y=rep(0.1*par("usr")[4], 2),
+          col=1, lwd=7, lend=1)
+    lines(x=rep(cindy_jags_out$q50$Winf[ilake], 2), y=c(0.05,0.15)*par("usr")[4], lwd=2, lend=1)
+    abline(v=morphometry$W_inf_lester[ilake], lty=3)
   }
 }
 
