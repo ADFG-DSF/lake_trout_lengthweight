@@ -1,5 +1,19 @@
 ## NEED TO WRITE A HEADER
-
+# An integrated Bayesian model for estimating asymptotic weight of lake trout
+#
+# This model, as contrasted with previous modeling efforts, uses all available
+# information simultaneously to estimate asymptotic weight (and length) for each
+# of a set of lakes.  Data may include:
+# + at the fish level:
+#   - weight
+#            > weight ~ length (paired)
+#   - length
+#            > length ~ age (paired)
+#   - age
+# + at the lake level:
+#   - lake area
+#   - weight sample quantile (95th percentile value)
+#   - length sample quantile (95th percentile value)
 
 
 ## loading packages
@@ -30,7 +44,7 @@ morphometry1 <- read_csv("flat_data/lake_morphometry3.csv", skip=1) %>%
 # length(unique(morphometry1$LakeName))
 
 
-## adding Lester equations for comparison
+## adding Lester equations for comparison (without model error)
 morphometry1 <- morphometry1 %>%
   mutate(DR_lester = MaximumDepth_m/MeanDepth_m) %>%
   mutate(D_th_lester = 3.26*SurfaceArea_h^0.109*MeanDepth_m^0.213*exp(-0.0263*`Temp (C)`)) %>%
@@ -44,32 +58,6 @@ morphometry1 <- morphometry1 %>%
   mutate(msy_ha_lester = B_msy_lester*M_lester) %>%
   mutate(msy_lester = round(msy_ha_lester*SurfaceArea_h, 2))
 
-# lester_msy <- function(lake, temp, area, mean_depth, max_depth) {
-#   Temp <- temp
-#   A <- area
-#   D_max <- max_depth
-#   D_mn <- mean_depth
-#   DR <- D_max/D_mn
-#   D_th <- 3.26*A^0.109*D_mn^0.213*exp(-0.0263*Temp)
-#   pV_hy <- (1-D_th/D_max)^DR
-#   pV_eb <- exp(-4.63*pV_hy)
-#   L_inf <- 957*(1-exp(-0.14*(1+log(A))))
-#   W_inf <- (L_inf/451)^3.2
-#   S <- 1/(1+exp(2.47+0.386*Temp-16.8*pV_hy))
-#   B_msy <- 8.47*(D_mn*pV_eb*S)/W_inf^1.33
-#   M <- 0.26*(exp(0.021*Temp+0.0004*Temp^2))/W_inf^0.30
-#   msy_ha <- B_msy*M
-#   msy <- round(msy_ha*area, 2)
-#   return(data.frame(lake = lake, Temp = temp, A = area, D_mn = mean_depth, D_max = max_depth,
-#                     DR = DR, D_th = D_th, pV_hy = pV_hy, pV_eb = pV_eb, L_inf = L_inf, W_inf = W_inf, S = S,
-#                     B_msy = B_msy, M = M, msy_ha = msy_ha, msy = msy))
-# }
-# msy_test <- lester_msy(lake=morphometry1$LakeName,
-#                        temp=morphometry1$`Temp (C)`,
-#                        area=morphometry1$SurfaceArea_h,
-#                        mean_depth = morphometry1$MeanDepth_m,
-#                        max_depth = morphometry1$MaximumDepth_m)
-# all(msy_test$msy == morphometry2$msy_lester, na.rm=TRUE)
 
 # read fish-level data
 # match lake names to lake-level (morphometry) data as needed
@@ -357,11 +345,11 @@ cat('model {
     b0[j] ~ dnorm(mu_b0[j], tau_b0)
     b0_interp[j] <- b0[j] - b1[j]*meanlogLc
     mu_b0[j] <- b0_int
-                + b0_area*logareac[j]
+                # + b0_area*logareac[j]
 
     b1[j] ~ dnorm(mu_b1[j], tau_b1)
     mu_b1[j] <- b1_int
-                + lamt*latc[j]
+                # + lamt*latc[j]
   }
 
   # loop over lakes without area & lat data (c for complement)
@@ -371,11 +359,11 @@ cat('model {
     b0[jc] ~ dnorm(mu_b0[jc], tau_b0)
     b0_interp[jc] <- b0[jc] - b1[jc]*meanlogLc
     mu_b0[jc] <- b0_int
-                + b0_area*areasim[jc]
+                # + b0_area*areasim[jc]
 
     b1[jc] ~ dnorm(mu_b1[jc], tau_b1)
     mu_b1[jc] <- b1_int
-                + lamt*latsim[jc]
+                # + lamt*latsim[jc]
     areasim[jc] ~ dnorm(mean(logareac[whichlakes_WL]), pow(sd(logareac[whichlakes_WL]), -2))
     latsim[jc] ~ dnorm(mean(latc[whichlakes_WL]), pow(sd(latc[whichlakes_WL]), -2))
   }
@@ -494,7 +482,10 @@ niter <- 2*1000
 # niter <- 20*1000
 # niter <- 50*1000      # 50k in 9 minutes
 # niter <- 100*1000
+# niter <- 200*1000
+# niter <- 500*1000
 # ncores <- 3
+# ncores <- 8
 ncores <- min(10, parallel::detectCores()-1)
 
 
@@ -543,7 +534,9 @@ cindy_jags_out$DIC
 
 # save(cindy_jags_out, file="modelpost_3_4_25.Rdata")
 # load(file="modelpost_3_4_25.Rdata")
-
+crosswind_winf <- cindy_jags_out$sims.list$Winf[, lakenames=="Crosswind Lake"]
+median(crosswind_winf)  # 6.007426 with regression effects, 6.005857 without
+sd(crosswind_winf)  # 0.3115758 with regression effects, 0.3200333 without
 
 
 # # winf_list <- list()

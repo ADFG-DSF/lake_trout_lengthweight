@@ -19,31 +19,6 @@ Implementation of an integrated model as outlined below allows simultaneous use 
 
 The model can be conceptualized as consisting of six inter-related components:
 
-### Weight ~ Length component
-
-A log-log regression was used to model weight as a function of length, expanding somewhat on the form used by Lester, et al.  Since fish-level data (lengths and weights) were available from several lakes of differing habitat, the length-weight relationships were estimated separately for each lake, with slope and intercept parameters modeled hierarchically as further described.  For fish *i* within lake *j*: 
-
-THIS WHOLE DARN PIECE WILL PROBABLY NEED TO BE REFINED AFTER MODEL SELECTION
-
-$log(W\left[j[i]\right]) \sim N \left(\mu_{WL} [j[i]], \sigma_{WL}\right)$
-
-$\mu_{WL} [j[i]] = \beta_0[j] + \beta_1[j] log(L[j[i]])$
-
-$\sigma_{WL} \sim Diffuse Unif$
-
-$\beta_0[j] \sim N(\mu_{\beta_0}, \sigma_{\beta_0})$
-
-$\mu_{\beta_0} \sim Diffuse Norm$
-
-$\sigma_{\beta_0} \sim Diffuse Unif$
-
-$\beta_1[j] \sim N(\mu_{\beta_1}, \sigma_{\beta_1})$
-
-$\mu_{\beta_1} \sim Diffuse Norm$
-
-$\sigma_{\beta_1} \sim Diffuse Unif$
-
-
 ### Length ~ Age component
 
 The relationship between length and age was modeled using a Von Bertalanffy growth function, with multiplicative (lognormal) error.  For fish *i* within lake *j*:
@@ -71,15 +46,40 @@ $\sigma_{k} \sim Diffuse Unif$
 
 Growth parameter $L_{\infty}$ may be thought of as hierarchically distributed, but with a central trend defined not by a global mean but according to the relationship with lake area reported by Lester, et al., and with multiplicative (lognormal) process error.  Parameters $\gamma$ and $\lambda$ were given weakly informative priors centered on the values reported by Lester, et al., and with coefficients of variation given below.  For lake *j*:
 
-$L_{\infty} \sim LogN(log(\mu_{LA}[j]), \sigma_{LA})$
+$L_{\infty}[j] \sim LogN(log(\mu_{LA}[j]), \sigma_{LA})$
 
-$log(\mu_{LA}[j]) = \gamma(1-e^{-\lambda(1+log(A[j]))})$
+$\mu_{LA}[j] = \gamma(1-e^{-\lambda(1+log(A[j]))})$
 
 $\sigma_{LA} \sim Diffuse Unif$
 
 $\gamma \sim N(\gamma_{Lester}, 100\% \times \gamma_{Lester})$
 
 $\lambda \sim N(\lambda_{Lester}, 250\% \times \lambda_{Lester})$
+
+### Weight ~ Length component
+
+A log-log regression was used to model weight as a function of length, expanding somewhat on the form used by Lester, et al.  Since fish-level data (lengths and weights) were available from several lakes of differing habitat, the length-weight relationships were estimated separately for each lake, with slope and intercept parameters modeled hierarchically as further described.  For fish *i* within lake *j*: 
+
+THIS WHOLE DARN PIECE WILL PROBABLY NEED TO BE REFINED AFTER MODEL SELECTION
+
+$log(W\left[j[i]\right]) \sim N \left(\mu_{WL} [j[i]], \sigma_{WL}\right)$
+
+$\mu_{WL} [j[i]] = \beta_0[j] + \beta_1[j] log(L[j[i]])$
+
+$\sigma_{WL} \sim Diffuse Unif$
+
+$\beta_0[j] \sim N(\mu_{\beta_0}, \sigma_{\beta_0})$
+
+$\mu_{\beta_0} \sim Diffuse Norm$
+
+$\sigma_{\beta_0} \sim Diffuse Unif$
+
+$\beta_1[j] \sim N(\mu_{\beta_1}, \sigma_{\beta_1})$
+
+$\mu_{\beta_1} \sim Diffuse Norm$
+
+$\sigma_{\beta_1} \sim Diffuse Unif$
+
 
 
 ### Length Quantile ~ $L_{\infty}$ component
