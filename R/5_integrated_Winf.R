@@ -89,11 +89,11 @@ for(i in 1:nrow(morphometry)) {
 }
 table(laketrout_all$LakeNum)
 
-nrow(laketrout_all)  # 35691, was 35516
+nrow(laketrout_all)  # 35849, was 35691, was 35516
 sapply(laketrout_all, function(x) sum(is.na(x)))
 
 summary(laketrout_all$Year)  # 1960-2024
-length(unique(laketrout_all$ProjectTitle))  # 118, was 148
+length(unique(laketrout_all$ProjectTitle))  #119, was 118, was 148
 length(unique(laketrout_all$LakeName))  # 41, was 84
 
 
@@ -115,7 +115,7 @@ laketrout1 <- laketrout_all %>%
                               "Mark-Recapture Event 1 - (September - 2004)",
                               "Mark-Recapture Event 2 - (May - 2003)"))
 # filter(is.na(ForkLength_mm) | ForkLength_mm )
-nrow(laketrout1) # 32714, was 32539
+nrow(laketrout1) # 32872, was 32714, was 32539
 
 lm1 <- with(laketrout1, lm(log(Weight_g) ~ log(ForkLength_mm)))
 resids1 <- log(laketrout1$Weight_g) - predict(lm1, newdata=laketrout1)
@@ -131,7 +131,7 @@ laketrout <- laketrout2 %>%
   # filter(`Include in "Alaskanizing" Modeling Exercise` %in% c("yes", "Yes"))# %>%
   # mutate(LakeNum = as.numeric(as.factor(LakeName)))
 
-nrow(laketrout) # 32697 # was 32516
+nrow(laketrout) # 32854 was 32697 # was 32516
 
 # lakenames <- levels(as.factor(laketrout$LakeName))
 length(levels(as.factor(laketrout$LakeName))) # 41 was 84
@@ -193,13 +193,13 @@ sapply(laketrout, function(x) sum(is.na(x)))
 #       is.na(laketrout$SurfaceArea_h),
 #       is.na(laketrout$Weight_g))
 
-nrow(laketrout) # 32697
+nrow(laketrout) # 32854 was 32697
 
-sum(!is.na(laketrout$ForkLength_mm))  # 32417 lengths
-sum(!is.na(laketrout$Weight_g))  # 4615 weights
+sum(!is.na(laketrout$ForkLength_mm))  # 32574 was 32417 lengths
+sum(!is.na(laketrout$Weight_g))  # 4772 was 4615 weights
 sum(!is.na(laketrout$Age)) # 1517 ages
 
-sum(!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Weight_g))  # 4607 paired weight~length obs
+sum(!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Weight_g))  # 4764 was 4607 paired weight~length obs
 length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Weight_g)]))  # 26 lakes
 
 sum(!is.na(laketrout$ForkLength_mm) & !is.na(laketrout$Age))  # 1517 paired length~age obs
@@ -209,7 +209,9 @@ length(unique(laketrout$LakeNum[!is.na(laketrout$ForkLength_mm) & !is.na(laketro
 
 sapply(laketrout, function(x) sum(!is.na(x)))
 
-
+if(save_results) {
+  save(laketrout, file="laketrout_sampling_formodel.Rdata")
+}
 
 
 ##### starting a summarized data.frame
@@ -534,9 +536,47 @@ cindy_jags_out$DIC
 
 # save(cindy_jags_out, file="modelpost_3_4_25.Rdata")
 # load(file="modelpost_3_4_25.Rdata")
+
+
+### filling in summary output to save to external file
+
+ff <- function(x, n=nrow(laketrout_Winf)) { # f for fill
+  c(x, rep(NA, n - length(x)))
+}
+
+laketrout_Winf$Winf_est <- cindy_jags_out$q50$Winf %>% ff
+laketrout_Winf$Winf_se <- cindy_jags_out$sd$Winf %>% ff
+laketrout_Winf$Winf_cilo <- cindy_jags_out$q2.5$Winf %>% ff
+laketrout_Winf$Winf_cihi <- cindy_jags_out$q97.5$Winf %>% ff
+
+laketrout_Winf$Linf_est <- cindy_jags_out$q50$Linf %>% ff
+laketrout_Winf$Linf_se <- cindy_jags_out$sd$Linf %>% ff
+laketrout_Winf$Linf_cilo <- cindy_jags_out$q2.5$Linf %>% ff
+laketrout_Winf$Linf_cihi <- cindy_jags_out$q97.5$Linf %>% ff
+
+laketrout_Winf$t0_est <- cindy_jags_out$q50$t0 %>% ff
+laketrout_Winf$t0_se <- cindy_jags_out$sd$t0 %>% ff
+laketrout_Winf$k_est <- cindy_jags_out$q50$k %>% ff
+laketrout_Winf$k_se <- cindy_jags_out$sd$k %>% ff
+
+laketrout_Winf$b0_est <- cindy_jags_out$q50$b0_interp %>% ff
+laketrout_Winf$b0_se <- cindy_jags_out$sd$b0_interp %>% ff
+laketrout_Winf$b1_est <- cindy_jags_out$q50$b1 %>% ff
+laketrout_Winf$b1_se <- cindy_jags_out$sd$b1 %>% ff
+
+save_results
+if(save_results) {
+  write.csv(laketrout_Winf, file="Winf_estimates.csv")
+}
+
 crosswind_winf <- cindy_jags_out$sims.list$Winf[, lakenames=="Crosswind Lake"]
 median(crosswind_winf)  # 6.007426 with regression effects, 6.005857 without
 sd(crosswind_winf)  # 0.3115758 with regression effects, 0.3200333 without
+if(save_results) {
+  W_inf_vec <- crosswind_winf
+  save(W_inf_vec,
+       file="C:\\Users\\mbtyers\\Documents\\Current Projects\\CrosswindLake_Laketrout\\W_inf_vec.Rdata")
+}
 
 
 # # winf_list <- list()

@@ -9,13 +9,41 @@ date: "2025-01-18"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r, echo=FALSE}
+# loading data to report sample sizes
+load(file="laketrout_sampling_formodel.Rdata")
+library(magrittr)
+
+roundn <- paste0(formatC(round(nrow(laketrout), digits=-4), 
+                         big.mark=",", format="f", digits=0), 
+                 "+")
+nw <- sum(!is.na(laketrout$Weight_g)) %>% 
+  formatC(big.mark=",", format="f", digits=0)
+nl <- sum(!is.na(laketrout$ForkLength_mm)) %>% 
+  formatC(big.mark=",", format="f", digits=0)
+na <- sum(!is.na(laketrout$Age)) %>% 
+  formatC(big.mark=",", format="f", digits=0)
+
+nlw <- sum(!is.na(laketrout$ForkLength_mm & laketrout$Weight_g)) %>% 
+  formatC(big.mark=",", format="f", digits=0)
+nla <- sum(!is.na(laketrout$ForkLength_mm & laketrout$Age)) %>% 
+  formatC(big.mark=",", format="f", digits=0)
+
+nllw <- length(unique(laketrout$LakeName[!is.na(laketrout$ForkLength_mm & laketrout$Weight_g)]))
+nlla <- length(unique(laketrout$LakeName[!is.na(laketrout$ForkLength_mm & laketrout$Age)]))
+
+nlakes <- length(unique(laketrout$LakeName))
+```
+
 ## Purpose & general outline of methods
 
 Application of the Lester Model to lake trout in Alaska lakes may be substantially improved by direct estimation of asymptotic weight $W_{\infty}$ when possible.  In the computational framework presented by Lester, et al., $W_{\infty}$ is estimated by means of a sequence of relationships: first, the relationship observed between lake area and asymptotic length observed in Canada; then, the aggregate relationship between length and weight observed in Canada.
 
-We have data at a finer resolution: for the subset of 41 lakes with documented lake trout presence and of inferential interest, we have sampling data on 30,000+ individual fish (4615 weights; 32,417 lengths; 1517 ages), which can be used to gain inference on pairwise relationships between variables (4607 paired length x weight observations from 26 lakes; 1517 paired length x age observations from 19 lakes).  Not only can the relationships between length and weight and between lake area and asymptotic length be estimated for Alaska, they can be estimated specifically for each of the 41 lakes as appropriate, and parameters reported by Lester, et. al. may be incorporated as priors.  
+We have data at a finer resolution: for `r nlakes` lakes, we have sampling data on `r roundn` individual lake trout (`r nw` weights; `r nl` lengths; `r na` ages), which can be used to gain inference on pairwise relationships between variables (`r nlw` paired length x weight observations from `r nllw` lakes; `r nla` paired length x age observations from `r nlla` lakes).  Not only can the relationships between length and weight and between lake area and asymptotic length be estimated for Alaska, they can be estimated specifically for each of the `r nlakes` lakes and applied to additional lakes as appropriate, and parameters reported by Lester, et. al. may be incorporated as priors.  
 
 Implementation of an integrated model as outlined below allows simultaneous use of all available information, as well as appropriate propagation of all uncertainty in estimation.  This should represent an improvement over a previous modeling exercise that estimated each relationship in sequence and then employed heuristic rules to select among available methods for estimating asymptotic size: rather, all available information is used simultaneously.
+
+## Model framework
 
 The model can be conceptualized as consisting of six inter-related components:
 
@@ -117,3 +145,13 @@ $\zeta_W \sim Diffuse Unif$
 Finally, the relationship between asymptotic length and asymptotic weight for lake *j* was treated as deterministic (that is, without additional observation error), according to the log-log regression parameters estimated for that lake.  Since asymptotic size functions as a central trend that is not subject to fish-level variability, the only variability that is necessary to incorporate is that due to estimation of the regression parameters themselves.  Inclusion of this step in the same model that is also estimating the length-weight relationship will therefore propagate this uncertainty.
 
 $log(W_{\infty}[j]) = \beta_0[j] + \beta_1[j] log(L_{\infty}[j])$
+
+## Availability
+
+All R and JAGS code is continuously archived, and available at the following GitHub repository:
+
+https://github.com/ADFG-DSF/lake_trout_lengthweight
+
+A spreadsheet summarizing current estimates of asymptotic weight and length for all lakes of inferential interest is available here:
+
+
