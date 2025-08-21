@@ -154,4 +154,4 @@ https://github.com/ADFG-DSF/lake_trout_lengthweight
 
 A spreadsheet summarizing current estimates of asymptotic weight and length for all lakes of inferential interest is available here:
 
-
+https://github.com/ADFG-DSF/lake_trout_lengthweight/blob/main/Winf_estimates.csv
