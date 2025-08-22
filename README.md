@@ -1,34 +1,35 @@
-# Length-Weight Relationship and Asymptotic Length for Lake Trout
+# Estimating Asymptotic Weight for Lake Trout
 
-The purpose of this modeling exercise was to provide Alaska-specific estimates of the length-weight relationship in lake trout, as well as the possible relationship between lake area and asymptotic weight, as a means to further refine the modeling framework described in Lester et al. (yyyy) for estimation of Maximum Sustained Yield of lake trout in Alaska.
+Application of the Lester Model to lake trout in Alaska lakes may be substantially improved by direct estimation of asymptotic weight W_∞ when possible. In the computational framework presented by Lester, et al., W_∞ is estimated by means of a sequence of relationships: first, the relationship observed between lake area and asymptotic length observed in Canada; then, the aggregate relationship between length and weight observed in Canada.
 
-Data were provided from [source??] and compiled by Region III biologists as relevant.  Data represent a total of:
-* 82 lakes
-* 137 sampling events from 1960-2022
-* 34,362 fish sampled
-* 34,107 length measurements
-* 3,894 weight measurements
-* 3,887 paired length x weight measurements from
-  - 24 lakes
-  - 57 sampling events from 1960-2022
+We have data at a finer resolution: for 41 lakes, we have sampling data on 30,000+ individual lake trout (4,772 weights; 32,574 lengths; 1,517 ages), which can be used to gain inference on pairwise relationships between variables (4,764 paired length x weight observations from 26 lakes; 1,517 paired length x age observations from 19 lakes). Not only can the relationships between length and weight and between lake area and asymptotic length be estimated for Alaska, they can be estimated specifically for each of the 41 lakes and applied to additional lakes as appropriate, and parameters reported by Lester, et. al. may be incorporated as priors.
+
+Implementation of an integrated model as outlined below allows simultaneous use of all available information, as well as appropriate propagation of all uncertainty in estimation. This should represent an improvement over a previous modeling exercise that estimated each relationship in sequence and then employed heuristic rules to select among available methods for estimating asymptotic size: rather, all available information is used simultaneously.
+
 
 ## Repository contents
 
 ### flat_data/
 
-* `lake_morphometry.csv` gives lake-level data (area, latitude, etc)
+* `lake_morphometry3.csv` gives lake-level data (area, latitude, etc)
 
-* `length_weight.csv` gives fish-level data (length, weight, etc)
+* `length_weight4.csv` gives fish-level data (length, weight, etc)
+
+* all other .csv files are no longer current and will be cleaned out soon.
 
 ### R/
 
-* `1_laketrout_lwdata.R` reads data and does some basic cleaning for the purpose of length-weight relationship
+* `5_integrated_Winf.R` is a standalone script that fits the integrated Bayesian model
 
-* `2_laketrout_lwmodels.R` fits an exhaustive set of length-weight models (log-log regression), with all possible combinations of slope and intercept parameters:
-  - common for all lakes
-  - separate for all lakes but hierarchically distributed
-  - trending with log-area
-  - trending with latitude
+* all other .R scripts in this folder are analyses that are no longer current!
+
+### integrated model equations.Rmd 
+
+This Markdown document outlines and describes the current version of the integrated Bayesian model
+
+### Winf_estimates.csv
+
+This spreadsheet summarizes model inferences and data inputs for all lakes
 
 ## Reference
 
