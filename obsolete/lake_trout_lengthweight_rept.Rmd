@@ -1,0 +1,452 @@
+---
+title: "Lake Trout Length-Weight Relationship"
+author: "Matt Tyers"
+date: "2024-05-01"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, 
+                      warning=FALSE, message=FALSE, 
+                      fig.width = 12, fig.height=9,
+                      dpi=300)
+```
+
+```{r}
+library(tidyverse)
+library(jagsUI)
+library(jagshelper)
+```
+
+
+## Length-Weight Relationship for Each Lake
+
+### Model
+
+A log-log regression was used to model weight as a function of length, expanding somewhat on the form used by Lester, et al.  Since fish-level data (lengths and weights) were available from several lakes of differing habitat, the length-weight relationships were fit separately for each lake, with slope and intercept parameters modeled hierarchically as shown below.
+
+$log(W_{j[i]}) = \beta_{0[j]} + \beta_{1[j]}log(L_{j[i]}) + \epsilon_i$
+
+which is equivalent to
+
+$W = e^{\beta_{0[j]}} \times L^{\beta_{1[j]}} \times e^{\epsilon_i}$
+
+in which
+
+$\beta_{0[j]} \sim N(\mu_{\beta_0}, \sigma_{\beta_0}) \text{ for } j \in 1...n_{lakes}$
+
+$\beta_{1[j]} \sim N(\mu_{\beta_1}, \sigma_{\beta_1}) \text{ for } j \in 1...n_{lakes}$
+
+$\epsilon_i \sim N(0,\sigma_{\epsilon})$
+
+Modeling lake-level slope and intercept parameters hierarchically allows for variability in the length-weight relationship between lakes, but also allows the overall relationship to inform data-poor cases.
+
+Note: The model was extended to explore possible relationships between lake area and latitude on the length-weight relationship, with some weak relationships identified but fairly equivalent inferences for the lake parameters.  See Appendix for more details.
+
+\pagebreak
+
+### Results
+
+```{r, fig.show='hide'}
+# loading all the data, but hiding the data exploration plots, etc
+source("R/1_laketrout_lwdata.R")
+
+laketrout_lw <- filter(laketrout_lw, !is.na(SurfaceArea_h))
+
+logarea <- log(with(laketrout_lw, tapply(SurfaceArea_h, LakeName, median, na.rm=T)))
+lat <- with(laketrout_lw, tapply(Latitude_WGS84, LakeName, median))
+lakenames <- names(lat)
+```
+
+Parameter estimates are given below for all lakes with paired length-weight data as well as lake area and latitude.  
+
+Note: the model was fit using recentered log-lengths to facilitate model convergence (see inference for $\beta_{0c}$ below), but parameters were back-transformed for interpretability (see inference for $\beta_0$ below.)
+
+```{r}
+load(file="alloutputs.Rdata")
+
+out_tbl <- data.frame(Lake = lakenames,
+                      beta_0 = alloutputs[[1]]$q50$b0_interp,
+                      SE_beta_0 = alloutputs[[1]]$sd$b0_interp,
+                      beta_0_c = alloutputs[[1]]$q50$b0,
+                      SE_beta_0_c = alloutputs[[1]]$sd$b0,
+                      beta_1 = alloutputs[[1]]$q50$b1,
+                      SE_beta_1 = alloutputs[[1]]$sd$b1)
+names(out_tbl) <- c("Lake", 
+                    "beta_0", "SE(beta_0)", 
+                    "beta_0c", "SE(beta_0c)", 
+                    "beta_1", "SE(beta_1)")
+knitr::kable(out_tbl, digits=2)
+```
+
+\pagebreak
+
+Length-weight relationships are plotted below, with the Bayesian model output expressed in blue and the fit line reported in Lester et al. overlayed as a black dotted line.
+
+```{r, fig.height=12, fig.width=12}
+par(mar=c(4,4,3,2))
+par(mfrow=c(5,5))
+logl_vec <- seq(from=min(log(laketrout_lw$ForkLength_mm), na.rm=TRUE),
+                to=max(log(laketrout_lw$ForkLength_mm), na.rm=TRUE),
+                length.out=20)
+logl_mat <-  logl_vec %>% 
+  matrix(nrow=nrow(alloutputs[[1]]$sims.list$b1),
+         ncol=20, byrow=TRUE)
+for(i in 1:length(lakenames)) {
+  b0 <- alloutputs[[1]]$sims.list$b0_interp[,i]
+  b1 <- alloutputs[[1]]$sims.list$b1[,i]
+  predmat <- b0 + b1*logl_mat
+  
+  envelope(predmat, x=exp(logl_vec), dark=.5,
+           transform="exp",log="xy",
+           main=lakenames[i],
+           xlab="Fork Length (mm)", ylab="Weight (kg)")
+  points(x = (laketrout_lw$ForkLength_mm)[laketrout_lw$LakeName==lakenames[i]],
+         y = (laketrout_lw$Weight_g/1000)[laketrout_lw$LakeName==lakenames[i]],
+         col = adjustcolor(1, alpha.f=.5))
+  curve(exp(-19.56)*x^3.2, lty=3, lwd=2, add=TRUE)
+  
+  if(i==1) legend("topleft", lwd=2, lty=3, legend="Lester fit")
+}
+```
+
+\pagebreak
+
+## Asymptotic Length for Each Lake
+
+\pagebreak
+
+## Appendix: notes on data and modeling
+
+### Length-Weight Relationship
+
+#### Data
+
+The raw data consisted of 3,887 paired length x weight measurements from 24 lakes, and 57 sampling events from 1960-2022.  Raw data are plotted below.
+
+```{r}
+laketrout_all %>%
+  ggplot(aes(x=ForkLength_mm, y=Weight_g)) +#, 
+             # colour=LakeName)) +
+  geom_point(alpha=.3) +
+  # facet_wrap(facets=~LakeName) +
+  scale_y_log10() +
+  scale_x_log10() +
+  theme_bw()
+```
+
+A cluster of points in the lower right were best explained by weight having been entered as kilograms rather than grams.  These entries were adjusted according to this assumption.
+
+Obvious outliers were removed according to the rules: weight > 100,000g, length < 150mm.
+
+```{r}
+laketrout_lw_filter1 %>%
+  ggplot(aes(x=ForkLength_mm, y=Weight_g, 
+             colour=LakeName)) +
+  geom_point(alpha=.3) +
+  # facet_wrap(facets=~LakeName) +
+  scale_y_log10() +
+  scale_x_log10() +
+  theme_bw()
+
+
+laketrout_lw_filter1 %>%
+  ggplot(aes(x=ForkLength_mm, y=Weight_g)) +
+  geom_point(alpha=.3) +
+  facet_wrap(facets=~LakeName) +
+  scale_y_log10() +
+  scale_x_log10() +
+  theme_bw()
+```
+
+Many observations from Paxson Lake showed substantial deviations from the trend.  Residual analysis showed this phenomenon to be related to data from a few specific projects.  It was not clear whether this was an artifact of sampling, or if errors were introduced in data entry or data sorting, etc.  Regardless, the data from these projects were censored from the length-weight analysis.
+
+A number of observations still showed large deviations from the trend, likely due to data entry or transcription errors.  These were removed by fitting a global linear regression model, and removing the points with residuals greater than $\pm 4$ times the residual standard deviation, shown below.
+
+```{r}
+plot(laketrout_lw_filter2$ForkLength_mm, laketrout_lw_filter2$Weight_g,
+     log="xy", xlab="Fork Length (mm)", ylab="Weight (g)",
+     pch=ifelse(lm_filter2$residuals/sd(lm_filter2$residuals) > -4 &
+         lm_filter2$residuals/sd(lm_filter2$residuals) < 4, 1, 16),
+     col=adjustcolor(1,alpha.f=.6))
+```
+
+\pagebreak
+
+#### Modeling
+
+A log-log regression was used to model weight as a function of length, expanding somewhat on the form used by Lester, et al.  Since fish-level data (lengths and weights) were available from several lakes of differing habitat, the length-weight relationships were fit separately for each lake, with the base model defining slope and intercept parameters as modeled hierarchically, shown below.
+
+$log(W_{j[i]}) = \beta_{0[j]} + \beta_{1[j]}log(L_{j[i]}) + \epsilon_i$
+
+which is equivalent to
+
+$W = e^{\beta_{0[j]}} \times L^{\beta_{1[j]}} \times e^{\epsilon_i}$
+
+in which
+
+$\beta_{0[j]} \sim N(\mu_{\beta_0}, \sigma_{\beta_0}) \text{ for } j \in 1...n_{lakes}$
+
+$\beta_{1[j]} \sim N(\mu_{\beta_1}, \sigma_{\beta_1}) \text{ for } j \in 1...n_{lakes}$
+
+$\epsilon_i \sim N(0,\sigma_{\epsilon})$
+
+This was extended to allow possible relationships between the lake-level intercept parameters $\beta_{0[j]}$ and slope parameters $\beta_{1[j]}$ and both lake area and latitude.  The full model extension is expressed below.
+
+$\beta_{0[j]} \sim N(\mu_{\beta_0[j]}, \sigma_{\beta_0}) \text{ for } j \in 1...n_{lakes}$
+
+$\beta_{1[j]} \sim N(\mu_{\beta_1[j]}, \sigma_{\beta_1}) \text{ for } j \in 1...n_{lakes}$
+
+$\mu_{\beta_0[j]} = \gamma_0 + \tau_{0,Area}log(Area_j) + \tau_{0,Lat}Latitude_j \text{ for } j \in 1...n_{lakes}$
+
+$\mu_{\beta_1[j]} = \gamma_1 + \tau_{1,Area}log(Area_j) + \tau_{1,Lat}Latitude_j \text{ for } j \in 1...n_{lakes}$
+
+$\epsilon_i \sim N(0,\sigma_{\epsilon})$
+
+Models were fit for all possible combinations of relationships, and were compared according to DIC scores, as tabulated below.
+
+```{r}
+# load(file="alloutputs.Rdata")
+# alloutputs <- alloutputs1
+
+theDIC <- sapply(alloutputs, function(x) x$DIC)[1:16]
+# theDIC
+# [1] -3343.813 -3344.528 -3346.021 -3345.798 -3345.114 -3345.044 -3346.590 -3346.775
+# [9] -3344.630 -3344.252 -3346.165 -3346.176 -3344.370 -3344.958 -3346.061 -3346.038
+
+# theDIC - min(theDIC)
+# [1] 2.9622832 2.2467628 0.7539361 0.9766494 1.6606827 1.7314548 0.1847344 0.0000000
+# [9] 2.1452072 2.5227203 0.6104599 0.5986784 2.4050054 1.8175136 0.7138559 0.7370097
+
+# modeldescription[which.min(theDIC)]
+
+controlmat <- expand.grid(0:1,0:1,0:1,0:1)
+
+intmodel <- slopemodel <- rep(NA, nrow(controlmat))
+intmodel[controlmat[,1]==0 & controlmat[,2]==0] <- "hierarchical"
+intmodel[controlmat[,1]==1 & controlmat[,2]==0] <- "trends with lat"
+intmodel[controlmat[,1]==0 & controlmat[,2]==1] <- "trends with area"
+intmodel[controlmat[,1]==1 & controlmat[,2]==1] <- "trends with lat & area"
+slopemodel[controlmat[,3]==0 & controlmat[,4]==0] <- "hierarchical"
+slopemodel[controlmat[,3]==1 & controlmat[,4]==0] <- "trends with lat"
+slopemodel[controlmat[,3]==0 & controlmat[,4]==1] <- "trends with area"
+slopemodel[controlmat[,3]==1 & controlmat[,4]==1] <- "trends with lat & area"
+modeldescription <- paste0("intercept ", intmodel,", ", "slope ", slopemodel)
+
+nparam <- rowSums(controlmat)
+
+# par(mfrow=c(1, 1))
+# plot(x=theDIC - min(theDIC), y=rank(theDIC),
+#      xlim=c(0, 10))
+# text(x=theDIC - min(theDIC), y=rank(theDIC),
+#      labels=paste(modeldescription, nparam), pos=4)
+
+# par(mfrow=c(1,1))
+# comparecat(alloutputs, p="sig")
+# thesigs <- sapply(alloutputs, function(x) jags_df(x, p="sig", exact=T))
+# thesigs %>% as.data.frame %>% caterpillar
+
+model_df <- data.frame(Model=modeldescription, delta_DIC = theDIC - min(theDIC),
+                       Addl_Param = nparam)
+# rownames(model_df) <- modeldescription
+highlight <- rep("", nrow(model_df))
+bestmodels <- which(model_df$delta_DIC %in% tapply(model_df$delta_DIC, model_df$Addl_Param, min))
+highlight[bestmodels] <- " *** "
+# model_df$highlight <- highlight
+
+# model_df <- model_df[order(model_df$delta_DIC),]
+
+# knitr::kable(model_df)
+
+par(mfrow=c(1, 1))
+plot(x=theDIC - min(theDIC), y=seq_along(theDIC),
+     xlim=c(0, 8),
+     col=rowSums(controlmat)+1, pch=16,
+     ylab="Model", xlab="Delta DIC (smaller is better)",
+     ylim=c(16,1))
+axis(2, 1:16)
+text(x=theDIC - min(theDIC), y=seq_along(theDIC),
+     labels=paste0(modeldescription, ", Addl param = ",nparam,highlight), pos=4,
+     col=rowSums(controlmat)+1)
+```
+
+To illustrate the possible relationships between lake-level variables (log-area and latitude) and lake-level slope and intercept parameters, parameters are plotted for model 7.  This was the top-performing model in terms of DIC, and was defined as the lake-level intercept parameters having a linear relationship with log area, and the lake-level slope parameters having a linear relationship with latitude.
+
+```{r, fig.width=9, fig.height=9}
+# bundle data to pass into JAGS
+laketrout_lw <- filter(laketrout_lw, !is.na(SurfaceArea_h))
+
+logarea <- log(with(laketrout_lw, tapply(SurfaceArea_h, LakeName, median, na.rm=T)))
+lat <- with(laketrout_lw, tapply(Latitude_WGS84, LakeName, median))
+
+lt_data <- list(x=log(laketrout_lw$ForkLength_mm) - mean(log(laketrout_lw$ForkLength_mm)),
+                y=log(laketrout_lw$Weight_g/1000),
+                n=nrow(laketrout_lw),
+                lake=as.numeric(as.factor(laketrout_lw$LakeName)),
+                nlake=length(unique(laketrout_lw$LakeName)),
+                meanx = mean(log(laketrout_lw$ForkLength_mm)),
+                lat=lat - mean(lat),
+                area=logarea - mean(logarea))
+lt_data$xpred <- seq(from=min(lt_data$x), to=max(lt_data$x), length.out=30)
+lt_data$npred <- length(lt_data$xpred)
+
+par(mfrow=c(2,2))
+caterpillar(alloutputs[[7]], p="b0", x=lat, xlab="latitude", ylab="lake-level parameter value")
+caterpillar(alloutputs[[7]], p="b1", x=lat, xlab="latitude", ylab="lake-level parameter value")
+envelope(alloutputs[[7]], p="mu_b1", x=lat, add=TRUE, dark=.2)
+caterpillar(alloutputs[[7]], p="b0", x=logarea, xlab="log area", ylab="lake-level parameter value")
+envelope(alloutputs[[7]], p="mu_b0", x=logarea, add=TRUE, dark=.2)
+caterpillar(alloutputs[[7]], p="b1", x=logarea, xlab="log area", ylab="lake-level parameter value")
+```
+
+It is important to compare the differences between inferences in terms of lake-level parameters, among the models considered.  Here the lake-level intercept (b0) and slope (b1) parameters are compared, for the top-performing models for each number of additional parameters (see table below).
+
+```{r}
+knitr::kable(model_df[bestmodels,], digits=2)
+```
+
+Note that slight differences in inference exist between models, though all differences are very slight.  Dotted lines are overlayed as appropriate, for comparison with the fit reported in Lester et al.
+
+```{r, fig.height=15}
+bestoutputs <- alloutputs[bestmodels]
+
+par(mfrow=c(3,1))
+comparecat(bestoutputs, p="b0_interp[", col=1:5, main="b0")
+abline(h=-19.56, lty=3)
+comparecat(bestoutputs, p="b0[", col=1:5, main="b0 (centered)")
+comparecat(bestoutputs, p="b1[", col=1:5, main="b1")
+abline(h=3.2, lty=3)
+```
+
+\pagebreak
+
+That said, it may be beneficial to consider the relationships with latitude and log-area when modeling the length-weight relationship for a new lake *outside* the list presented.
+
+Since model fitting was done using recentered data (log length, log area, latitude), some algebraic headache was required to backtransform all parameters back to the data scale, and is not shown here.  Since the net relationship between log length and log weight contains several sources of uncertainty (error in parameter estimation, errors in hierarchical distributions, residual error), error in expressing the length-weight relationship for a new lake is best calculated in-model or directly from the posterior.  However, the formula below should be sufficient for point estimates of regression parameters.
+
+Note: weight is expressed in kilograms, length in millimeters, area in hectares, and latitude in degrees.
+
+```{r, results='asis'}
+g0 <- alloutputs[[7]]$q50$b0_int
+g1 <- alloutputs[[7]]$q50$b1_int
+t0A <- alloutputs[[7]]$q50$b0_area
+t1L <- alloutputs[[7]]$q50$b1_lat
+meanlogA <- mean(log(laketrout_lw$SurfaceArea_h))
+meanlogL <- mean(log(laketrout_lw$ForkLength_mm))
+meanlat <- mean(laketrout_lw$Latitude_WGS84)
+
+p1 <- g0 - t0A*meanlogA - g1*meanlogL + t1L*meanlat*meanlogL
+p2 <- t0A
+p3 <- -t1L*meanlogL
+p4 <- g1 - t1L*meanlat
+p5 <- t1L
+
+# cat("$$\\hat{log(W)}=", round(p1, 2), "+",
+#     round(p2, 3), "\\times log(area) +",
+#     round(p3, 3), "\\times lat +",
+#     "(", round(p4, 2), "+", round(p5, 3), "\\times lat)\\times log(L)", "$$")
+
+cat("$$\\hat{log(W)}=", round(p1, 2), 
+    round(p2, 3), "log(area)+",
+    round(p3, 3), "lat +",
+    "(", round(p4, 2), round(p5, 3), " lat)log(L)", "$$")
+```
+
+The predictive power of the five top models was also compared using a cross-validation routine, in which all considered models were re-fit *excluding* the data for each lake in turn, and the model-predicted length-weight relationships were compared to the relationships actually observed at each lake.
+
+This was done two ways: First, the predicted intercept and slope parameters (b0 and b1) were compared to the respective parameters fit from data.  Since inferences for five different models *excluding* each lakes' data were compared to five different models *including* each lakes' data, consensus was sought among the five possible versions of "truth".
+
+```{r}
+load(file="lw_loocv.Rdata")
+b0_medians <- apply(b0_arr, 2:3, median)
+b1_medians <- apply(b1_arr, 2:3, median)
+
+par(mfrow=c(2,1))
+
+comparecat(list(as.data.frame(b0_interp_arr[,,1]),
+                as.data.frame(b0_interp_arr[,,2]),
+                as.data.frame(b0_interp_arr[,,3]),
+                as.data.frame(b0_interp_arr[,,4]),
+                as.data.frame(b0_interp_arr[,,5])), col=1:5, 
+           main="b0", xlab="lake")
+for(i in seq_along(bestmodels)) lines(alloutputs[[bestmodels[i]]]$q50$b0_interp, lty=1)
+# legend("topleft", legend = c("from Data", paste("Mod", bestmodels)), 
+#        lwd=c(1, rep(3,5)), lty=c(1, rep(1,5)), col=c(1,1:5), pch=c(NA,rep(16,5)))
+legend("topleft", legend = c("from Data", "Model prediction"), 
+       lwd=c(1, 3), lty=c(1, 1), col=c(1,1), pch=c(NA,16))
+
+comparecat(list(as.data.frame(b1_arr[,,1]),
+                as.data.frame(b1_arr[,,2]),
+                as.data.frame(b1_arr[,,3]),
+                as.data.frame(b1_arr[,,4]),
+                as.data.frame(b1_arr[,,5])), col=1:5, 
+           main="b1", xlab="lake")
+for(i in seq_along(bestmodels)) lines(alloutputs[[bestmodels[i]]]$q50$b1, lty=1)
+# legend("topleft", legend = c("from Data", paste("Mod", bestmodels)), 
+#        lwd=c(1, rep(3,5)), lty=c(1, rep(1,5)), col=c(1,1:5), pch=c(NA,rep(16,5)))
+legend("topleft", legend = c("from Data", "Model prediction"), 
+       lwd=c(1, 3), lty=c(1, 1), col=c(1,1), pch=c(NA,16))
+```
+
+Root mean squared prediction error is plotted below for predictions from all five selected models, as compared to parameters fit from data.  In this case, the "truth" from all models is shown, but the five top models are highlighted.
+
+```{r, fig.height=5}
+b0_truths <- sapply(alloutputs, function(x) x$q50$b0)
+b0_interp_truths <- sapply(alloutputs, function(x) x$q50$b0_interp)
+b1_truths <- sapply(alloutputs, function(x) x$q50$b1)
+
+# all models, all truths
+b0_rmse <- b0_interp_rmse <- b1_rmse <- matrix(nrow=ncol(b0_truths), ncol=5)
+for(itruth in 1:ncol(b0_truths)) {
+  for(imodel in 1:5) {
+    b0_rmse[itruth, imodel] <- sqrt(mean((b0_truths[,itruth]-b0_medians[,imodel])^2))
+    # b0_interp_rmse[itruth, imodel] <- sqrt(mean((b0_interp_truths[,itruth]-b0_interp_medians[,imodel])^2))
+    b1_rmse[itruth, imodel] <- sqrt(mean((b1_truths[,itruth]-b1_medians[,imodel])^2))
+  }
+}
+thecolors <- rcolors(22)
+thecolors[bestmodels] <- 1:5
+
+par(mfrow=c(1,2))
+boxplot(b0_rmse, names=bestmodels, xlab="Model used for prediction", main="b0 prediction RMSE")
+for(i in 1:ncol(b0_truths)) {
+  lines(b0_rmse[i,], col=adjustcolor(thecolors[i], alpha.f=.5), 
+        lwd=ifelse(i %in% bestmodels, 2, 1))
+}
+boxplot(b1_rmse, names=bestmodels, xlab="Model used for prediction", main="b1 prediction RMSE")
+for(i in 1:ncol(b0_truths)) {
+  lines(b1_rmse[i,], col=adjustcolor(thecolors[i], alpha.f=.5), 
+        lwd=ifelse(i %in% bestmodels, 2, 1))
+}
+# plot(b0_rmse[1,], type="l", ylim=range(b0_rmse))
+# plot(b1_rmse[1,], type="l", ylim=range(b1_rmse))
+```
+
+Second, the candidate prediction models (that were fit *excluding* the data from each lake in turn) were used to predict log weights from log lengths, using data from the excluded lake.  Model-predicted log weights were compared to actual log-weights for each lake, for each prediction model considered, again in terms of root mean squared prediction error.
+
+```{r, fig.height=5}
+lat_all <- with(laketrout_lw, tapply(Latitude_WGS84, LakeName, median))
+lakenames_all <- names(lat_all)
+pred_r <- pred_sd <- pred_rmse <- matrix(nrow=length(bestmodels), ncol=length(lakenames_all))
+for(imodel in seq_along(bestmodels)) {
+  for(ilake in seq_along(lakenames_all)) {
+    # ypred <- b0_interp_medians[ilake, imodel] +
+    #   b1_medians[ilake, imodel]*log(laketrout_lw$ForkLength_mm[laketrout_lw$LakeName==lakenames_all[ilake]])
+    ypred <- b0_medians[ilake, imodel] +
+      b1_medians[ilake, imodel]*
+      (log(laketrout_lw$ForkLength_mm[laketrout_lw$LakeName==lakenames_all[ilake]]) -
+         mean(log(laketrout_lw$ForkLength_mm)))
+    ytrue <- log(laketrout_lw$Weight_g[laketrout_lw$LakeName==lakenames_all[ilake]]/1000)
+    pred_sd[imodel, ilake] <- sd(ypred-ytrue)  # should this be rmse instead??
+    pred_rmse[imodel, ilake] <- sqrt(mean(((ypred-ytrue)^2)))
+    pred_r[imodel, ilake] <- cor(ypred, ytrue)
+  }
+}
+par(mfrow=c(1,2))
+boxplot(t(pred_rmse), names=bestmodels, xlab="Model used for prediction", main="prediction RMSE for all lakes")
+apply(pred_rmse, 1, mean) %>% lines(lwd=4)
+apply(pred_rmse, 1, mean) %>% plot(main="Mean prediction RMSE error across lakes", type="b", xaxt="n", xlab="Model used for prediction")
+axis(side=1, at=1:5, labels=bestmodels)
+```
+
+The results from cross-validation show relatively strong agreement between models, which could perhaps be interpreted as limited benefit from selecting a prediction model that includes lake area and/or latitude.  However, Model 7 (intercept depends on log area, slope depends on latitude) might be considered a "sweet spot" in predictive power: beyond this number of parameters, the predictive power drops due to overfitting.
