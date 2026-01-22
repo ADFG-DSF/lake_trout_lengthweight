@@ -271,7 +271,7 @@ sapply(1:5,
 ### Will censor points with residual > 4 times the residual sd
 
 resids <- log(laketrout2$Weight_g) - predict(laketrout2_lm, newdata = laketrout2)
-sd(resids, na.rm=TRUE) - rsd
+sd(resids, na.rm=TRUE) - rsd # close enough to zero!
 laketrout2 %>%
   mutate(keep=ifelse(abs(resids) <= 4*rsd, "yes", "no")) %>%
   ggplot(aes(y=Weight_g, x=ForkLength_mm, col=keep)) +
@@ -308,13 +308,22 @@ laketrout3 %>%
   theme(legend.position = "none")
 
 
+
+
 ## finalizing and saving the current filtration
-laketrout <- laketrout3
+laketrout <- laketrout3 %>%
+  filter(is.na(Age) | Age < 50)
+nrow(laketrout3) # 36043
+nrow(laketrout) # 36041
+nrow(laketrout3) - nrow(laketrout) # 2
 
 save_results
 if(save_results) {
   save(laketrout, morphometry, file="Rdata/laketrout_sampling_formodel.Rdata")
 }
+
+
+
 
 ## quick summary of how many samples there are
 
@@ -346,11 +355,11 @@ sum(!is.na(laketrout$Weight_g))
 
 ## how many lengths
 sum(!is.na(laketrout$ForkLength_mm))
-# 36043
+# 36041
 
 ## how many ages
 sum(!is.na(laketrout$Age))
-# 1496
+# 1494
 
 ## how many fish with both length and weight
 sum(!is.na(laketrout$ForkLength_mm & laketrout$Weight_g))
@@ -358,7 +367,7 @@ sum(!is.na(laketrout$ForkLength_mm & laketrout$Weight_g))
 
 ## how many fish with both length and age
 sum(!is.na(laketrout$ForkLength_mm & laketrout$Age))
-# 1496
+# 1494
 
 ## how many lakes with length and weight samples
 length(unique(laketrout$LakeName[!is.na(laketrout$ForkLength_mm & laketrout$Weight_g)]))

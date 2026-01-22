@@ -278,6 +278,8 @@ unique(lw_new$LakeName[!(lw_new$LakeName %in% morph_new$LakeName)]) # what it is
 # ISSUE: lake "Other"  sum(lw_new$LakeName=="Other") [1] 3
 # SOLUTION: take these samples out on import
 
+
+
 # new projects?
 proj_old <- with(lw_old, paste(LakeName, ProjectTitle, Year))
 proj_new <- with(lw_new, paste(LakeName, ProjectTitle, Year))
