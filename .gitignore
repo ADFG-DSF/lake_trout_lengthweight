@@ -1,10 +1,9 @@
 .Rproj.user
 .Rhistory
-.RData
 .Ruserdata
 *.Rproj
 *.docx
 *.xlsx
 *.html
-*.Rdata
+/obsolete_Rdata
 */raw_data

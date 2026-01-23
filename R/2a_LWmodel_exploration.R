@@ -667,9 +667,10 @@ int_Winf_data$elevc <- morphometry$`Elevation (m)` - mean(morphometry$`Elevation
 # niter <- 2*1000
 # niter <- 20*1000
 # niter <- 50*1000      # 50k in 15 minutes per
-niter <- 100*1000    # about 13 hours total, for all 25 models
+# niter <- 100*1000    # about 13 hours total, for all 25 models
 # niter <- 200*1000
 # niter <- 500*1000
+niter <- 1000*1000
 
 # ncores <- 3
 ncores <- 8
