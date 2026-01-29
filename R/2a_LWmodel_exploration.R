@@ -6,6 +6,18 @@ library(tidyverse)
 load(file="Rdata/laketrout_sampling_formodel.Rdata")
 
 
+
+########## Strategy 1 ##########
+
+# b0 & b1 fully free, then model POINT ESTS as functions of site-level variables
+#
+# compare using AIC & RMSE
+#
+# Result (2000k, 10 hrs):
+# - AIC:  b0 ~ larea, b1 free
+# - RMSE: b0 ~ larea, b1 ~ lat
+
+
 ##### starting a summarized data.frame
 getn <- function(x) sum(!is.na(x))
 lakenums <- factor(laketrout$LakeNum, levels=1:nrow(morphometry))
@@ -320,10 +332,11 @@ parameters <- c("sig_Lt", "sig_Lt_prior",
 # JAGS controls
 # niter <- 2*1000
 # niter <- 20*1000
-niter <- 50*1000      # 50k in 15 minutes
+# niter <- 50*1000      # 50k in 15 minutes
 # niter <- 100*1000
 # niter <- 200*1000     # 1.1 hr
 # niter <- 500*1000  # 3 hr
+niter <- 2000*1000   # 10 hrs
 
 # ncores <- 3
 ncores <- 8
@@ -439,7 +452,31 @@ modelbuilder("b0")[which.min(b0_rmses)]
 modelbuilder("b1")[which.min(b1_rmses)]
 
 
+##### RESULTS #####
 
+# > modelbuilder("b0")[which.min(b0_rmses)]
+# [1] "b0 ~ larea"
+# > modelbuilder("b1")[which.min(b1_rmses)]
+# [1] "b1 ~ lat"
+
+# Note: b1 ~ lat is < 2DIC less than b1 ~ null
+# lat might actually look like a regime thing? low-high-low
+
+
+
+
+
+########## Strategy 2 ##########
+
+# big loooong model runs, with the 4 candidate models considered:
+# - b0 free, b1 free
+# - b0 ~ larea, b1 free
+# - b0 ~ larea, b1 ~ temp
+# - b0 ~ larea, b1 ~ lat
+#
+# compare using DIC
+#
+# Result (2500k, 54hrs): b0 ~ larea, b1 free
 
 
 cat('model {
@@ -669,8 +706,8 @@ int_Winf_data$elevc <- morphometry$`Elevation (m)` - mean(morphometry$`Elevation
 # niter <- 50*1000      # 50k in 15 minutes per
 # niter <- 100*1000    # about 13 hours total, for all 25 models
 # niter <- 200*1000
-# niter <- 500*1000
-niter <- 1000*1000
+# niter <- 500*1000   # 10 hours for 4 models
+niter <- 2500*1000   # 54 hours for 4 models
 
 # ncores <- 3
 ncores <- 8
@@ -698,21 +735,73 @@ for(i in 1:nrow(thegrid)) {
 }
 
 thedics <- sapply(outs, \(x) x$DIC)
-plot(thedics)
+plot(thedics, type='b')
+abline(h=min(thedics)+c(0,2), lty=3)
 thedics - min(thedics)
+# [1] 3.894564204 0.000000000 1.093129147 0.005059854  # at 2500k
+# area only wins, no real diff between last 3 models
 
-aa <- c("none", "elev", "temp", "area", "lat")
-expand.grid(aa,aa)[which.min(thedics),]
+# aa <- c("none", "elev", "temp", "area", "lat")
+# expand.grid(aa,aa)[which.min(thedics),]
+
+rep(c("elev", "temp", "area", "lat"), 2)[thegrid[which.min(thedics),]]
 
 
 
-## ------  trying this again, using k-fold cross validation
+
+
+
+
+
+
+########## Strategy 3 ##########
+
+# K-fold cross validation, with the 4 candidate models considered:
+# - b0 free, b1 free
+# - b0 ~ larea, b1 free
+# - b0 ~ larea, b1 ~ temp
+# - b0 ~ larea, b1 ~ lat
+#
+# compare using RMSE and MAE
+#
+# Result (100k & 5 folds, 9hrs): b0 ~ larea, b1 free
+# Result (100k & 10 folds, 18hrs): b0 ~ free, b1 free ???
+#
+# ^^^ DEVELOP THIS ONE FURTHER ^^^
+
+
+kfold_data <- int_Winf_data
+
+# logW = log(laketrout$Weight_g/1000),
+# logLc = log(laketrout$ForkLength_mm) - mean(log(laketrout$ForkLength_mm), na.rm=TRUE),
+# lake = as.numeric(as.character(laketrout$LakeNum)),
+# whichdata_WL = which(laketrout$use_fish &
+#                        !is.na(laketrout$ForkLength_mm) &
+#                        !is.na(laketrout$SurfaceArea_h) &
+#                        !is.na(laketrout$Latitude_WGS84) &
+#                        !is.na(laketrout$Weight_g)),  # note: only 14 use_fish are missing surface area
+
+these <- which(laketrout$use_fish &
+                 !is.na(laketrout$ForkLength_mm) &
+                 !is.na(laketrout$SurfaceArea_h) &
+                 !is.na(laketrout$Latitude_WGS84) &
+                 !is.na(laketrout$`Elevation (m)`) &
+                 !is.na(laketrout$`Temp (C)`) &
+                 !is.na(laketrout$Weight_g))
+kfold_data$logW <- int_Winf_data$logW[these]
+kfold_data$logLc <- int_Winf_data$logLc[these]
+# kfold_data$elevc <- int_Winf_data$elevc[these]
+# kfold_data$tempc <- int_Winf_data$tempc[these]
+# kfold_data$logareac <- int_Winf_data$logareac[these]
+# kfold_data$latc <- int_Winf_data$latc[these]
+kfold_data$whichdata_WL <- seq_along(these)
 
 # JAGS controls
-niter <- 2*1000
-# niter <- 20*1000
-# niter <- 50*1000      # 50k in 15 minutes per
-# niter <- 100*1000    # about 13 hours total, for all 25 models
+# niter <- 2*1000      # 20 min / 4 models
+# niter <- 10*1000     # 1 hr / 4 models
+# niter <- 20*1000     # 2 hrs / 4 models
+# niter <- 50*1000
+niter <- 100*1000     # 9 hrs / 4 models at k=5  -- 18 hrs / 4 models at k=10
 # niter <- 200*1000
 # niter <- 500*1000
 
@@ -723,7 +812,7 @@ ncores <- 8
 outs <- list()
 
 for(i in 1:nrow(thegrid)) {
-  int_Winf_data$Z <- themat[i,]
+  kfold_data$Z <- themat[i,]
 
 
 
@@ -734,11 +823,22 @@ for(i in 1:nrow(thegrid)) {
     tstart <- Sys.time()
     print(tstart)
     outs[[i]] <- kfold(p="logW",
-                       k=5,
-                       model.file=int_Winf_jags, data=int_Winf_data,
+                       k=10,
+                       model.file=int_Winf_jags, data=kfold_data,
                               # parameters.to.save=parameters,
                               n.chains=ncores, parallel=T, n.iter=niter,
                               n.burnin=niter/2, n.thin=niter/2000)
     print(Sys.time() - tstart)
+    sapply(outs, \(x) x$rmse_pred)  %>% plot(type='b')
   }
 }
+
+sapply(outs, \(x) x$rmse_pred)
+sapply(outs, \(x) x$mae_pred)
+
+sapply(outs, \(x) x$rmse_pred)  %>% plot(type='b')
+sapply(outs, \(x) x$mae_pred)  %>% plot(type='b')
+
+
+rep(c("elev", "temp", "area", "lat"), 2)[thegrid[which.min(sapply(outs, \(x) x$rmse_pred)),]]
+rep(c("elev", "temp", "area", "lat"), 2)[thegrid[which.min(sapply(outs, \(x) x$mae_pred)),]]

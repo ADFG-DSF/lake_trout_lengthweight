@@ -5,347 +5,9 @@ library(tidyverse)
 
 load(file="Rdata/laketrout_sampling_formodel.Rdata")
 
-
-##### starting a summarized data.frame
-getn <- function(x) sum(!is.na(x))
-lakenums <- factor(laketrout$LakeNum, levels=1:nrow(morphometry))
-laketrout$LakeNum <- factor(laketrout$LakeNum, levels=1:nrow(morphometry))
-laketrout_Winf <- data.frame(LakeName = morphometry$LakeName,
-                             LakeNum = morphometry$LakeNum,
-                             n_Weight = tapply(laketrout$Weight_g, lakenums, getn),
-                             n_Length = tapply(laketrout$ForkLength_mm, lakenums, getn),
-                             n_Age = tapply(laketrout$Age, lakenums, getn),
-                             Latitude = morphometry$Latitude_WGS84,
-                             Area_ha = morphometry$SurfaceArea_h,
-                             Elevation = morphometry$`Elevation (m)`,
-                             Temperature = morphometry$`Temp (C)`,
-                             use_fish = morphometry$use_fish,
-                             make_estimates = morphometry$make_estimates) %>%
-  mutate(n_Weight = ifelse(is.na(n_Weight), 0, n_Weight)) %>%
-  mutate(n_Length = ifelse(is.na(n_Length), 0, n_Length)) %>%
-  mutate(n_Age = ifelse(is.na(n_Age), 0, n_Age))
-lakenames <- morphometry$LakeName
-
-
-
-
-int_Winf_jags <- tempfile()
-cat('model {
-
-  ## ---- Length ~ Age Component ---- ##
-  for(i in whichdata_Lt) {   # fish-level data from lakes with paired lengths & ages
-    # L[i] ~ dnorm(mu_Lt[i], tau_Lt)
-    # Lpp[i] ~ dnorm(mu_Lt[i], tau_Lt)
-    # mu_Lt[i] <- Linf[lake[i]]*(1-exp(-k[lake[i]]*(Age[i]-t0[lake[i]])))
-    L[i] ~ dlnorm(logmu_Lt[i], tau_Lt)
-    Lpp[i] ~ dlnorm(logmu_Lt[i], tau_Lt)
-    logmu_Lt[i] <- log(Linf[lake[i]]*(1-exp(-k[lake[i]]*(Age[i]-t0[lake[i]]))))
-  }
-
-  tau_Lt <- pow(sig_Lt, -2)
-  # sig_Lt ~ dunif(0, 100)
-  # sig_Lt_prior ~ dunif(0, 100)
-  sig_Lt ~ dunif(0, 3)
-  sig_Lt_prior ~ dunif(0, 3)
-
-
-  for(j in whichlakes_Lt) {   # lake level
-    t0[j] ~ dnorm(mu_t0, tau_t0)T(,1)
-    # t0_prior[j] ~ dnorm(mu_t0, tau_t0)
-    k[j] ~ dlnorm(mu_k, tau_k)
-    # k_prior[j] ~ dlnorm(mu_k, tau_k)
-
-    # making plottable LVB curve envelopes for each lake
-    for(ifit in 1:nfit) {
-      Lfit[ifit, j] <- Linf[j]*(1-exp(-k[j]*(Agefit[ifit]-t0[j])))
-    }
-  }
-
-  mu_t0 ~ dnorm(0, 1)   # was 1
-  mu_t0_prior ~ dnorm(0, 1)
-  # sig_t0 ~ dunif(0, 0.2)
-  sig_t0 ~ dunif(0, 10)
-  sig_t0_prior ~ dunif(0, 10)
-  # sig_t0 ~ dexp(10)
-  tau_t0 <- pow(sig_t0, -2)
-
-  mu_k ~ dnorm(0, 0.1)
-  mu_k_prior ~ dnorm(0, 0.1)
-  sig_k ~ dunif(0, 3)
-  sig_k_prior ~ dunif(0, 3)
-  tau_k <- pow(sig_k, -2)
-
-
-
-  ## ---- Linf ~ Area component ---- ##
-  for(j in whichlakes_LA) {  # lake-level data where there are areas
-    # Linf[j] ~ dnorm(mu_LA[j], tau_LA)T(1,)
-    # mu_LA[j] <- gam * (1 - exp(-lam * (1 + log(Area[j]))))
-    Linf[j] ~ dlnorm(logmu_LA[j], tau_LA)
-    logmu_LA[j] <- log(gam * (1 - exp(-lam * (1 + log(Area[j])))))
-  }
-  for(j in whichlakes_LA_c) {  # lake-level priors where there are no areas
-    Linf[j] ~ dnorm(600, 0.00001)T(1,)
-    # Linf[j] ~ dnorm(mu_Linf_noarea, tau_Linf_noarea)
-  }
-  # mu_Linf_noarea ~ dnorm(600, 0.0001)
-  # tau_Linf_noarea <- pow(sig_Linf_noarea, -2)
-  # sig_Linf_noarea ~ dunif(0, 500)
-  # sig_Linf_noarea_prior ~ dunif(0, 500)
-
-  tau_LA <- pow(sig_LA, -2)
-  # sig_LA ~ dunif(0, 300)
-  # sig_LA_prior ~ dunif(0, 300)
-  sig_LA ~ dunif(0, 3)
-  sig_LA_prior ~ dunif(0, 3)
-  # sig_LA ~ dexp(0.05)
-  # sig_LA_prior ~ dexp(0.05)
-
-  gam ~ dnorm(gam_lester, pow(cv_gam_lester*gam_lester, -2))T(0.01,)
-  gam_prior ~ dnorm(gam_lester, pow(cv_gam_lester*gam_lester, -2))T(0.01,)
-  lam ~ dnorm(lam_lester, pow(cv_lam_lester*lam_lester, -2))T(0.01,)
-  lam_prior ~ dnorm(lam_lester, pow(cv_lam_lester*lam_lester, -2))T(0.01,)
-
-
-
-  ## ---- Length quantile ~ Linf component ---- ##
-  for(j in whichlakes_L) {
-    qL[j] ~ dnorm(Linf[j], tau_L[j])
-    qLpp[j] ~ dnorm(Linf[j], tau_L[j])
-    tau_L[j] <- pow(sig_L[j], -2)
-    sig_L[j] <- pow((eta_L^2) + ((zeta_L^2)/nL[j]), 0.5)
-  }
-
-  eta_L ~ dunif(0, eta_L_cap)
-  eta_L_prior ~ dunif(0, eta_L_cap)
-  zeta_L ~ dunif(0, zeta_L_cap)
-  zeta_L_prior ~ dunif(0, zeta_L_cap)
-
-  # eta_L ~ dexp(0.1)
-  # eta_L_prior ~ dexp(0.1)
-  # zeta_L ~ dexp(0.1)
-  # zeta_L_prior ~ dexp(0.1)
-
-
-
-  ## ---- log Weight ~ log Length component ---- ##
-  # loop over all WL data
-  for(i in whichdata_WL) {
-    logW[i] ~ dnorm(mu_WL[i], tau_WL)
-    # logWpp[i] ~ dnorm(mu_WL[i], tau_WL)    # might take this out if model seems ok
-    mu_WL[i] <- b0[lake[i]] + b1[lake[i]]*logLc[i]
-  }
-
-  # loop over lakes with lat & area data
-  for(j in whichlakes_WL) {
-    b0[j] ~ dnorm(mu_b0[j], tau_b0)
-    b0_interp[j] <- b0[j] - b1[j]*meanlogLc
-    mu_b0[j] <- b0_int
-                # + b0_area*logareac[j]
-
-    b1[j] ~ dnorm(mu_b1[j], tau_b1)
-    mu_b1[j] <- b1_int
-                # + b1_lat*latc[j]
-  }
-
-  # # loop over lakes without area & lat data (c for complement)
-  # # draw log(area) and lat from Normal distributions (mean & sd of actual data)
-  # # corresponding b0, b0_interp, and b1 will effectively be from the post pred
-  # for(jc in whichlakes_WL_c) {
-  #   b0[jc] ~ dnorm(mu_b0[jc], tau_b0)
-  #   b0_interp[jc] <- b0[jc] - b1[jc]*meanlogLc
-  #   mu_b0[jc] <- b0_int
-  #               # + b0_area*areasim[jc]
-  #
-  #   b1[jc] ~ dnorm(mu_b1[jc], tau_b1)
-  #   mu_b1[jc] <- b1_int
-  #               # + b1_lat*latsim[jc]
-  #   areasim[jc] ~ dnorm(mean(logareac[whichlakes_WL]), pow(sd(logareac[whichlakes_WL]), -2))
-  #   latsim[jc] ~ dnorm(mean(latc[whichlakes_WL]), pow(sd(latc[whichlakes_WL]), -2))
-  # }
-
-  # global priors
-  sig_b0 ~ dunif(0, 10)
-  sig_b0_prior ~ dunif(0, 10)
-  tau_b0 <- pow(sig_b0, -2)
-
-  sig_b1 ~ dunif(0, 10)
-  sig_b1_prior ~ dunif(0, 10)
-  tau_b1 <- pow(sig_b1, -2)
-
-  b0_int ~ dnorm(0, 0.001)
-  b0_area ~ dnorm(0, 0.001)
-  b0_int_prior ~ dnorm(0, 0.001)
-  b0_area_prior ~ dnorm(0, 0.001)
-
-  b1_int ~ dnorm(0, 0.001)
-  b1_lat ~ dnorm(0, 0.001)
-  b1_int_prior ~ dnorm(0, 0.001)
-  b1_lat_prior ~ dnorm(0, 0.001)
-
-  tau_WL <- pow(sig_WL, -2)
-  sig_WL ~ dunif(0, 10)
-  sig_WL_prior ~ dunif(0, 10)
-
-
-
-  ## ---- Weight quantile ~ Winf component ---- ##
-  for(j in whichlakes_W) {
-    qW[j] ~ dnorm(Winf[j], tau_W[j])
-    qWpp[j] ~ dnorm(Winf[j], tau_W[j])
-    tau_W[j] <- pow(sig_W[j], -2)
-    sig_W[j] <- pow((eta_W^2) + ((zeta_W^2)/nW[j]), 0.5)
-  }
-
-  eta_W ~ dunif(0, eta_W_cap)
-  eta_W_prior ~ dunif(0, eta_W_cap)
-  zeta_W ~ dunif(0, zeta_W_cap)
-  zeta_W_prior ~ dunif(0, zeta_W_cap)
-
-  # eta_W ~ dexp(0.1)
-  # eta_W_prior ~ dexp(0.1)
-  # zeta_W ~ dexp(0.1)
-  # zeta_W_prior ~ dexp(0.1)
-
-
-
-  ## ---- Winf from Linf! ---- ##
-  for(j in whichlakes_WL) {  # alllakes
-    Winf[j] <- exp(b0_interp[j] + b1[j]*log(Linf[j]))
-  }
-
-
-}', file=int_Winf_jags)
-
-
-
-# bundle data to pass into JAGS
-q_input <- 0.95   # assumed quantile value for asymptotic size
-int_Winf_data <- list(
-
-  # fish-level data
-  Age = laketrout$Age,
-  L = laketrout$ForkLength_mm,
-  logW = log(laketrout$Weight_g/1000),
-  logLc = log(laketrout$ForkLength_mm) - mean(log(laketrout$ForkLength_mm), na.rm=TRUE),
-  lake = as.numeric(as.character(laketrout$LakeNum)),
-  whichdata_WL = which(laketrout$use_fish &
-                         !is.na(laketrout$ForkLength_mm) &
-                         !is.na(laketrout$SurfaceArea_h) &
-                         !is.na(laketrout$Latitude_WGS84)),  # note: only 14 use_fish are missing surface area
-  # ^^^ this may be vestigial
-  # whichdata_WL = which(laketrout$use_fish),  # note: only 14 use_fish are missing surface area
-
-  # lake-level data
-  Area = laketrout_Winf$Area_ha,
-  latc = morphometry$Latitude_WGS84 - mean(morphometry$Latitude_WGS84, na.rm=TRUE),
-  logareac = log(morphometry$SurfaceArea_h) - mean(log(morphometry$SurfaceArea_h), na.rm=TRUE),
-
-  whichlakes_L = which(morphometry$use_fish & laketrout_Winf$n_Length > 10),
-  qL = tapply(laketrout$ForkLength_mm, laketrout$LakeNum, quantile, p=q_input, na.rm=TRUE),
-  nL = laketrout_Winf$n_Length,
-  whichlakes_W = which(morphometry$use_fish & laketrout_Winf$n_Weight > 10),
-  qW = tapply(laketrout$Weight_g/1000, laketrout$LakeNum, quantile, p=q_input, na.rm=TRUE),
-  nW = laketrout_Winf$n_Weight,
-
-  whichlakes_Lt = which(morphometry$use_fish & laketrout_Winf$n_Age > 0 & laketrout_Winf$n_Length > 0),
-  whichlakes_LA = which(!is.na(laketrout_Winf$Area_ha)),# & laketrout_Winf$n_Length > 0),
-  whichlakes_LA_c = which(!(!is.na(laketrout_Winf$Area_ha))),# & laketrout_Winf$n_Length > 0)),
-  whichlakes_WL = which(!is.na(laketrout_Winf$Lat) & !is.na(laketrout_Winf$Area_ha)),
-  whichlakes_WL_c = which(is.na(laketrout_Winf$Lat) | is.na(laketrout_Winf$Area_ha)),
-  alllakes = 1:nrow(laketrout_Winf),
-
-  # inputs for fitted vals of L~Age
-  Agefit = 1:max(laketrout$Age, na.rm=TRUE),
-  nfit = max(laketrout$Age, na.rm=TRUE),
-
-  # priors from Lester
-  gam_lester = 957,
-  cv_gam_lester = 0.2*2.5,
-  lam_lester = 0.14,
-  cv_lam_lester = 1*2.5,
-
-  # global values
-  eta_L_cap = 500,
-  zeta_L_cap = 2000,
-  eta_W_cap = 5,
-  zeta_W_cap = 20,
-  meanlogLc = mean(log(laketrout$ForkLength_mm), na.rm=TRUE)
-)
-
-# can i make this within the above?
-int_Winf_data$whichdata_Lt <- which((laketrout$LakeNum %in% int_Winf_data$whichlakes_Lt) &
-                                   (!is.na(laketrout$Age)) & (!is.na(laketrout$ForkLength_mm)))
-
-
-parameters <- c("sig_Lt", "sig_Lt_prior",
-                "t0", "t0_prior",
-                "k", "k_prior",
-                "mu_t0","mu_t0_prior",
-                "sig_t0","sig_t0_prior",
-                "mu_k","mu_k_prior",
-                "sig_k","sig_k_prior",
-                "Lfit",
-                "Linf", "Winf",
-                "mu_LA",
-                "sig_LA", "sig_LA_prior",
-                "gam", "gam_prior",
-                "lam", "lam_prior",
-                "eta_L", "eta_L_prior",
-                "zeta_L", "zeta_L_prior",
-                "sig_L",
-                "Lpp","qLpp",
-                "mu_Linf_noarea", "sig_Linf_noarea", "sig_Linf_noarea_prior",
-                "b0","b1","sig_WL","sig_WL_prior",
-                "mu_b0","mu_b1",
-                "sig_b0","sig_b0_prior",
-                "sig_b1","sig_b1_prior",
-                "b0_interp",
-                "b0_int","b1_int","b0_int_prior","b1_int_prior",
-                "b0_lat","b0_area","b0_lat_prior","b0_area_prior",
-                "b1_lat","b1_area","b1_lat_prior","b1_area_prior",
-                "eta_W", "eta_W_prior",
-                "zeta_W", "zeta_W_prior",
-                "sig_W",
-                "Wpp","qWpp")
-
-
-
-
-# JAGS controls
-# niter <- 2*1000
-# niter <- 20*1000
-# niter <- 50*1000      # 50k in 9 minutes
-niter <- 100*1000  # 37 min
-# niter <- 200*1000
-# niter <- 500*1000
-
-# ncores <- 3
-ncores <- 8
-# ncores <- min(10, parallel::detectCores()-1)
-
-
-###### RUNNING THE MODEL #####
-{
-  tstart <- Sys.time()
-  print(tstart)
-  int_Winf_jags_out <- jagsUI::jags(model.file=int_Winf_jags, data=int_Winf_data,
-                                 parameters.to.save=parameters,
-                                 n.chains=ncores, parallel=T, n.iter=niter,
-                                 n.burnin=niter/2, n.thin=niter/2000)
-  print(Sys.time() - tstart)
-}
-int_Winf_jags_out$DIC
-
-
-###### SAVING INTERIM RESULTS #####
-save(int_Winf_jags_out,
-     int_Winf_data,
-     laketrout_Winf,
-     lakenames,
-     niter, ncores,
-     file="interim_posts/int_Winf_modelrun.Rdata")
-
+load(file="interim_posts/int_Winf_modelrun.Rdata")
+niter/1000
+ncores
 
 
 ### a few helper functions and color vectors for plotting
@@ -392,27 +54,63 @@ plotRhats(int_Winf_jags_out)
 # trace plots for the nodes with the worst Rhat value for each named parameter
 traceworstRhat(int_Winf_jags_out, parmfrow=c(3,3))
 
-
+graphics.off()
 
 
 
 ### ------------------- exploring model appropriateness  ------------------ ###
 
 # comparing distributions of priors to the associated parameter
-comparepriors(int_Winf_jags_out, parmfrow=c(3,3))
+comparepriors(int_Winf_jags_out, parmfrow=c(2,2))
 
 # plotting the correlation between all parameters
 par(mfrow=c(1,1))
 plotcor_jags(int_Winf_jags_out, p=c("Linf", "mu_LA", "t0", "k", "b0", "b1", "sig","gam","lam","eta","zeta"))
 
+graphics.off()
 
 
 # cross plots between parameters ------ FILL THIS IN BETTER
-crossplot(int_Winf_jags_out, p=c("eta_L","zeta_L"), drawblob=TRUE)
+
+# length 59
+# t0, k, sig_L, qLpp, sig_W, qWpp
+
+# length 62
+# Linf, Winf, b0, b1, mu_b0, mu_b1, b0_interp
+
+# length 1
+# sig_Lt
+# mu_t0, sig_t0, mu_k, sig_k
+# sig_LA
+# gam, lam
+# eta_L, zeta_L
+# eta_W, zeta_W
+# sig_WL
+# sig_b0, sig_b1
+# b0_int, b1_int
+
+par(mfrow=c(1,1))
+crossplot(int_Winf_jags_out, p=c("t0","k"), drawblob=TRUE, col = "random")
+crossplot(int_Winf_jags_out, p=c("sig_L","sig_W"), drawblob=TRUE, col = "random")
+crossplot(int_Winf_jags_out, p=c("sig_L","qLpp"), drawblob=TRUE, col = "random")
+crossplot(int_Winf_jags_out, p=c("sig_W","qWpp"), drawblob=TRUE, col = "random")
+crossplot(int_Winf_jags_out, p=c("Linf","Winf"), drawblob=TRUE, col = "random")
+crossplot(int_Winf_jags_out, p=c("b0","b1"), drawx=TRUE, col = "random")
+crossplot(int_Winf_jags_out, p=c("mu_b0","mu_b1"), drawx=TRUE, col = "random")
+
+par(mfrow=c(2,2))
+crossplot(int_Winf_jags_out, p=c("sig_Lt","sig_LA"), drawblob=TRUE)
+crossplot(int_Winf_jags_out, p=c("sig_Lt","sig_WL"), drawblob=TRUE)
+crossplot(int_Winf_jags_out, p=c("mu_t0","sig_t0"), drawblob=TRUE)
+crossplot(int_Winf_jags_out, p=c("mu_k","sig_k"), drawblob=TRUE)
+crossplot(int_Winf_jags_out, p=c("mu_t0","mu_k"), drawblob=TRUE)
+crossplot(int_Winf_jags_out, p=c("sig_t0","sig_k"), drawblob=TRUE)
 crossplot(int_Winf_jags_out, p=c("gam","lam"), drawblob=TRUE)
-crossplot(int_Winf_jags_out, p=c("b0","b1"), drawblob=FALSE)
+crossplot(int_Winf_jags_out, p=c("eta_L","zeta_L"), drawblob=TRUE)
+crossplot(int_Winf_jags_out, p=c("eta_W","zeta_W"), drawblob=TRUE)
+crossplot(int_Winf_jags_out, p=c("sig_b0","sig_b1"), drawblob=TRUE)
 
-
+## ^^ keep filling these in
 
 
 ### Posterior predictive for qL
@@ -492,12 +190,31 @@ for(j in int_Winf_data$whichlakes_Lt) {
   datalegend()
 }
 
+par(mfrow=c(1,1))
+cols <- adjustcolor(rcolors(ncol(int_Winf_jags_out$q50$Lfit)), red.f = .5, blue.f=.5, green.f=.5)
+plot(NA, xlim=c(0, 70), ylim=c(0,1000), xlab="Age", ylab="Length")
+for(j in int_Winf_data$whichlakes_Lt) {
+  envelope(int_Winf_jags_out$sims.list$Lfit[,,j],
+           add=TRUE, col=adjustcolor(cols[j], alpha.f=.5))
+}
+for(j in int_Winf_data$whichlakes_Lt) {
+  lines(int_Winf_jags_out$q50$Lfit[,j],
+        col=cols[j], lwd=2)
+}
+# text(x=rep(max(int_Winf_data$Agefit), length(int_Winf_data$whichlakes_Lt)),
+#      y=int_Winf_jags_out$q50$Lfit[nrow(int_Winf_jags_out$q50$Lfit),],
+#      labels=lakenames[int_Winf_data$whichlakes_Lt], pos=4)
+text(x=rep(max(int_Winf_data$Agefit), ncol(int_Winf_jags_out$q50$Lfit)),
+     y=int_Winf_jags_out$q50$Lfit[nrow(int_Winf_jags_out$q50$Lfit),],
+     labels=lakenames[1:ncol(int_Winf_jags_out$q50$Lfit)], pos=4, col=cols)
+
+
 
 caterpillar1 <- function (df, p = NULL, x = NA, row = NULL, column = NULL, median = TRUE,
-          mean = FALSE, ci = c(0.5, 0.95), lwd = 1, col = 4, add = FALSE,
-          xlab = "", ylab = "", main = NULL, ylim = NULL, xax = NA, do_xax=TRUE,
-          transform = c("none", "exp", "expit"), medlwd = lwd, medwd = 1,
-          ...)
+                          mean = FALSE, ci = c(0.5, 0.95), lwd = 1, col = 4, add = FALSE,
+                          xlab = "", ylab = "", main = NULL, ylim = NULL, xax = NA, do_xax=TRUE,
+                          transform = c("none", "exp", "expit"), medlwd = lwd, medwd = 1,
+                          ...)
 {
   if (!inherits(df, "jagsUI") & !inherits(df, c("matrix", "data.frame",
                                                 "numeric", "integer"))) {
@@ -586,6 +303,23 @@ caterpillar_plus <- function(df, p, x=NA, col=datacols, ...) {
        cex=.6, col=adjustcolor(col[1:nn], alpha.f=.6, blue.f=.8, red.f=.8, green.f=.8), srt=90)
   datalegend()
 }
+
+par(mfrow=c(1,2))
+
+length10 <- int_Winf_jags_out$sims.list$Lfit[,which(int_Winf_data$Agefit==10),]
+length20 <- int_Winf_jags_out$sims.list$Lfit[,which(int_Winf_data$Agefit==20),]
+
+caterpillar(length10, main="Mean length at age 10", ylim=c(0,1000))
+text(x=1:ncol(length10), y=apply(length10, 2, median),
+     labels=lakenames[1:ncol(length10)],
+     cex=.6, col=adjustcolor(4, alpha.f=.6, blue.f=.8, red.f=.8, green.f=.8), srt=90)
+
+caterpillar(length20, main="Mean length at age 20", ylim=c(0,1000))
+text(x=1:ncol(length20), y=apply(length20, 2, median),
+     labels=lakenames[1:ncol(length20)],
+     cex=.6, col=adjustcolor(4, alpha.f=.6, blue.f=.8, red.f=.8, green.f=.8), srt=90)
+
+
 
 
 ##### Linf #####
@@ -772,8 +506,8 @@ plot(NA, xlim=range(int_Winf_data$qL, na.rm=T),
      ylim=range(int_Winf_jags_out$q2.5$Linf, int_Winf_jags_out$q97.5$Linf, na.rm=TRUE),
      main="Linf", xlab="qL", ylab="")
 caterpillar(int_Winf_jags_out, "Linf", col=ifelse(int_Winf_data$alllakes %in% int_Winf_data$whichlakes_Lt, 4,
-                                               ifelse(int_Winf_data$alllakes %in% int_Winf_data$whichlakes_L, 2,
-                                                      ifelse(int_Winf_data$alllakes %in% int_Winf_data$whichlakes_LA, 3, 1))),
+                                                  ifelse(int_Winf_data$alllakes %in% int_Winf_data$whichlakes_L, 2,
+                                                         ifelse(int_Winf_data$alllakes %in% int_Winf_data$whichlakes_LA, 3, 1))),
             x=int_Winf_data$qL,
             add=TRUE)
 legend("topleft", legend=c("AGES, then","Lq, then","AREA, then","nothing"), col=c(4,2,3,1), lwd=3, cex=0.5)

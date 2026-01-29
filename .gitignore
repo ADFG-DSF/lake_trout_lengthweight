@@ -6,4 +6,5 @@
 *.xlsx
 *.html
 /obsolete_Rdata
+/interim_posts
 */raw_data
