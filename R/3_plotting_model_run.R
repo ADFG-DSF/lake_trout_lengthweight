@@ -174,7 +174,65 @@ caterpillar(int_Winf_jags_out, "k",
             col=estcols)
 
 
+# par(mfrow=c(1,1))
+# library(sf)
+# AK <- map_data("world") %>%
+#   filter(region=="USA") %>%
+#   filter(subregion=="Alaska") %>%
+#   cbind(sf::sf_project(pts=AK[,1:2], to="+proj=aea +lat_1=55 +lat_2=65
+#     +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs
+#     +ellps=GRS80")) %>%
+#   rename(x="1", y="2")
+# morph1 <- cbind(morphometry, sf::sf_project(pts=morphometry[,4:5], to="+proj=aea +lat_1=55 +lat_2=65
+#     +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs
+#     +ellps=GRS80")) %>% rename(x="1", y="2")
+# ggplot(AK, aes(x=x, y=y, group=group)) +
+#   geom_polygon(fill="white", col="black") +
+#   geom_point(data=morph1,
+#              mapping=aes(x=x, y=y)) +
+#   theme_bw()
+# ggplot(AK) +#, aes(x=long, y=lat, group=group)
+#   geom_sf(fill="white") +
+#   # geom_polygon(fill="white", col="black") +
+#   coord_sf(crs = 3338) +
+#   theme_bw()
+#
+# AK_albers <- sf::sf_project(pts=AK[,1:2], to="+proj=aea +lat_1=55 +lat_2=65
+#     +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs
+#     +ellps=GRS80")
+# plot(AK_albers, col=0)
+# polygon(AK_albers)
+#
+# AK_albers %>%
+#   as.data.frame() %>%
+#   ggplot(aes(x=V1, y=V2)) +
+#   geom_polygon(fill="white", col="black")
 
+
+ff <- function(x, n=nrow(laketrout_Winf)) { # f for fill
+  c(x, rep(NA, n - length(x)))
+}
+
+library(leaflet)
+thecol <- ifelse(is.na(ff(int_Winf_jags_out$q50$b1)), "white",
+                 ifelse(ff(int_Winf_jags_out$q50$b1) < 3.15, "blue",
+                        ifelse(ff(int_Winf_jags_out$q50$b1) > 3.3, "red", "grey")))
+leaflet(morphometry) %>%
+  addTiles() %>%
+  addCircles(lng=~Longitude_WGS84,
+             lat=~Latitude_WGS84,
+             # color=colorRampPalette(c("blue","white","red"))(nrow(morphometry))[rank(ff(int_Winf_jags_out$q50$b1))]
+             color=thecol
+             )
+
+b0_range <- int_Winf_jags_out$q50$b0_interp
+b1_range <- int_Winf_jags_out$q50$b1
+
+curve(exp(median(b0_range, na.rm=TRUE))*(x^median(b1_range, na.rm=TRUE)), from=0, to=1000)
+for(i in which(!is.na(b0_range))) curve(exp(b0_range[i])*(x^median(b1_range, na.rm=TRUE)), from=0, to=1000, add=TRUE)
+
+curve(exp(median(b0_range, na.rm=TRUE))*(x^median(b1_range, na.rm=TRUE)), from=0, to=1000)
+for(i in which(!is.na(b1_range))) curve(exp(median(b0_range, na.rm=TRUE))*(x^b1_range[i]), from=0, to=1000, add=TRUE)
 
 
 ## length ~ age (plots for all lakes where there are lengths and ages)

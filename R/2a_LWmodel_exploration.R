@@ -766,6 +766,7 @@ rep(c("elev", "temp", "area", "lat"), 2)[thegrid[which.min(thedics),]]
 #
 # Result (100k & 5 folds, 9hrs): b0 ~ larea, b1 free
 # Result (100k & 10 folds, 18hrs): b0 ~ free, b1 free ???
+# Result (400k & 10 folds, 18hrs): b0 ~ larea, b1 free (rmse), b1 ~ lat (mae)
 #
 # ^^^ DEVELOP THIS ONE FURTHER ^^^
 
@@ -801,8 +802,9 @@ kfold_data$whichdata_WL <- seq_along(these)
 # niter <- 10*1000     # 1 hr / 4 models
 # niter <- 20*1000     # 2 hrs / 4 models
 # niter <- 50*1000
-niter <- 100*1000     # 9 hrs / 4 models at k=5  -- 18 hrs / 4 models at k=10
+# niter <- 100*1000     # 9 hrs / 4 models at k=5  -- 18 hrs / 4 models at k=10
 # niter <- 200*1000
+niter <- 400*1000      # 72 hrs / 4 models at k=10
 # niter <- 500*1000
 
 # ncores <- 3
