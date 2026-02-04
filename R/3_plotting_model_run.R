@@ -173,6 +173,24 @@ caterpillar(int_Winf_jags_out, "t0",
 caterpillar(int_Winf_jags_out, "k",
             col=estcols)
 
+library(sf)
+library(ggspatial)
+AK <- map_data("world") %>%
+    filter(region=="USA") %>%
+    filter(subregion=="Alaska") %>%
+  filter(long < 0) #%>%
+  # st_as_sf(coords=c("long","lat"))
+ggplot()  +
+  geom_polygon(data=AK, aes(x=long, y=lat, group=group), fill="white", col="black") +
+  geom_point(data=morphometry, mapping=aes(x=Longitude_WGS84, y=Latitude_WGS84)) +
+  coord_sf(datum = st_crs(2964)) +
+  theme_bw()
+ggplot()  +
+  geom_sf(data=st_as_sf(AK, coords = c("long","lat"), crs = 4326), aes(group=group), fill="white", col="black") +
+  geom_sf(data=st_as_sf(morphometry, coords = c("Longitude_WGS84","Latitude_WGS84"), crs = 4326)) +
+  coord_sf(datum = st_crs(2964)) +
+  theme_bw()
+
 
 # par(mfrow=c(1,1))
 # library(sf)
