@@ -173,42 +173,96 @@ caterpillar(int_Winf_jags_out, "t0",
 caterpillar(int_Winf_jags_out, "k",
             col=estcols)
 
-library(sf)
-library(ggspatial)
-AK <- map_data("world") %>%
-    filter(region=="USA") %>%
-    filter(subregion=="Alaska") %>%
-  filter(long < 0) #%>%
-  # st_as_sf(coords=c("long","lat"))
-ggplot()  +
-  geom_polygon(data=AK, aes(x=long, y=lat, group=group), fill="white", col="black") +
-  geom_point(data=morphometry, mapping=aes(x=Longitude_WGS84, y=Latitude_WGS84)) +
-  coord_sf(datum = st_crs(2964)) +
-  theme_bw()
-ggplot()  +
-  geom_sf(data=st_as_sf(AK, coords = c("long","lat"), crs = 4326), aes(group=group), fill="white", col="black") +
-  geom_sf(data=st_as_sf(morphometry, coords = c("Longitude_WGS84","Latitude_WGS84"), crs = 4326)) +
-  coord_sf(datum = st_crs(2964)) +
-  theme_bw()
-
-
-# par(mfrow=c(1,1))
 # library(sf)
+# library(ggspatial)
 # AK <- map_data("world") %>%
-#   filter(region=="USA") %>%
-#   filter(subregion=="Alaska") %>%
-#   cbind(sf::sf_project(pts=AK[,1:2], to="+proj=aea +lat_1=55 +lat_2=65
-#     +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs
-#     +ellps=GRS80")) %>%
-#   rename(x="1", y="2")
-# morph1 <- cbind(morphometry, sf::sf_project(pts=morphometry[,4:5], to="+proj=aea +lat_1=55 +lat_2=65
-#     +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs
-#     +ellps=GRS80")) %>% rename(x="1", y="2")
-# ggplot(AK, aes(x=x, y=y, group=group)) +
-#   geom_polygon(fill="white", col="black") +
-#   geom_point(data=morph1,
-#              mapping=aes(x=x, y=y)) +
+#     filter(region=="USA") %>%
+#     filter(subregion=="Alaska") %>%
+#   filter(long < 0) #%>%
+#   # st_as_sf(coords=c("long","lat"))
+# ggplot()  +
+#   geom_polygon(data=AK, aes(x=long, y=lat, group=group), fill="white", col="black") +
+#   geom_point(data=morphometry, mapping=aes(x=Longitude_WGS84, y=Latitude_WGS84)) +
+#   coord_sf(datum = st_crs(2964)) +
 #   theme_bw()
+# ggplot()  +
+#   geom_sf(data=st_as_sf(AK, coords = c("long","lat"), crs = 4326), aes(group=group), fill="white", col="black") +
+#   geom_sf(data=st_as_sf(morphometry, coords = c("Longitude_WGS84","Latitude_WGS84"), crs = 4326)) +
+#   coord_sf(datum = st_crs(2964)) +
+#   theme_bw()
+
+
+par(mfrow=c(1,1))
+library(sf)
+AK <- map_data("world") %>%
+  filter(region=="USA") %>%
+  filter(subregion=="Alaska") %>%
+  cbind(sf::sf_project(pts=.[,1:2], to="+proj=aea +lat_1=55 +lat_2=65
+    +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs
+    +ellps=GRS80")) %>%
+  rename(x="1", y="2")
+
+ff <- function(x, n=nrow(laketrout_Winf)) { # f for fill
+  c(x, rep(NA, n - length(x)))
+}
+
+morph1 <- cbind(morphometry, sf::sf_project(pts=morphometry[,4:5], to="+proj=aea +lat_1=55 +lat_2=65
+    +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs
+    +ellps=GRS80")) %>%
+  rename(x="1", y="2") %>%
+  mutate(b0 = ff(int_Winf_jags_out$q50$b0),
+         b1 = ff(int_Winf_jags_out$q50$b1),
+         k = ff(int_Winf_jags_out$q50$k),
+         t0 = ff(int_Winf_jags_out$q50$t0),
+         Winf = ff(int_Winf_jags_out$q50$Winf),
+         Linf = ff(int_Winf_jags_out$q50$Linf))
+
+# ideas
+# chop off aleutians??
+# label max/min points
+# create wrapper function (first try name as variable DARN IT DIDN'T WORK)
+# better fill in NA in b0/b1
+
+basemap <- ggplot() +
+  geom_polygon(data=AK, mapping=aes(x=x, y=y, group=group), fill="white", col="black") +
+  # geom_point(data=morph1,
+  #            mapping=aes(x=x, y=y)) +
+  coord_fixed() +
+  theme_bw() +
+  # theme(axis.title = element_blank(), axis.ticks = element_blank()) +
+  scale_x_continuous(labels = NULL, breaks = NULL) + labs(x = "") +
+  scale_y_continuous(labels = NULL, breaks = NULL) + labs(y = "") +
+  scale_color_gradientn(colors = c("blue", "grey95", "red"))
+
+theparm <- "b0"
+basemap + geom_point(data=morph1, mapping=aes(x=x, y=y, col=b0))
+basemap + geom_point(data=morph1, mapping=aes(x=x, y=y, col=b1))
+basemap + geom_point(data=morph1, mapping=aes(x=x, y=y, col=k))+
+  scale_color_gradientn(colors = c("blue", "grey95", "red"), trans="log10")
+basemap + geom_point(data=morph1, mapping=aes(x=x, y=y, col=t0))
+basemap + geom_point(data=morph1, mapping=aes(x=x, y=y, col=Linf))
+basemap + geom_point(data=morph1, mapping=aes(x=x, y=y, col=Winf)) +
+  scale_color_gradientn(colors = c("blue", "grey95", "red"), trans="log10")
+
+
+ggAK <- function(theparm) {
+  toplot <- select(morph1, all_of(theparm))[,1]
+  minmax <- rep(NA, length(toplot))
+  minmax[which.min(toplot)] <- paste(lakenames[which.min(toplot)],
+                                     round(min(toplot, na.rm = TRUE), 3))
+  minmax[which.max(toplot)] <- paste(lakenames[which.max(toplot)],
+                                     round(max(toplot, na.rm = TRUE), 3))
+  morphplot <- mutate(morph1, toplot = toplot,
+                      minmax = minmax)
+
+  basemap + geom_point(data=morph1, mapping=aes(x=x, y=y, col=toplot))
+
+  # legend title from theparm
+  # maybe fill in basemap
+  # label minmax!! best to use ggrepel
+}
+ggAK("b1")
+
 # ggplot(AK) +#, aes(x=long, y=lat, group=group)
 #   geom_sf(fill="white") +
 #   # geom_polygon(fill="white", col="black") +
@@ -227,9 +281,7 @@ ggplot()  +
 #   geom_polygon(fill="white", col="black")
 
 
-ff <- function(x, n=nrow(laketrout_Winf)) { # f for fill
-  c(x, rep(NA, n - length(x)))
-}
+
 
 library(leaflet)
 thecol <- ifelse(is.na(ff(int_Winf_jags_out$q50$b1)), "white",
