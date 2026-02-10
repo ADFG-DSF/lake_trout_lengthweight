@@ -244,24 +244,59 @@ basemap + geom_point(data=morph1, mapping=aes(x=x, y=y, col=Linf))
 basemap + geom_point(data=morph1, mapping=aes(x=x, y=y, col=Winf)) +
   scale_color_gradientn(colors = c("blue", "grey95", "red"), trans="log10")
 
-
-ggAK <- function(theparm) {
+library(ggrepel)
+ggAK <- function(theparm, digits=3, NAvec=NULL) {
   toplot <- select(morph1, all_of(theparm))[,1]
   minmax <- rep(NA, length(toplot))
   minmax[which.min(toplot)] <- paste(lakenames[which.min(toplot)],
-                                     round(min(toplot, na.rm = TRUE), 3))
+                                     round(min(toplot, na.rm = TRUE), digits=digits))
   minmax[which.max(toplot)] <- paste(lakenames[which.max(toplot)],
-                                     round(max(toplot, na.rm = TRUE), 3))
+                                     round(max(toplot, na.rm = TRUE), digits=digits))
   morphplot <- mutate(morph1, toplot = toplot,
                       minmax = minmax)
+  if(!is.null(NAvec)) {
+    morphplot$toplot[NAvec] <- NA
+  }
+  justmm <- filter(morphplot, !is.na(minmax))
 
-  basemap + geom_point(data=morph1, mapping=aes(x=x, y=y, col=toplot))
+  basemap +
+    geom_point(data=justmm,
+               mapping=aes(x=x, y=y), fill="white", pch=21, size=2.5) +
+    geom_point(data=morphplot,
+               mapping=aes(x=x, y=y, col=toplot)) +
+    geom_text_repel(data=morphplot,
+                    mapping=aes(x=x, y=y, label=minmax),
+                    size=2) +
+    labs(color=theparm)
 
-  # legend title from theparm
   # maybe fill in basemap
-  # label minmax!! best to use ggrepel
+  # NA argument
 }
-ggAK("b1")
+
+wl_lakes <- subset(laketrout, !is.na(Weight_g) & !is.na(ForkLength_mm))$LakeNum %>%
+  unique %>%
+  sort %>%
+  as.character %>%
+  as.numeric
+not_wl_lakes <- !((1:nrow(morphometry)) %in% wl_lakes)
+
+ggAK("b0")
+ggAK("b0", NAvec = not_wl_lakes)
+ggAK("b1", digits=2)
+ggAK("b1", digits=2, NAvec = not_wl_lakes)
+ggAK("k")
+ggAK("t0")
+ggAK("Linf", digits=0)
+ggAK("Winf", digits=2) +
+  scale_color_gradientn(colors = c("blue", "grey95", "red"), trans="log10")
+
+wl_lakes <- subset(laketrout, !is.na(Weight_g) & !is.na(ForkLength_mm))$LakeNum %>%
+  unique %>%
+  sort %>%
+  as.character %>%
+  as.numeric
+not_wl_lakes <- !((1:nrow(morphometry)) %in% wl_lakes)
+
 
 # ggplot(AK) +#, aes(x=long, y=lat, group=group)
 #   geom_sf(fill="white") +
@@ -580,6 +615,54 @@ summary(lm(int_Winf_jags_out$q50$b1[hasLW] ~ log(morphometry$SurfaceArea_h)[hasL
              morphometry$Latitude_WGS84[hasLW]))
 
 ### ^^^^^ this stuff is handled much better elsewhere
+
+
+
+
+
+
+
+
+# trying a new thing with Linf and Winf to be moved elsewhither
+
+Linf_denses <- apply(int_Winf_jags_out$sims.list$Linf, 2, density)
+Winf_denses <- apply(int_Winf_jags_out$sims.list$Winf, 2,
+                     \(x) {
+                       if(all(is.na(x))) {
+                         NA
+                         } else {
+                           density(x)
+                         }})
+Linf_xlims <- range(sapply(Linf_denses, \(x) range(x$x)), na.rm=TRUE)
+Linf_ylims <- range(sapply(Linf_denses, \(x) range(x$y)), na.rm=TRUE)
+Winf_xlims <- range(sapply(Winf_denses, \(x) {
+  if(all(is.na(x))) {
+    NA
+  } else {
+    range(x$x)
+  }
+}), na.rm=TRUE)
+Winf_ylims <- range(sapply(Winf_denses, \(x) {
+  if(all(is.na(x))) {
+    NA
+  } else {
+    range(x$y)
+  }
+}), na.rm=TRUE)
+
+plot(NA, xlim=Linf_xlims, ylim=Linf_ylims)
+for(i in 1:length(Linf_denses)) {
+  if(!all(is.na(Linf_denses[[i]]))) {
+    lines(Linf_denses[[i]], col=adjustcolor(1, alpha.f=.2))
+  }
+}
+
+plot(NA, xlim=Winf_xlims, ylim=Winf_ylims)
+for(i in 1:length(Winf_denses)) {
+  if(!all(is.na(Winf_denses[[i]]))) {
+    lines(Winf_denses[[i]], col=adjustcolor(1, alpha.f=.2))
+  }
+}
 
 
 
