@@ -217,11 +217,6 @@ morph1 <- cbind(morphometry, sf::sf_project(pts=morphometry[,4:5], to="+proj=aea
          Winf = ff(int_Winf_jags_out$q50$Winf),
          Linf = ff(int_Winf_jags_out$q50$Linf))
 
-# ideas
-# chop off aleutians??
-# label max/min points
-# create wrapper function (first try name as variable DARN IT DIDN'T WORK)
-# better fill in NA in b0/b1
 
 basemap <- ggplot() +
   geom_polygon(data=AK, mapping=aes(x=x, y=y, group=group), fill="white", col="black") +
@@ -234,15 +229,7 @@ basemap <- ggplot() +
   scale_y_continuous(labels = NULL, breaks = NULL) + labs(y = "") +
   scale_color_gradientn(colors = c("blue", "grey95", "red"))
 
-theparm <- "b0"
-basemap + geom_point(data=morph1, mapping=aes(x=x, y=y, col=b0))
-basemap + geom_point(data=morph1, mapping=aes(x=x, y=y, col=b1))
-basemap + geom_point(data=morph1, mapping=aes(x=x, y=y, col=k))+
-  scale_color_gradientn(colors = c("blue", "grey95", "red"), trans="log10")
-basemap + geom_point(data=morph1, mapping=aes(x=x, y=y, col=t0))
-basemap + geom_point(data=morph1, mapping=aes(x=x, y=y, col=Linf))
-basemap + geom_point(data=morph1, mapping=aes(x=x, y=y, col=Winf)) +
-  scale_color_gradientn(colors = c("blue", "grey95", "red"), trans="log10")
+
 
 library(ggrepel)
 ggAK <- function(theparm, digits=3, NAvec=NULL) {
@@ -284,60 +271,29 @@ ggAK("b0")
 ggAK("b0", NAvec = not_wl_lakes)
 ggAK("b1", digits=2)
 ggAK("b1", digits=2, NAvec = not_wl_lakes)
-ggAK("k")
+ggAK("k") +
+  scale_color_gradientn(colors = c("blue", "grey95", "red"), trans="log10")
 ggAK("t0")
 ggAK("Linf", digits=0)
 ggAK("Winf", digits=2) +
   scale_color_gradientn(colors = c("blue", "grey95", "red"), trans="log10")
 
-wl_lakes <- subset(laketrout, !is.na(Weight_g) & !is.na(ForkLength_mm))$LakeNum %>%
-  unique %>%
-  sort %>%
-  as.character %>%
-  as.numeric
-not_wl_lakes <- !((1:nrow(morphometry)) %in% wl_lakes)
-
-
-# ggplot(AK) +#, aes(x=long, y=lat, group=group)
-#   geom_sf(fill="white") +
-#   # geom_polygon(fill="white", col="black") +
-#   coord_sf(crs = 3338) +
-#   theme_bw()
-#
-# AK_albers <- sf::sf_project(pts=AK[,1:2], to="+proj=aea +lat_1=55 +lat_2=65
-#     +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs
-#     +ellps=GRS80")
-# plot(AK_albers, col=0)
-# polygon(AK_albers)
-#
-# AK_albers %>%
-#   as.data.frame() %>%
-#   ggplot(aes(x=V1, y=V2)) +
-#   geom_polygon(fill="white", col="black")
 
 
 
 
-library(leaflet)
-thecol <- ifelse(is.na(ff(int_Winf_jags_out$q50$b1)), "white",
-                 ifelse(ff(int_Winf_jags_out$q50$b1) < 3.15, "blue",
-                        ifelse(ff(int_Winf_jags_out$q50$b1) > 3.3, "red", "grey")))
-leaflet(morphometry) %>%
-  addTiles() %>%
-  addCircles(lng=~Longitude_WGS84,
-             lat=~Latitude_WGS84,
-             # color=colorRampPalette(c("blue","white","red"))(nrow(morphometry))[rank(ff(int_Winf_jags_out$q50$b1))]
-             color=thecol
-             )
+# library(leaflet)
+# thecol <- ifelse(is.na(ff(int_Winf_jags_out$q50$b1)), "white",
+#                  ifelse(ff(int_Winf_jags_out$q50$b1) < 3.15, "blue",
+#                         ifelse(ff(int_Winf_jags_out$q50$b1) > 3.3, "red", "grey")))
+# leaflet(morphometry) %>%
+#   addTiles() %>%
+#   addCircles(lng=~Longitude_WGS84,
+#              lat=~Latitude_WGS84,
+#              # color=colorRampPalette(c("blue","white","red"))(nrow(morphometry))[rank(ff(int_Winf_jags_out$q50$b1))]
+#              color=thecol
+#              )
 
-b0_range <- int_Winf_jags_out$q50$b0_interp
-b1_range <- int_Winf_jags_out$q50$b1
-
-curve(exp(median(b0_range, na.rm=TRUE))*(x^median(b1_range, na.rm=TRUE)), from=0, to=1000)
-for(i in which(!is.na(b0_range))) curve(exp(b0_range[i])*(x^median(b1_range, na.rm=TRUE)), from=0, to=1000, add=TRUE)
-
-curve(exp(median(b0_range, na.rm=TRUE))*(x^median(b1_range, na.rm=TRUE)), from=0, to=1000)
-for(i in which(!is.na(b1_range))) curve(exp(median(b0_range, na.rm=TRUE))*(x^b1_range[i]), from=0, to=1000, add=TRUE)
 
 
 ## length ~ age (plots for all lakes where there are lengths and ages)
@@ -353,6 +309,8 @@ for(j in int_Winf_data$whichlakes_Lt) {
   datalegend()
 }
 
+
+## overlaying length ~ age on a single plot (MAYBE NOT USEFUL LIKE THIS)
 par(mfrow=c(1,1))
 cols <- adjustcolor(rcolors(ncol(int_Winf_jags_out$q50$Lfit)), red.f = .5, blue.f=.5, green.f=.5)
 plot(NA, xlim=c(0, 70), ylim=c(0,1000), xlab="Age", ylab="Length")
@@ -487,6 +445,8 @@ text(x=1:ncol(length20), y=apply(length20, 2, median),
 
 ##### Linf #####
 
+par(mfrow=c(1,1))
+
 # vs data availability
 caterpillar_plus(p="Linf", x=datarank,
                  df=int_Winf_jags_out, col=datacols)
@@ -503,12 +463,14 @@ plot(x=morphometry$SurfaceArea_h, y=int_Winf_jags_out$q50$Linf,
 caterpillar_plus(p="Linf", x=morphometry$SurfaceArea_h, #x=int_Winf_data$logareac,
                  df=int_Winf_jags_out, col=datacols,
                  add=TRUE, median=FALSE)
-curve(int_Winf_data$gam_lester * (1 - exp(-int_Winf_data$lam_lester * (1 + log(x)))), add=TRUE, lty=2)
+curve(int_Winf_jags_out$q50$gam * (1 - exp(-int_Winf_jags_out$q50$lam * (1 + log(x)))), add=TRUE, lty=2)
+curve(int_Winf_data$gam_lester * (1 - exp(-int_Winf_data$lam_lester * (1 + log(x)))), add=TRUE, lty=3)
+legend("topright", lty=c(2,3), legend=c("Post median","Lester"), cex=.5)
 
-# vs Lester Linf
-caterpillar_plus(p="Linf", x=morphometry$L_inf_lester, xlab="Lester Linf",
-                 df=int_Winf_jags_out, col=datacols)
-abline(0, 1, lty=3)
+# # vs Lester Linf
+# caterpillar_plus(p="Linf", x=morphometry$L_inf_lester, xlab="Lester Linf",
+#                  df=int_Winf_jags_out, col=datacols)
+# abline(0, 1, lty=3)
 
 
 
@@ -533,12 +495,12 @@ caterpillar_plus(p="Winf", x=morphometry$SurfaceArea_h, #x=int_Winf_data$logarea
                  add=TRUE, median=FALSE)
 curve(exp(-19.56 +
             3.2*log(int_Winf_data$gam_lester * (1 - exp(-int_Winf_data$lam_lester * (1 + log(x)))))),
-      add=TRUE, lty=2)
+      add=TRUE, lty=3)
 
-# vs Lester Linf
-caterpillar_plus(p="Winf", x=morphometry$W_inf_lester, xlab="Lester Winf",
-                 df=int_Winf_jags_out, col=datacols)
-abline(0, 1, lty=3)
+# # vs Lester Winf
+# caterpillar_plus(p="Winf", x=morphometry$W_inf_lester, xlab="Lester Winf",
+#                  df=int_Winf_jags_out, col=datacols)
+# abline(0, 1, lty=3)
 
 
 
@@ -623,47 +585,163 @@ summary(lm(int_Winf_jags_out$q50$b1[hasLW] ~ log(morphometry$SurfaceArea_h)[hasL
 
 
 
-# trying a new thing with Linf and Winf to be moved elsewhither
+# # trying a new thing with Linf and Winf to be moved elsewhither
+#
+# Linf_denses <- apply(int_Winf_jags_out$sims.list$Linf, 2, density)
+# Winf_denses <- apply(int_Winf_jags_out$sims.list$Winf, 2,
+#                      \(x) {
+#                        if(all(is.na(x))) {
+#                          NA
+#                          } else {
+#                            density(x)
+#                          }})
+# Linf_xlims <- range(sapply(Linf_denses, \(x) range(x$x)), na.rm=TRUE)
+# Linf_ylims <- range(sapply(Linf_denses, \(x) range(x$y)), na.rm=TRUE)
+# Winf_xlims <- range(sapply(Winf_denses, \(x) {
+#   if(all(is.na(x))) {
+#     NA
+#   } else {
+#     range(x$x)
+#   }
+# }), na.rm=TRUE)
+# Winf_ylims <- range(sapply(Winf_denses, \(x) {
+#   if(all(is.na(x))) {
+#     NA
+#   } else {
+#     range(x$y)
+#   }
+# }), na.rm=TRUE)
+#
+# plot(NA, xlim=Linf_xlims, ylim=Linf_ylims)
+# for(i in 1:length(Linf_denses)) {
+#   if(!all(is.na(Linf_denses[[i]]))) {
+#     lines(Linf_denses[[i]], col=adjustcolor(1, alpha.f=.2))
+#   }
+# }
+#
+# plot(NA, xlim=Winf_xlims, ylim=Winf_ylims)
+# for(i in 1:length(Winf_denses)) {
+#   if(!all(is.na(Winf_denses[[i]]))) {
+#     lines(Winf_denses[[i]], col=adjustcolor(1, alpha.f=.2))
+#   }
+# }
 
-Linf_denses <- apply(int_Winf_jags_out$sims.list$Linf, 2, density)
-Winf_denses <- apply(int_Winf_jags_out$sims.list$Winf, 2,
-                     \(x) {
-                       if(all(is.na(x))) {
-                         NA
-                         } else {
-                           density(x)
-                         }})
-Linf_xlims <- range(sapply(Linf_denses, \(x) range(x$x)), na.rm=TRUE)
-Linf_ylims <- range(sapply(Linf_denses, \(x) range(x$y)), na.rm=TRUE)
-Winf_xlims <- range(sapply(Winf_denses, \(x) {
-  if(all(is.na(x))) {
-    NA
-  } else {
-    range(x$x)
-  }
-}), na.rm=TRUE)
-Winf_ylims <- range(sapply(Winf_denses, \(x) {
-  if(all(is.na(x))) {
-    NA
-  } else {
-    range(x$y)
-  }
-}), na.rm=TRUE)
+side_cat <- function(x, a, xlab="") { # a will be an index to highlight
 
-plot(NA, xlim=Linf_xlims, ylim=Linf_ylims)
-for(i in 1:length(Linf_denses)) {
-  if(!all(is.na(Linf_denses[[i]]))) {
-    lines(Linf_denses[[i]], col=adjustcolor(1, alpha.f=.2))
-  }
+  ci <- c(0.5, 0.95)
+
+  loq <- apply(x, 2, quantile, p = (1 - ci)/2, na.rm = T)
+  hiq <- apply(x, 2, quantile, p = 1 - (1 - ci)/2, na.rm = T)
+  meds <- apply(x, 2, median, na.rm=T)
+
+  plot(NA, xlim=range(0, loq, hiq, na.rm=TRUE), ylim=c(ncol(x),1),
+       ylab="", xlab=xlab, yaxt="n")
+
+  segments(x0=loq[1,], x1=hiq[1,], y0=1:ncol(x),
+           lend=1, lwd=3, col=adjustcolor(1, alpha.f=.2))
+  segments(x0=loq[2,], x1=hiq[2,], y0=1:ncol(x),
+           lend=1, lwd=1, col=adjustcolor(1, alpha.f=.2))
+
+  segments(x0=loq[1,a], x1=hiq[1,a], y0=a,
+           lend=1, lwd=6, col=1)
+  segments(x0=loq[2,a], x1=hiq[2,a], y0=a,
+           lend=1, lwd=2, col=1)
+  segments(x0=meds[a], x1=meds[a], y0=a-1, y1=a+1,
+           lend=1, lwd=2, col=1)
+
+  # grid(nx=NULL, ny=NA)
 }
 
-plot(NA, xlim=Winf_xlims, ylim=Winf_ylims)
-for(i in 1:length(Winf_denses)) {
-  if(!all(is.na(Winf_denses[[i]]))) {
-    lines(Winf_denses[[i]], col=adjustcolor(1, alpha.f=.2))
-  }
+catbars <- function(x, h, col=1) {
+  ci <- c(0.5, 0.95)
+  lolo <- quantile(x, p = (1 - ci)/2, na.rm = T)
+  hihi <- quantile(x, p = 1 - (1 - ci)/2, na.rm = T)
+  segments(x0=lolo[1], x1=hihi[1], y0=h, lwd=3, lend=1, col=col)
+  segments(x0=lolo[2], x1=hihi[2], y0=h, lwd=1, lend=1, col=col)
 }
 
+# i <- 5
+
+par(mfrow=c(2,2))
+for(i in 21:32) {
+  par(xpd=FALSE)
+
+  # L ~ Age
+  plot(NA, xlab="Age", ylab="Length (mm)", main=lakenames[i],
+       xlim=c(0, max(int_Winf_data$Age, na.rm=TRUE)),
+       ylim=c(0, max(int_Winf_data$L[!is.na(int_Winf_data$Age)], na.rm=TRUE)))
+  for(j in 1:ncol(int_Winf_jags_out$q50$Lfit)) {
+    lines(int_Winf_jags_out$q50$Lfit[,j], col=adjustcolor(1, alpha.f = .1))
+  }
+  envelope(int_Winf_jags_out$sims.list$Lfit[,,i], add=TRUE)
+  points(x=int_Winf_data$Age[int_Winf_data$lake==i],
+         y=int_Winf_data$L[int_Winf_data$lake==i])
+
+
+  # W ~ Length
+  plot(NA, xlab="Length (mm)", ylab="Weight (kg)", main=lakenames[i], log="xy",
+       # xlim=range(int_Winf_data$L[!is.na(int_Winf_data$logW)], na.rm=TRUE),
+       # ylim=range(exp(int_Winf_data$logW), na.rm=TRUE),
+       xlim=quantile(int_Winf_data$L[!is.na(int_Winf_data$logW)], na.rm=TRUE, p=c(.01,.999)),
+       ylim=quantile(exp(int_Winf_data$logW), na.rm=TRUE, p=c(.01,.999)),
+       )
+  for(j in 1:length(lakenames)) {
+    curve(exp(int_Winf_jags_out$q50$b0_interp[j])*x^int_Winf_jags_out$q50$b1[j],
+          add=TRUE, col=adjustcolor(1, alpha.f = .1))
+  }
+  points(x=int_Winf_data$L[int_Winf_data$lake==i],
+         y=exp(int_Winf_data$logW)[int_Winf_data$lake==i])
+  envelope(exp(int_Winf_jags_out$sims.list$b0_interp[,i]) *
+                t(outer(seq(100, 1000, by=100), int_Winf_jags_out$sims.list$b1[,i], "^")),
+              x=seq(100, 1000, by=100), add=TRUE)
+
+
+  # Linf by data sources
+  side_cat(x=int_Winf_jags_out$sims.list$Linf, a=i, xlab="Linf (mm)")
+
+  par(xpd=NA)
+  cols <- c(1, 2, 4) # ages, lengths, area
+
+  segments(x0=int_Winf_data$qL[i], y0=-5-1, y1=1+i, lty=2, col=cols[2])
+  sig_L <- int_Winf_jags_out$sims.list$sig_L
+  qLvec <- rnorm(n=nrow(sig_L), mean=int_Winf_data$qL[i], sd=sig_L[,i])
+  catbars(x=qLvec, h=-5, col=cols[2])
+
+  logmu_vec <- log(int_Winf_jags_out$sims.list$gam * (1 - exp(-int_Winf_jags_out$sims.list$lam * (1 + log(int_Winf_data$Area[i])))))
+  sigLAvec <- int_Winf_jags_out$sims.list$sig_LA
+  areaLvec <- rlnorm(n=length(logmu_vec), meanlog = logmu_vec, sdlog = sigLAvec)
+  # abline(v=median(areaLvec), lty=2)
+  segments(x0=median(areaLvec), y0=-3-1, y1=1+i, lty=2, col=cols[3])
+  catbars(x=areaLvec, h=-3, col=cols[3])
+
+  text(x=c(0, 0), y=c(-7, -5, -3)-1, pos=4, cex=0.5, col=cols,
+       labels=paste(c("n ages =", "n lengths =", "area"),
+                    c(laketrout_Winf$n_Age[i], laketrout_Winf$n_Length[i], "")))
+
+
+  # Winf by data sources
+  side_cat(x=int_Winf_jags_out$sims.list$Winf, a=i, xlab="Winf (kg)")
+
+  par(xpd=NA)
+  cols <- c(1, 2, 3, 4) # ages, lengths, area
+
+  segments(x0=int_Winf_data$qW[i], y0=-7-1, y1=1+i, lty=2, col=cols[2])
+  sig_W <- int_Winf_jags_out$sims.list$sig_W
+  qWvec <- rnorm(n=nrow(sig_W), mean=int_Winf_data$qW[i], sd=sig_W[,i])
+  catbars(x=qWvec, h=-7, col=cols[2])
+
+  qWLvec <- exp(int_Winf_jags_out$sims.list$b0_interp[,i])*qLvec^int_Winf_jags_out$sims.list$b1[,i]
+  segments(x0=median(qWLvec), y0=-5-1, y1=1+i, lty=2, col=cols[3])
+  catbars(x=qWLvec, h=-5, col=cols[3])
+
+  areaWLvec <- exp(int_Winf_jags_out$sims.list$b0_interp[,i])*areaLvec^int_Winf_jags_out$sims.list$b1[,i]
+  segments(x0=median(areaWLvec), y0=-3-1, y1=1+i, lty=2, col=cols[4])
+  catbars(x=areaWLvec, h=-3, col=cols[4])
+
+  text(x=c(0, 0), y=c(-9, -7, -5, -3)-1, pos=4, cex=0.5, col=cols,
+       labels=paste(c("n ages =", "n weights =", "n lengths =", "area"),
+                    c(laketrout_Winf$n_Age[i], laketrout_Winf$n_Weight[i], laketrout_Winf$n_Length[i], "")))
+}
 
 
 
