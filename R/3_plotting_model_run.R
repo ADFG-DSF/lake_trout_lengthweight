@@ -1,13 +1,19 @@
-library(jagsUI)
-library(jagshelper)
-library(tidyverse)
-library(sf)
-library(ggrepel)
+library(jagsUI)           # for running JAGS models
+library(jagshelper)       # for plotting JAGS output
+library(tidyverse)        # for data manipulation
+library(sf)               # for spatial projections & transformations
+library(ggrepel)          # for plotting
 
 
+### ------- loading data and custom functions -------- ###
+
+## loading input data for the JAGS model
 load(file="Rdata/laketrout_sampling_formodel.Rdata")
 
+## loading the JAGS output itself (this is a big file)
 load(file="interim_posts/int_Winf_modelrun.Rdata")
+
+## displaying how many MCMC iterations and how many chains
 niter/1000
 ncores
 
@@ -309,9 +315,9 @@ envelope(int_Winf_jags_out$sims.list$sig_W[, int_Winf_data$whichlakes_W],
 
 ### LVB parameters
 par(mfrow=c(1,2))
-caterpillar(int_Winf_jags_out, "t0",
+caterpillar1(int_Winf_jags_out, "t0", do_xax=FALSE,
             col=estcols)
-caterpillar(int_Winf_jags_out, "k",
+caterpillar1(int_Winf_jags_out, "k", do_xax=FALSE,
             col=estcols)
 
 
@@ -439,6 +445,8 @@ for(j in int_Winf_data$whichlakes_Lt) {
   datalegend()
 }
 
+# graphics.off()
+
 
 ## overlaying length ~ age on a single plot (MAYBE NOT USEFUL LIKE THIS)
 par(mfrow=c(1,1))
@@ -467,12 +475,12 @@ par(mfrow=c(1,2))
 length10 <- int_Winf_jags_out$sims.list$Lfit[,which(int_Winf_data$Agefit==10),]
 length20 <- int_Winf_jags_out$sims.list$Lfit[,which(int_Winf_data$Agefit==20),]
 
-caterpillar(length10, main="Mean length at age 10", ylim=c(0,1000))
+caterpillar1(length10, main="Mean length at age 10", ylim=c(0,1000), do_xax = FALSE)
 text(x=1:ncol(length10), y=apply(length10, 2, median),
      labels=lakenames[1:ncol(length10)],
      cex=.6, col=adjustcolor(4, alpha.f=.6, blue.f=.8, red.f=.8, green.f=.8), srt=90)
 
-caterpillar(length20, main="Mean length at age 20", ylim=c(0,1000))
+caterpillar1(length20, main="Mean length at age 20", ylim=c(0,1000), do_xax = FALSE)
 text(x=1:ncol(length20), y=apply(length20, 2, median),
      labels=lakenames[1:ncol(length20)],
      cex=.6, col=adjustcolor(4, alpha.f=.6, blue.f=.8, red.f=.8, green.f=.8), srt=90)
@@ -522,6 +530,9 @@ for(i in seq_along(lakenames)) {
            x=lvec, add=TRUE)
 }
 
+# graphics.off()
+
+
 
 ## caterpillar plots of modeled median weight at 300mm and 600mm??? <-- perhaps betterer lengths
 par(mfrow=c(1,1))
@@ -535,26 +546,27 @@ maxes <- tapply(laketrout$ForkLength_mm, factor(laketrout$LakeName, levels=laken
 
 df300 <- exp(int_Winf_jags_out$sims.list$b0_interp)*
   300^int_Winf_jags_out$sims.list$b1
-caterpillar(df300, main="Median weight (kg) at 300mm",
+caterpillar1(df300, main="Median weight (kg) at 300mm", do_xax = FALSE,
             col=ifelse(is.na(maxes), adjustcolor(4, alpha.f=.2),
                        ifelse(maxes < 300, adjustcolor(4, alpha.f=.6), 4)))
 makelabels(df300)
 
 df600 <- exp(int_Winf_jags_out$sims.list$b0_interp)*
   600^int_Winf_jags_out$sims.list$b1
-caterpillar(df600, main="Median weight (kg) at 600mm",
+caterpillar1(df600, main="Median weight (kg) at 600mm", do_xax = FALSE,
             col=ifelse(is.na(maxes), adjustcolor(4, alpha.f=.2),
                        ifelse(maxes < 600, adjustcolor(4, alpha.f=.6), 4)))
 makelabels(df600)
 
 df800 <- exp(int_Winf_jags_out$sims.list$b0_interp)*
   800^int_Winf_jags_out$sims.list$b1
-caterpillar(df800, main="Median weight (kg) at 800mm",
+caterpillar1(df800, main="Median weight (kg) at 800mm", do_xax = FALSE,
             col=ifelse(is.na(maxes), adjustcolor(4, alpha.f=.2),
                        ifelse(maxes < 800, adjustcolor(4, alpha.f=.6), 4)))
 makelabels(df800)
 
 
+## mapping modeled median weight
 morph1 <- morph1 %>%
   mutate(W300 = ifelse(is.na(maxes), NA,
                        ifelse(maxes < 300, NA,
@@ -567,19 +579,63 @@ morph1 <- morph1 %>%
                               apply(df800, 2, median))),
          x = morph1$x,
          y = morph1$y)
-# basemap + geom_point(data=Wdf, aes(x=x, y=y, col=W300))
-# basemap + geom_point(data=Wdf, aes(x=x, y=y, col=W600))
-# basemap + geom_point(data=Wdf, aes(x=x, y=y, col=W800))
+
 
 ggAK("W300")
 ggAK("W600")
 ggAK("W800")
 
 
+## plotting by latitude
+caterpillar1(df300[,!is.na(morph1$W300)], main="Median weight (kg) at 300mm",
+             x=morphometry$Latitude_WGS84[!is.na(morph1$W300)],
+             xlab="Latitude", do_xax = FALSE)
+axis(side=1, axTicks(1))
+caterpillar1(df600[,!is.na(morph1$W600)], main="Median weight (kg) at 600mm",
+             x=morphometry$Latitude_WGS84[!is.na(morph1$W600)],
+             xlab="Latitude", do_xax = FALSE)
+axis(side=1, axTicks(1))
+caterpillar1(df800[,!is.na(morph1$W800)], main="Median weight (kg) at 800mm",
+             x=morphometry$Latitude_WGS84[!is.na(morph1$W800)],
+             xlab="Latitude", do_xax = FALSE)
+axis(side=1, axTicks(1))
+
+
+# ## plotting by Log Area
+# caterpillar1(df300[,!is.na(morph1$W300)], main="Median weight (kg) at 300mm",
+#              x=log(morphometry$SurfaceArea_h)[!is.na(morph1$W300)],
+#              xlab="Log Area", do_xax = FALSE)
+# axis(side=1, axTicks(1))
+# caterpillar1(df600[,!is.na(morph1$W600)], main="Median weight (kg) at 600mm",
+#              x=log(morphometry$SurfaceArea_h)[!is.na(morph1$W600)],
+#              xlab="Log Area", do_xax = FALSE)
+# axis(side=1, axTicks(1))
+# caterpillar1(df800[,!is.na(morph1$W800)], main="Median weight (kg) at 800mm",
+#              x=log(morphometry$SurfaceArea_h)[!is.na(morph1$W800)],
+#              xlab="Log Area", do_xax = FALSE)
+# axis(side=1, axTicks(1))
+#
+#
+# ## plotting by temperature
+# caterpillar1(df300[,!is.na(morph1$W300)], main="Median weight (kg) at 300mm",
+#              x=morphometry$`Temp (C)`[!is.na(morph1$W300)],
+#              xlab="Temp (C)", do_xax = FALSE)
+# axis(side=1, axTicks(1))
+# caterpillar1(df600[,!is.na(morph1$W600)], main="Median weight (kg) at 600mm",
+#              x=morphometry$`Temp (C)`[!is.na(morph1$W600)],
+#              xlab="Temp (C)", do_xax = FALSE)
+# axis(side=1, axTicks(1))
+# caterpillar1(df800[,!is.na(morph1$W800)], main="Median weight (kg) at 800mm",
+#              x=morphometry$`Temp (C)`[!is.na(morph1$W800)],
+#              xlab="Temp (C)", do_xax = FALSE)
+# axis(side=1, axTicks(1))
 
 
 
-##### Linf #####
+
+
+
+##### ------ Plotting asymptotic length  Linf ----- #####
 
 par(mfrow=c(1,1))
 
@@ -593,6 +649,7 @@ axis(side=1, axTicks(1))
 points(x=datarank[morphometry$make_estimates],
        y=int_Winf_jags_out$q50$Linf[morphometry$make_estimates],
        pch=16)
+legend("topleft", pch=16, legend="Estimates of Winf desired", cex=0.5)
 
 
 # vs qL value
@@ -607,6 +664,7 @@ points(x=int_Winf_data$qL[morphometry$make_estimates],
        y=int_Winf_jags_out$q50$Linf[morphometry$make_estimates],
        pch=16)
 abline(0, 1, lty=3)
+legend("topleft", pch=16, legend="Estimates of Winf desired", cex=0.5)
 
 
 # vs Area
@@ -632,7 +690,7 @@ points(x=morphometry$SurfaceArea_h[morphometry$make_estimates],
 curve(int_Winf_jags_out$q50$gam * (1 - exp(-int_Winf_jags_out$q50$lam * (1 + log(x)))), add=TRUE, lty=2)
 curve(int_Winf_data$gam_lester * (1 - exp(-int_Winf_data$lam_lester * (1 + log(x)))), add=TRUE, lty=3)
 legend("topright", lty=c(2,3), legend=c("Post median","Lester"), cex=.5)
-
+legend("topleft", pch=16, legend="Estimates of Winf desired", cex=0.5)
 
 # # vs Lester Linf
 # caterpillar_plus(p="Linf", x=morphometry$L_inf_lester, xlab="Lester Linf",
@@ -642,7 +700,7 @@ legend("topright", lty=c(2,3), legend=c("Post median","Lester"), cex=.5)
 
 
 
-##### Winf #####
+##### ------ Plotting asymptotic weight Winf ----- #####
 
 # vs data availability
 caterpillar_plus(p="Winf", x=datarank,
@@ -654,6 +712,7 @@ axis(side=1, axTicks(1))
 points(x=datarank[morphometry$make_estimates],
        y=int_Winf_jags_out$q50$Winf[morphometry$make_estimates],
        pch=16)
+legend("topleft", pch=16, legend="Estimates of Winf desired", cex=0.5)
 
 
 # vs qW value
@@ -668,7 +727,7 @@ points(x=int_Winf_data$qW[morphometry$make_estimates],
        y=int_Winf_jags_out$q50$Winf[morphometry$make_estimates],
        pch=16)
 abline(0, 1, lty=3)
-
+legend("topleft", pch=16, legend="Estimates of Winf desired", cex=0.5)
 
 # vs Area
 plot(x=morphometry$SurfaceArea_h, y=int_Winf_jags_out$q50$Winf,
@@ -693,6 +752,7 @@ points(x=morphometry$SurfaceArea_h[morphometry$make_estimates],
 curve(exp(-19.56 +
             3.2*log(int_Winf_data$gam_lester * (1 - exp(-int_Winf_data$lam_lester * (1 + log(x)))))),
       add=TRUE, lty=3)
+legend("topleft", pch=c(16,NA), lty=c(NA,3), legend=c("Estimates of Winf desired","Lester"), cex=0.5)
 
 # # vs Lester Winf
 # caterpillar_plus(p="Winf", x=morphometry$W_inf_lester, xlab="Lester Winf",
@@ -900,179 +960,6 @@ for(i in seq_along(lakenames)) {
                     c(laketrout_Winf$n_Age[i], laketrout_Winf$n_Weight[i], laketrout_Winf$n_Length[i], "")))
 }
 
+# graphics.off()
 
 
-## ------- figure out better what is happening here
-
-
-### Linf by data availability
-par(mfrow=c(2,2))
-caterpillar(int_Winf_jags_out, "Linf", col=3+int_Winf_data$alllakes %in% int_Winf_data$whichlakes_Lt)
-legend("topleft", legend=c("has AGES", "no AGES"), col=4:3, lwd=3, cex=0.5)
-caterpillar(int_Winf_jags_out, "Linf", col=3+int_Winf_data$alllakes %in% int_Winf_data$whichlakes_LA)
-legend("topleft", legend=c("has AREA", "no AREA"), col=4:3, lwd=3, cex=0.5)
-caterpillar(int_Winf_jags_out, "Linf", col=3+int_Winf_data$alllakes %in% int_Winf_data$whichlakes_L)
-legend("topleft", legend=c("has Lq", "no Lq"), col=4:3, lwd=3, cex=0.5)
-caterpillar(int_Winf_jags_out, "Linf", col=3+int_Winf_data$alllakes %in% int_Winf_data$whichlakes_W)
-legend("topleft", legend=c("has Wq", "no Wq"), col=4:3, lwd=3, cex=0.5)
-
-# # ages and lq
-# caterpillar(int_Winf_jags_out, "Linf", col=3+(int_Winf_data$alllakes %in%
-#               intersect(int_Winf_data$whichlakes_L, int_Winf_data$whichlakes_Lt)))
-# legend("topleft", legend=c("has Lq and AGES", "no"), col=4:3, lwd=3, cex=0.5)
-#
-# # ages and lq and area
-# caterpillar(int_Winf_jags_out, "Linf", col=3+(int_Winf_data$alllakes %in%
-#                                              intersect(int_Winf_data$whichlakes_L,
-#                                                        intersect(int_Winf_data$whichlakes_Lt,
-#                                                        int_Winf_data$whichlakes_LA))))
-# legend("topleft", legend=c("has Lq and AGES and AREA", "no"), col=4:3, lwd=3, cex=0.5)
-
-# # ages, then lq, then area
-# par(mfrow=c(1,1))
-# theorder <- ifelse(int_Winf_data$alllakes %in% int_Winf_data$whichlakes_Lt, 1,
-#                    ifelse(int_Winf_data$alllakes %in% int_Winf_data$whichlakes_L, 2,
-#                           ifelse(int_Winf_data$alllakes %in% int_Winf_data$whichlakes_LA, 3, 4))) %>% rank(ties.method = "first")
-# caterpillar(int_Winf_jags_out, "Linf", x=theorder,
-#             col=ifelse(int_Winf_data$alllakes %in% int_Winf_data$whichlakes_Lt, 4,
-#                        ifelse(int_Winf_data$alllakes %in% int_Winf_data$whichlakes_L, 2,
-#                               ifelse(int_Winf_data$alllakes %in% int_Winf_data$whichlakes_LA, 3, 1))))
-# legend("topleft", legend=c("AGES, then","Lq, then","AREA, then","nothing"), col=c(4,2,3,1), lwd=3, cex=0.5)
-# points(x=theorder[int_Winf_data$whichlakes_W], y=int_Winf_jags_out$q50$Linf[int_Winf_data$whichlakes_W])#, col=int_Winf_data$alllakes %in% int_Winf_data$whichlakes_W)
-# points(x=theorder[morphometry$make_estimates], y=int_Winf_jags_out$q50$Linf[morphometry$make_estimates], pch=16)
-
-# points(x=theorder, y=morphometry$L_inf_lester, pch="x")
-
-caterpillar(int_Winf_jags_out, "Linf", x=datarank, col=datacols)
-datalegend()
-points(x=datarank[morphometry$make_estimates], y=int_Winf_jags_out$q50$Linf[morphometry$make_estimates], pch=16)
-
-## ---
-
-# plot(NA, xlim=range(int_Winf_data$qL, na.rm=T),
-#      ylim=range(int_Winf_jags_out$q2.5$Linf, int_Winf_jags_out$q97.5$Linf, na.rm=TRUE),
-#      main="Linf", xlab="qL", ylab="")
-# caterpillar(int_Winf_jags_out, "Linf", col=ifelse(int_Winf_data$alllakes %in% int_Winf_data$whichlakes_Lt, 4,
-#                                                   ifelse(int_Winf_data$alllakes %in% int_Winf_data$whichlakes_L, 2,
-#                                                          ifelse(int_Winf_data$alllakes %in% int_Winf_data$whichlakes_LA, 3, 1))),
-#             x=int_Winf_data$qL,
-#             add=TRUE)
-# legend("topleft", legend=c("AGES, then","Lq, then","AREA, then","nothing"), col=c(4,2,3,1), lwd=3, cex=0.5)
-# abline(0,1, lty=2)
-# # points(x=int_Winf_data$qL[int_Winf_data$whichlakes_LA],
-# #        y=int_Winf_jags_out$q50$mu_LA[int_Winf_data$whichlakes_LA])
-
-
-plot(NA, xlim=range(int_Winf_data$qL, na.rm=T),
-     ylim=range(int_Winf_jags_out$q2.5$Linf, int_Winf_jags_out$q97.5$Linf, na.rm=TRUE),
-     main="Linf", xlab="qL", ylab="")
-caterpillar(int_Winf_jags_out, "Linf", x=int_Winf_data$qL, col=datacols, add=T)
-abline(0,1, lty=2)
-datalegend()
-
-#---
-
-plot(NA, xlim=range(int_Winf_data$qW, na.rm=T),
-     ylim=range(int_Winf_jags_out$q2.5$Winf, int_Winf_jags_out$q97.5$Winf, na.rm=TRUE),
-     main="Winf", xlab="qW", ylab="")
-caterpillar(int_Winf_jags_out, "Winf", x=int_Winf_data$qW, col=datacols, add=T)
-abline(0,1, lty=2)
-datalegend()
-
-
-# ----------
-
-par(mfrow=c(1,1))
-plot(NA,
-     ylim=range(int_Winf_jags_out$q2.5$Linf, int_Winf_jags_out$q97.5$Linf, na.rm=TRUE),
-     xlim=range(log(int_Winf_data$Area), -1, na.rm=TRUE),
-     main="Linf", xlab="Area (ha)", ylab="", xaxt="n")
-lbls <- c(1, 5, 10, 50, 100, 500, 1000, 5000)
-axis(side=1, at=log(lbls), labels=lbls)
-thecols <- ifelse(int_Winf_data$alllakes %in% int_Winf_data$whichlakes_Lt, 4,
-                  ifelse(int_Winf_data$alllakes %in% int_Winf_data$whichlakes_L, 2,
-                         ifelse(int_Winf_data$alllakes %in% int_Winf_data$whichlakes_LA, 3, 1)))
-caterpillar(int_Winf_jags_out, "Linf", col=datacols,#col=thecols,
-            x=ifelse(is.na(int_Winf_data$Area), -1, log(int_Winf_data$Area)),
-            add=TRUE)
-points(x=ifelse(is.na(int_Winf_data$Area), -1, log(int_Winf_data$Area)),
-       y=int_Winf_jags_out$q50$Linf,
-       col=datacols, pch=16)
-curve(int_Winf_data$gam_lester * (1 - exp(-int_Winf_data$lam_lester * (1 + x))), add=TRUE, lty=2)
-# legend("topleft", legend=c("AGES, then","Lq, then","AREA, then","nothing","Lester priors"),
-#        col=c(4,2,3,1,1), lwd=c(rep(3,4),1), lty=c(rep(1,4),2), cex=0.5)
-datalegend()
-
-# ---
-
-# this bit was commented out
-points(x=(ifelse(is.na(int_Winf_data$Area), -1, log(int_Winf_data$Area)))[int_Winf_data$whichlakes_L],
-       y=int_Winf_data$qL[int_Winf_data$whichlakes_L])
-points(x=(ifelse(is.na(int_Winf_data$Area), -1, log(int_Winf_data$Area)))[morphometry$make_estimates],
-       y=int_Winf_jags_out$q50$Linf[morphometry$make_estimates], pch=16)
-
-points(x=ifelse(is.na(int_Winf_data$Area), -1, log(int_Winf_data$Area)), y=morphometry$L_inf_lester, pch="x")
-
-# more of the same, maybe these thoughts can be combined?
-caterpillar(int_Winf_jags_out$sims.list$Linf[,int_Winf_data$whichlakes_L],
-            x=int_Winf_data$qL[int_Winf_data$whichlakes_L],
-            xlab="qL", main="subset with qL")
-abline(0,1,lty=3)
-caterpillar(int_Winf_jags_out$sims.list$Linf[,int_Winf_data$whichlakes_Lt],
-            x=int_Winf_data$qL[int_Winf_data$whichlakes_Lt],
-            xlab="qL", main="subset with Ages")
-abline(0,1,lty=3)
-int <- intersect(int_Winf_data$whichlakes_Lt, int_Winf_data$whichlakes_L)
-caterpillar(int_Winf_jags_out$sims.list$Linf[,int],
-            x=int_Winf_data$qL[int],
-            xlab="qL", main="subset with qL and Ages")
-abline(0,1,lty=3)
-
-
-## logW ~ logL for each lake
-## b0 ~ lat & area
-## b1 ~ lat & area
-## mu_b0 ~ lat & area
-## mu_b1 ~ lat & area
-
-
-
-### ------------------- compiling and saving output  ------------------ ###
-
-
-### filling in summary output to save to external file
-
-ff <- function(x, n=nrow(laketrout_Winf)) { # f for fill
-  c(x, rep(NA, n - length(x)))
-}
-
-laketrout_Winf$Winf_est <- int_Winf_jags_out$q50$Winf %>% ff
-laketrout_Winf$Winf_se <- int_Winf_jags_out$sd$Winf %>% ff
-laketrout_Winf$Winf_cilo <- int_Winf_jags_out$q2.5$Winf %>% ff
-laketrout_Winf$Winf_cihi <- int_Winf_jags_out$q97.5$Winf %>% ff
-
-laketrout_Winf$Linf_est <- int_Winf_jags_out$q50$Linf %>% ff
-laketrout_Winf$Linf_se <- int_Winf_jags_out$sd$Linf %>% ff
-laketrout_Winf$Linf_cilo <- int_Winf_jags_out$q2.5$Linf %>% ff
-laketrout_Winf$Linf_cihi <- int_Winf_jags_out$q97.5$Linf %>% ff
-
-laketrout_Winf$t0_est <- int_Winf_jags_out$q50$t0 %>% ff
-laketrout_Winf$t0_se <- int_Winf_jags_out$sd$t0 %>% ff
-laketrout_Winf$k_est <- int_Winf_jags_out$q50$k %>% ff
-laketrout_Winf$k_se <- int_Winf_jags_out$sd$k %>% ff
-
-laketrout_Winf$b0_est <- int_Winf_jags_out$q50$b0_interp %>% ff
-laketrout_Winf$b0_se <- int_Winf_jags_out$sd$b0_interp %>% ff
-laketrout_Winf$b1_est <- int_Winf_jags_out$q50$b1 %>% ff
-laketrout_Winf$b1_se <- int_Winf_jags_out$sd$b1 %>% ff
-
-save_results
-if(save_results) {
-  write.csv(laketrout_Winf, file="Winf_estimates.csv")
-}
-
-##### add convergence diagnostics etc here!!
-
-## make sure data object is appropriate
-## make sure model output is complete (plots etc?)
-## - pull out plotting stuff into its own 3_ script

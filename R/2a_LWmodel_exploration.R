@@ -844,3 +844,121 @@ sapply(outs, \(x) x$mae_pred)  %>% plot(type='b')
 
 rep(c("elev", "temp", "area", "lat"), 2)[thegrid[which.min(sapply(outs, \(x) x$rmse_pred)),]]
 rep(c("elev", "temp", "area", "lat"), 2)[thegrid[which.min(sapply(outs, \(x) x$mae_pred)),]]
+
+
+
+
+
+
+########### Strategy 4 ###########
+
+## Run the 4 top candidate models, and see if the inferences are
+## actually all that different!
+
+## HARDLY ANY DIFFERENCE AT ALL!!!  WOW.
+
+
+# JAGS controls
+# niter <- 2*1000
+# niter <- 20*1000
+# niter <- 50*1000      #
+# niter <- 100*1000    # 15 min per (1h tot) on desktop
+niter <- 200*1000      # 30 min per (2h tot) on desktop
+# niter <- 500*1000   #
+# niter <- 2500*1000   #
+
+# ncores <- 3
+ncores <- 8
+# ncores <- min(10, parallel::detectCores()-1)
+
+outs <- list()
+
+for(i in 1:nrow(thegrid)) {
+  int_Winf_data$Z <- themat[i,]
+
+
+
+
+  ###### RUNNING THE MODEL #####
+  {
+    print(i)
+    tstart <- Sys.time()
+    print(tstart)
+    outs[[i]] <- jagsUI::jags(model.file=int_Winf_jags, data=int_Winf_data,
+                              parameters.to.save=parameters,
+                              n.chains=ncores, parallel=T, n.iter=niter,
+                              n.burnin=niter/2, n.thin=niter/2000)
+    print(Sys.time() - tstart)
+  }
+}
+
+# compare Linf & Winf all in one place - comparecat
+
+# dashboard for each lake:
+# - Linf x 4
+# - Winf x 4 (maybe with full range for context??)
+# - length ~ age dots + overlayed (curves?) (envelopes?) x 4
+# - weight ~ length dots + overlayed (curves?) (envelopes?) x 4  <-- Linf & Winf ests??
+
+par(mfrow=c(1,1))
+cols=1:4
+comparecat(outs, p="Linf", col=cols)
+comparecat(outs, p="Winf", col=cols)
+
+Linfs <- simplify2array(sapply(outs, \(x) x$sims.list$Linf, simplify=FALSE))
+Winfs <- simplify2array(sapply(outs, \(x) x$sims.list$Winf, simplify=FALSE))
+LAcurves <- simplify2array(sapply(outs, \(x) x$q50$Lfit, simplify=FALSE))
+b0s <- simplify2array(sapply(outs, \(x) x$q50$b0_interp, simplify=FALSE))
+b1s <- simplify2array(sapply(outs, \(x) x$q50$b1, simplify=FALSE))
+
+for(i in seq_along(lakenames)) {
+
+  par(mfrow=c(2,2))
+
+  # L ~ Age
+  plot(NA, xlab="Age", ylab="Length (mm)", main=lakenames[i],
+       xlim=c(0, max(int_Winf_data$Age, na.rm=TRUE)),
+       ylim=c(0, max(int_Winf_data$L[!is.na(int_Winf_data$Age)], na.rm=TRUE)))
+  # for(j in 1:ncol(int_Winf_jags_out$q50$Lfit)) {
+  #   lines(int_Winf_jags_out$q50$Lfit[,j], col=adjustcolor(1, alpha.f = .1))
+  # }
+  # if(i <= dim(int_Winf_jags_out$sims.list$Lfit)[3]) {
+  #   envelope(int_Winf_jags_out$sims.list$Lfit[,,i], add=TRUE)
+  # }
+  if(i <= dim(LAcurves)[2]) {
+    for(j in seq_along(cols)) {
+      lines(LAcurves[,i,j], col=cols[j], lwd=2)
+    }
+  }
+  points(x=int_Winf_data$Age[int_Winf_data$lake==i],
+         y=int_Winf_data$L[int_Winf_data$lake==i])
+
+
+  # W ~ Length
+  plot(NA, xlab="Length (mm)", ylab="Weight (kg)", main=lakenames[i], #log="xy",
+       xlim=range(int_Winf_data$L[!is.na(int_Winf_data$logW)], na.rm=TRUE),
+       ylim=range(exp(int_Winf_data$logW), na.rm=TRUE),
+       # xlim=quantile(int_Winf_data$L[!is.na(int_Winf_data$logW)], na.rm=TRUE, p=c(.01,.999)),
+       # ylim=quantile(exp(int_Winf_data$logW), na.rm=TRUE, p=c(.01,.999)),
+  )
+  # for(j in 1:length(lakenames)) {
+  #   curve(exp(int_Winf_jags_out$q50$b0_interp[j])*x^int_Winf_jags_out$q50$b1[j],
+  #         add=TRUE, col=adjustcolor(1, alpha.f = .1))
+  # }
+  points(x=int_Winf_data$L[int_Winf_data$lake==i],
+         y=exp(int_Winf_data$logW)[int_Winf_data$lake==i])
+  lvec <- seq(from=min(int_Winf_data$L[!is.na(int_Winf_data$logW)], na.rm=TRUE),
+              to=max(int_Winf_data$L[!is.na(int_Winf_data$logW)], na.rm=TRUE),
+              length.out=20)
+  # envelope(exp(int_Winf_jags_out$sims.list$b0_interp[,i]) *
+  #            t(outer(lvec, int_Winf_jags_out$sims.list$b1[,i], "^")),
+  #          x=lvec, add=TRUE)
+  for(j in seq_along(cols)) {
+    curve(exp(b0s[i,j])*x^b1s[i,j], col=j, lwd=2, add=TRUE)
+  }
+  abline(v=apply(Linfs[,i,], 2, median, na.rm=TRUE), col=cols)
+  abline(h=apply(Winfs[,i,], 2, median, na.rm=TRUE), col=cols)
+
+  if(!all(is.na(Linfs[,i,]))) caterpillar(Linfs[,i,], col=cols)
+  if(!all(is.na(Winfs[,i,]))) caterpillar(Winfs[,i,], col=cols)
+}
