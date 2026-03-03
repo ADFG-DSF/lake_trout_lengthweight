@@ -707,9 +707,9 @@ parameters <- c("sig_Lt", "sig_Lt_prior",
 # JAGS controls
 # niter <- 2*1000
 # niter <- 20*1000
-niter <- 50*1000      # 50k in 15 minutes
+# niter <- 50*1000      # 50k in 15 minutes
 # niter <- 100*1000
-# niter <- 200*1000     # 1.1 hr
+niter <- 200*1000     # 1.1 hr
 # niter <- 500*1000  # 3 hr
 # niter <- 2000*1000   # 10 hrs
 

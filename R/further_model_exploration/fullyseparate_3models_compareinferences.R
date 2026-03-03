@@ -709,10 +709,10 @@ parameters <- c("sig_Lt", "sig_Lt_prior",
 
 
 # JAGS controls
-# niter <- 2*1000
+niter <- 2*1000
 # niter <- 20*1000
 # niter <- 50*1000      # 50k in 15 minutes
-niter <- 100*1000
+# niter <- 100*1000
 # niter <- 200*1000     # 1.1 hr
 # niter <- 500*1000  # 3 hr
 # niter <- 2000*1000   # 10 hrs
@@ -722,107 +722,41 @@ ncores <- 8
 # ncores <- min(10, parallel::detectCores()-1)
 
 
-###### RUNNING THE MODEL #####
-outs <- list()
-{
+theselakes <- laketrout_Winf$LakeNum[laketrout_Winf$n_Weight > 1]
+rmse <- function(x,y) sqrt(mean((x-y)^2, na.rm=TRUE))
+
+rmses <- matrix(nrow=length(theselakes), ncol=3)
+
+for(i in seq_along(theselakes)) {
+  print(i)
   tstart <- Sys.time()
   print(tstart)
-  outs[[1]] <- jagsUI::jags(model.file=model1, data=int_Winf_data,
-                            parameters.to.save=parameters,
-                            n.chains=ncores, parallel=T, n.iter=niter,
-                            n.burnin=niter/2, n.thin=niter/2000)
+  data_i <- int_Winf_data
+  data_i$logW[data_i$lake==theselakes[i]] <- NA
+
+  outs <- jagsUI::jags(model.file=model1, data=data_i,
+                       parameters.to.save="logW",
+                       n.chains=ncores, parallel=T, n.iter=niter,
+                       n.burnin=niter/2, n.thin=niter/2000)
+  logWpred <- outs$q50$logW[data_i$lake==theselakes[i]]
+  logWreal <- int_Winf_data$logW[data_i$lake==theselakes[i]]
+  rmses[i,1] <- rmse(logWpred, logWreal)
+
+  outs <- jagsUI::jags(model.file=model2, data=data_i,
+                       parameters.to.save="logW",
+                       n.chains=ncores, parallel=T, n.iter=niter,
+                       n.burnin=niter/2, n.thin=niter/2000)
+  logWpred <- outs$q50$logW[data_i$lake==theselakes[i]]
+  logWreal <- int_Winf_data$logW[data_i$lake==theselakes[i]]
+  rmses[i,2] <- rmse(logWpred, logWreal)
+
+  outs <- jagsUI::jags(model.file=model3, data=data_i,
+                       parameters.to.save="logW",
+                       n.chains=ncores, parallel=T, n.iter=niter,
+                       n.burnin=niter/2, n.thin=niter/2000)
+  logWpred <- outs$q50$logW[data_i$lake==theselakes[i]]
+  logWreal <- int_Winf_data$logW[data_i$lake==theselakes[i]]
+  rmses[i,3] <- rmse(logWpred, logWreal)
+
   print(Sys.time() - tstart)
-# }
-# {
-  tstart <- Sys.time()
-  print(tstart)
-  outs[[2]] <- jagsUI::jags(model.file=model2, data=int_Winf_data,
-                            parameters.to.save=parameters,
-                            n.chains=ncores, parallel=T, n.iter=niter,
-                            n.burnin=niter/2, n.thin=niter/2000)
-  print(Sys.time() - tstart)
-# }
-# {
-  tstart <- Sys.time()
-  print(tstart)
-  outs[[3]] <- jagsUI::jags(model.file=model3, data=int_Winf_data,
-                            parameters.to.save=parameters,
-                            n.chains=ncores, parallel=T, n.iter=niter,
-                            n.burnin=niter/2, n.thin=niter/2000)
-  print(Sys.time() - tstart)
-}
-
-par(mfrow=c(2,2))
-for(i in seq_along(outs)) plotRhats(outs[[i]])
-
-# compare Linf & Winf all in one place - comparecat
-
-# dashboard for each lake:
-# - Linf x 4
-# - Winf x 4 (maybe with full range for context??)
-# - length ~ age dots + overlayed (curves?) (envelopes?) x 4
-# - weight ~ length dots + overlayed (curves?) (envelopes?) x 4  <-- Linf & Winf ests??
-
-par(mfrow=c(1,1))
-cols=2:4
-comparecat(outs, p="Linf", col=cols)
-comparecat(outs, p="Winf", col=cols)
-
-Linfs <- simplify2array(sapply(outs, \(x) x$sims.list$Linf, simplify=FALSE))
-Winfs <- simplify2array(sapply(outs, \(x) x$sims.list$Winf, simplify=FALSE))
-LAcurves <- simplify2array(sapply(outs, \(x) x$q50$Lfit, simplify=FALSE))
-b0s <- simplify2array(sapply(outs, \(x) x$q50$b0_interp, simplify=FALSE))
-b1s <- simplify2array(sapply(outs, \(x) x$q50$b1, simplify=FALSE))
-
-# for(i in seq_along(lakenames)) {
-for(i in 1:6) {
-
-  par(mfrow=c(2,2))
-
-  # L ~ Age
-  plot(NA, xlab="Age", ylab="Length (mm)", main=lakenames[i],
-       xlim=c(0, max(int_Winf_data$Age, na.rm=TRUE)),
-       ylim=c(0, max(int_Winf_data$L[!is.na(int_Winf_data$Age)], na.rm=TRUE)))
-  # for(j in 1:ncol(int_Winf_jags_out$q50$Lfit)) {
-  #   lines(int_Winf_jags_out$q50$Lfit[,j], col=adjustcolor(1, alpha.f = .1))
-  # }
-  # if(i <= dim(int_Winf_jags_out$sims.list$Lfit)[3]) {
-  #   envelope(int_Winf_jags_out$sims.list$Lfit[,,i], add=TRUE)
-  # }
-  if(i <= dim(LAcurves)[2]) {
-    for(j in seq_along(cols)) {
-      lines(LAcurves[,i,j], col=cols[j], lwd=2)
-    }
-  }
-  points(x=int_Winf_data$Age[int_Winf_data$lake==i],
-         y=int_Winf_data$L[int_Winf_data$lake==i])
-
-
-  # W ~ Length
-  plot(NA, xlab="Length (mm)", ylab="Weight (kg)", main=lakenames[i], #log="xy",
-       xlim=range(int_Winf_data$L[!is.na(int_Winf_data$logW)], na.rm=TRUE),
-       ylim=range(exp(int_Winf_data$logW), na.rm=TRUE),
-       # xlim=quantile(int_Winf_data$L[!is.na(int_Winf_data$logW)], na.rm=TRUE, p=c(.01,.999)),
-       # ylim=quantile(exp(int_Winf_data$logW), na.rm=TRUE, p=c(.01,.999)),
-  )
-  # for(j in 1:length(lakenames)) {
-  #   curve(exp(int_Winf_jags_out$q50$b0_interp[j])*x^int_Winf_jags_out$q50$b1[j],
-  #         add=TRUE, col=adjustcolor(1, alpha.f = .1))
-  # }
-  points(x=int_Winf_data$L[int_Winf_data$lake==i],
-         y=exp(int_Winf_data$logW)[int_Winf_data$lake==i])
-  lvec <- seq(from=min(int_Winf_data$L[!is.na(int_Winf_data$logW)], na.rm=TRUE),
-              to=max(int_Winf_data$L[!is.na(int_Winf_data$logW)], na.rm=TRUE),
-              length.out=20)
-  # envelope(exp(int_Winf_jags_out$sims.list$b0_interp[,i]) *
-  #            t(outer(lvec, int_Winf_jags_out$sims.list$b1[,i], "^")),
-  #          x=lvec, add=TRUE)
-  for(j in seq_along(cols)) {
-    curve(exp(b0s[i,j])*x^b1s[i,j], col=cols[j], lwd=2, add=TRUE)
-  }
-  abline(v=apply(Linfs[,i,], 2, median, na.rm=TRUE), col=cols)
-  abline(h=apply(Winfs[,i,], 2, median, na.rm=TRUE), col=cols)
-
-  if(!all(is.na(Linfs[,i,]))) caterpillar(Linfs[,i,], col=cols)
-  if(!all(is.na(Winfs[,i,]))) caterpillar(Winfs[,i,], col=cols)
 }
