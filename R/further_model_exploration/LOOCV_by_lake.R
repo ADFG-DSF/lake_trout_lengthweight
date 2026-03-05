@@ -863,4 +863,41 @@ cbind(
   table
 
 
+mc_overlap <- function(x1, x2, nbin=1000) {
+  d <- diff(range(x1, x2, na.rm=TRUE))/nbin
+  breaks <- seq(from = min(x1, x2, na.rm=TRUE),
+                to = max(x1, x2, na.rm=TRUE),
+                by = d)
+  x1tab <- as.numeric(table(cut(x1, breaks=breaks, include.lowest=TRUE)))
+  x2tab <- as.numeric(table(cut(x2, breaks=breaks, include.lowest=TRUE)))
 
+  sum(mapply(min, x1tab, x2tab)) / sum(mapply(max, x1tab, x2tab))
+}
+
+mc_overlap_mat <- function(mat1, mat2, nbin=1000) {
+  overlaps <- rep(NA, ncol(mat1))
+  for(j in seq_along(overlaps)) {
+    overlaps[j] <- mc_overlap(x1=mat1[,j], x2=mat2[,j], nbin=nbin)
+  }
+  return(overlaps)
+}
+
+mc_overlap_mat(Winf_0, Winf_1) %>% plot(pch=16, col=2, ylim=0:1)
+mc_overlap_mat(Winf_0, Winf_2) %>% points(pch=16, col=3)
+mc_overlap_mat(Winf_0, Winf_3) %>% points(pch=16, col=4)
+
+cbind(mc_overlap_mat(Winf_0, Winf_1),
+      mc_overlap_mat(Winf_0, Winf_2),
+      mc_overlap_mat(Winf_0, Winf_3)) %>%
+  boxplot
+
+cbind(mc_overlap_mat(Winf_0, Winf_1),
+      mc_overlap_mat(Winf_0, Winf_2),
+      mc_overlap_mat(Winf_0, Winf_3)) %>%
+  colMeans
+
+cbind(mc_overlap_mat(Winf_0, Winf_1),
+      mc_overlap_mat(Winf_0, Winf_2),
+      mc_overlap_mat(Winf_0, Winf_3)) %>%
+  apply(., 1, which.max) %>%
+  table
