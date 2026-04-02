@@ -379,7 +379,7 @@ laketrout_Winf$b0_se <- int_Winf_jags_out$sd$b0_interp %>% ff
 laketrout_Winf$b1_est <- int_Winf_jags_out$q50$b1 %>% ff
 laketrout_Winf$b1_se <- int_Winf_jags_out$sd$b1 %>% ff
 
-save_results
-if(save_results) {
+# save_results
+# if(save_results) {
   write.csv(laketrout_Winf, file="Winf_estimates.csv")
-}
+# }
