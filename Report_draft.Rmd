@@ -1,0 +1,218 @@
+---
+title: "An Integrated Model for Estimating Asymptotic Size of Lake Trout"
+author: "Matt Tyers"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r LoadSample}
+# loading data to report sample sizes
+load(file="Rdata/laketrout_sampling_formodel.Rdata")
+library(magrittr)
+
+roundn <- paste0(formatC(round(nrow(laketrout), digits=-4), 
+                         big.mark=",", format="f", digits=0), 
+                 "+")
+nw <- sum(!is.na(laketrout$Weight_g)) %>% 
+  formatC(big.mark=",", format="f", digits=0)
+nl <- sum(!is.na(laketrout$ForkLength_mm)) %>% 
+  formatC(big.mark=",", format="f", digits=0)
+na <- sum(!is.na(laketrout$Age)) %>% 
+  formatC(big.mark=",", format="f", digits=0)
+
+nlw <- sum(!is.na(laketrout$ForkLength_mm & laketrout$Weight_g)) %>% 
+  formatC(big.mark=",", format="f", digits=0)
+nla <- sum(!is.na(laketrout$ForkLength_mm & laketrout$Age)) %>% 
+  formatC(big.mark=",", format="f", digits=0)
+
+nllw <- length(unique(laketrout$LakeName[!is.na(laketrout$ForkLength_mm & laketrout$Weight_g)]))
+nlla <- length(unique(laketrout$LakeName[!is.na(laketrout$ForkLength_mm & laketrout$Age)]))
+
+nlakes <- length(unique(laketrout$LakeName))
+```
+
+```{r LoadModelResults}
+## loading the JAGS output itself (this is a big file)
+load(file="interim_posts/int_Winf_modelrun.Rdata")
+
+# ^^^^^ update this file with non-interim model run ^^^^^
+
+```
+
+## Abstract
+
+
+## Purpose (?)
+
+
+## Introduction
+
+Management need
+
+Lester Model - spell this out??
+
+Data sources
+
+[yoink some language from a good lake trout report.]  Lake trout exist as a resident species in Alaska, and are long-lived and slow-growing.  In order to effectively manage localized harvest limits, a productivity model must be employed in order to estimate surplus production in a given waterbody, as environmental variability results in variability in productivity at the local scale.  
+
+Currently, the Lake Area Model (LAM, Evans citation) is used [for management, unpack the specifics].  In the LAM, yield potential is estimated from lake area, under the assumption that much of the variability in productivity can be explained by [limnic area thingy??], for which total surface area can serve as a surrogate.  This relationship was estimated using a set of [42] lakes in [Eastern Canada], and can be expressed as the following:
+
+$$ln(\hat{YP_{kg}}) = bb0 + bb1 ln(A)$$
+
+in which $\hag{YP_{kg}} represents the yield potential expressed in kilograms biomass, and *A* represents lake area measured in hectares.
+
+A newer model developed by Lester et al. (citation), hereafter termed the Lester Model, [fillllll thhhiiissss innnnn]
+
+model formulation explicitly
+
+Application of the Lester Model to lake trout in Alaska lakes may be substantially improved by direct estimation of asymptotic weight $W_{\infty}$ when possible.  In the computational framework presented by Lester, et al., $W_{\infty}$ is estimated by means of a sequence of relationships: first, the relationship observed between lake area and asymptotic length observed in Canada; then, the aggregate relationship between length and weight observed in Canada.
+
+We have data at a finer resolution: for `r nlakes` lakes, we have sampling data on `r roundn` individual lake trout (`r nw` weights; `r nl` lengths; `r na` ages), which can be used to gain inference on pairwise relationships between variables (`r nlw` paired length x weight observations from `r nllw` lakes; `r nla` paired length x age observations from `r nlla` lakes).  Not only can the relationships between length and weight and between lake area and asymptotic length be estimated for Alaska, they can be estimated specifically for each of the `r nlakes` lakes and applied to additional lakes as appropriate, and parameters reported by Lester, et. al. may be incorporated as priors.
+
+^^^ this paragraph maybe is better in methods?
+
+## Methods
+
+### The Integrated Model
+
+Implementation of an integrated model as outlined below allows simultaneous use of all available information, as well as appropriate propagation of all uncertainty in estimation.  The model can be conceptualized as consisting of six inter-related components:
+
+#### Length ~ Age component
+
+The relationship between length and age was modeled using a Von Bertalanffy growth function, with multiplicative (lognormal) error.  For fish *i* within lake *j*:
+
+$L[j[i]] \sim LogN(log(\mu_{Lt}[j[i]]), \sigma_{Lt})$
+
+$\mu_{Lt}[j[i]] = L_{\infty}[j](1-e^{-k[j](t[j[i]]-t_0[j])})$
+
+Growth parameters $L_{\infty}$, $k$, and $t_0$ were modeled separately for each lake *j*, with hierarchical distributions according to the form below.  Note that the hierarchical mean $t_0$ is mildly constrained to be near zero; this is to aid convergence and to ensure that it falls within a biologically reasonable range.
+
+$t_0[j] \sim N(\mu_{t_0}, \sigma_{t_0})$
+
+$\mu_{t_0} \sim N(0,1)$
+
+$\sigma_{t_0} \sim Diffuse Unif$
+
+$k[j] \sim N(\mu_{k}, \sigma_{k})$
+
+$\mu_{k} \sim Diffuse Norm$
+
+$\sigma_{k} \sim Diffuse Unif$
+
+
+#### $L_{\infty}$ ~ Area component
+
+Growth parameter $L_{\infty}$ may be thought of as hierarchically distributed, but with a central trend defined not by a global mean but according to the relationship with lake area reported by Lester, et al., and with multiplicative (lognormal) process error.  Parameters $\gamma$ and $\lambda$ were given weakly informative priors centered on the values reported by Lester, et al., and with coefficients of variation given below.  For lake *j*:
+
+$L_{\infty}[j] \sim LogN(log(\mu_{LA}[j]), \sigma_{LA})$
+
+$\mu_{LA}[j] = \gamma(1-e^{-\lambda(1+log(A[j]))})$
+
+$\sigma_{LA} \sim Diffuse Unif$
+
+$\gamma \sim N(\gamma_{Lester}, 100\% \times \gamma_{Lester})$
+
+$\lambda \sim N(\lambda_{Lester}, 250\% \times \lambda_{Lester})$
+
+#### Weight ~ Length component
+
+A log-log regression was used to model weight as a function of length, expanding somewhat on the form used by Lester, et al.  Since fish-level data (lengths and weights) were available from several lakes of differing habitat, the length-weight relationships were estimated separately for each lake, with slope and intercept parameters modeled hierarchically as further described.  For fish *i* within lake *j*: 
+
+THIS WHOLE DARN PIECE WILL PROBABLY NEED TO BE REFINED AFTER MODEL SELECTION
+
+$log(W\left[j[i]\right]) \sim N \left(\mu_{WL} [j[i]], \sigma_{WL}\right)$
+
+$\mu_{WL} [j[i]] = \beta_0[j] + \beta_1[j] log(L[j[i]])$
+
+$\sigma_{WL} \sim Diffuse Unif$
+
+$\beta_0[j] \sim N(\mu_{\beta_0}, \sigma_{\beta_0})$
+
+$\mu_{\beta_0} \sim Diffuse Norm$
+
+$\sigma_{\beta_0} \sim Diffuse Unif$
+
+$\beta_1[j] \sim N(\mu_{\beta_1}, \sigma_{\beta_1})$
+
+$\mu_{\beta_1} \sim Diffuse Norm$
+
+$\sigma_{\beta_1} \sim Diffuse Unif$
+
+
+
+#### Length Quantile ~ $L_{\infty}$ component
+
+In the absence of sufficient paired age and length data, it is common practice to use a quantile (percentile) value from a length sample as a proxy for asymptotic length.  Given the relative wealth of length samples within our dataset, it is certainly worth incorporating this information into an integrated model.
+
+Length quantile values for each lake *j* were treated as observations of asymptotic length, with additive (normal) error.  The error standard deviation was conceptualized as consisting of two independent components: the uncertainty due to estimation of a population length quantile, which will be approximately proportional to the inverse square root of the sample size, and the uncertainty within the relationship between the population length quantile and asymptotic length.  
+
+The model was run for a sequence of trial percentile values in sequence, ranging from the 85th to 99th percentiles, and data values (length percentiles) were compared to the respective posterior predictive distributions.  For this dataset, using the 95th percentile to estimate asymptotic length resulted in the best agreement between data values and posterior predictive distributions, which can be taken as evidence of consistency among all available sources of information.
+
+$q_L[j] \sim N(L_{\infty}, \sigma_L[j])$
+
+$\sigma_L[j] = \sqrt{\eta_L^2 + \frac{\zeta_L^2}{n_L[j]}}$
+
+$\eta_L \sim Diffuse Unif$
+
+$\zeta_L \sim Diffuse Unif$
+
+
+#### Weight Quantile ~ $W_{\infty}$ component
+
+Similarly, weight quantiles were treated as observations of asymptotic weight as available, with estimable error according to the same form.  The relationship between length and weight is non-linear; however, quantile values are invariant to monotonic transformations.  Therefore, the 95th percentile values of weight were used.
+
+$q_W[j] \sim N(W_{\infty}, \sigma_W[j])$
+
+$\sigma_W[j] = \sqrt{\eta_W^2 + \frac{\zeta_W^2}{n_W[j]}}$
+
+$\eta_W \sim Diffuse Unif$
+
+$\zeta_W \sim Diffuse Unif$
+
+
+#### $W_{\infty} \sim L_{\infty}$ relationship
+
+Finally, the relationship between asymptotic length and asymptotic weight for lake *j* was treated as deterministic (that is, without additional observation error), according to the log-log regression parameters estimated for that lake.  Since asymptotic size functions as a central trend that is not subject to fish-level variability, the only variability that is necessary to incorporate is that due to estimation of the regression parameters themselves.  Inclusion of this step in the same model that is also estimating the length-weight relationship will therefore propagate this uncertainty.
+
+$log(W_{\infty}[j]) = \beta_0[j] + \beta_1[j] log(L_{\infty}[j])$
+
+
+### Model fitting and diagnostics
+
+Model fitting was performed using JAGS (Just Another Gibbs Sampler, Plummer 2003) called through R^1 using the jagsUI^2 package, with output manipulation, convergence diagnostics, and plotting performed using the jagshelper package^3. `r english::Words(ncores)` chains of `r formatC(niter, big.mark=",", format="f", digits=0)` MCMC samples were taken, with the first half discarded as burn-in and the remainder thinned to 1,000 samples per parameter node per chain.  Convergence was assessed graphically by means of trace plots and corroborated using the Gelman-Rubin convergence diagnostic (R hat, Gelman & Rubin 1992).  R hat values for all parameter nodes were well within a threshold of 1.1, and all those for global hyperparameters or parameter nodes pertaining to Crosswind Lake were within a threshold of 1.01.   **UPDATE THIS AS NEEDED**
+
+Model appropriateness with respect to overparameterization was further assessed by means of posterior predictive quantile-quantile plots whenever possible **list specific cases?**.  Between-parameter correlations were estimated and bivariate plots were constructed as appropriate, in order to ensure that no additional reparameterization was necessary to facilitate convergence **klunky and maybe not needed**.
+
+
+## Results
+
+Plots of param ests for all lakes:
+b0, b1, k, t0
+
+Plots of sigW & sigL wrt sample sizes
+
+Plots of Linf & Winf wrt lake area (with lester line)
+
+BIG DARN TABLE with ests & SE per lake
+
+
+
+## Discussion
+
+
+
+## References
+
+
+
+## Appendix
+
+Data filtration 
+
+candidate W~L models and model selection?
+
+ALL THE PLOTS ALL THE LAKES!
