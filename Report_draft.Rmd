@@ -61,19 +61,74 @@ Data sources
 
 Currently, the Lake Area Model (LAM, Evans citation) is used [for management, unpack the specifics].  In the LAM, yield potential is estimated from lake area, under the assumption that much of the variability in productivity can be explained by [limnic area thingy??], for which total surface area can serve as a surrogate.  This relationship was estimated using a set of [42] lakes in [Eastern Canada], and can be expressed as the following:
 
-$$ln(\hat{YP_{kg}}) = bb0 + bb1 ln(A)$$
+$$log_{10}(\hat{YP}_{kg}) = 0.60 + 0.72log_{10}(A)$$
 
-in which $\hag{YP_{kg}} represents the yield potential expressed in kilograms biomass, and *A* represents lake area measured in hectares.
+in which $\hat{YP}_{kg}$ represents the yield potential expressed in kilograms biomass, and *A* represents lake area measured in hectares.
 
 A newer model developed by Lester et al. (citation), hereafter termed the Lester Model, [fillllll thhhiiissss innnnn]
 
-model formulation explicitly
+First, the depth ratio (DR) is calculated using:
 
-Application of the Lester Model to lake trout in Alaska lakes may be substantially improved by direct estimation of asymptotic weight $W_{\infty}$ when possible.  In the computational framework presented by Lester, et al., $W_{\infty}$ is estimated by means of a sequence of relationships: first, the relationship observed between lake area and asymptotic length observed in Canada; then, the aggregate relationship between length and weight observed in Canada.
+$$DR = \frac{D_{max}}{D_{mn}}$$ 
 
-We have data at a finer resolution: for `r nlakes` lakes, we have sampling data on `r roundn` individual lake trout (`r nw` weights; `r nl` lengths; `r na` ages), which can be used to gain inference on pairwise relationships between variables (`r nlw` paired length x weight observations from `r nllw` lakes; `r nla` paired length x age observations from `r nlla` lakes).  Not only can the relationships between length and weight and between lake area and asymptotic length be estimated for Alaska, they can be estimated specifically for each of the `r nlakes` lakes and applied to additional lakes as appropriate, and parameters reported by Lester, et. al. may be incorporated as priors.
+where:
+	
+$D_{max}$ = Maximum depth from bathymetric mapping (m)
+	
+$D_{mn}$ = Mean depth from bathymetric mapping (m)
 
-^^^ this paragraph maybe is better in methods?
+Thermocline depth ($D_{th}$) is estimated using:
+
+$$D_{th} = 3.26 \times A^{0.109}  \times D_{mn}^{0.213} \times e^{-0.0263 T}$$
+
+where: 
+	
+A = surface area (ha)
+	
+T = mean annual air temperature (°C)
+
+The proportion of the lake volume in the hypolimnetic zone ($pV_{hy}$) is estimated using:
+
+$$pV_{hy}=\left(1 - \frac{D_{th}}{D_{max}}\right)^{DR}$$
+
+The volume of the epibenthic zone ($pV_{eb}$) is estimated using:
+
+$$pV_{eb} = e^{-4.63pV_{hy}}$$
+
+Habitat suitability (S) is summarized using:
+
+$$S = \frac{1}{1 + e^{2.47 + 0.386T - 16.8pV_{hy} }}$$	
+
+Asymptotic length ($L_{\infty}$) is estimated within the Lester model using:
+
+$$L_{\infty} = 957 \times \left(1 - e^{-0.14 \times \left(1 + ln(A)\right)}\right)$$
+
+Asymptotic weight ($W_{\infty}$) is estimated within the Lester Model using:
+
+$$W_{\infty} = \left(\frac{L_{\infty}}{451}\right)^{3.2}$$
+
+An alternative method for estimating asymptotic weight (W_∞) requires taking the mean weight of the heaviest 10% of the fish weighed from the March and June sampling (Lester et al. 2021). This lake specific result will be compared to, and possibly substituted for the results of equation 14.
+
+Biomass density when a population is exploited at MSY ($B_{msy}$) will then be estimated using:
+
+$$B_{msy} = \frac{8.47 \times D_{mn} \times pV_{eb}  × S }{W_{\infty}^{1.33}}$$
+
+Natural mortality rate of the population (M) is estimated using:
+
+$$M=  \frac{0.26 e^{0.021T + 0.0004T^2}}{W_{\infty}^{0.30}} $$
+
+MSY per hectare surface area ($MSY_{ha}$) is estimated using:
+
+$$MSY_{ha} = B_{msy} \times M$$
+
+MSY expressed in kilograms biomass is estimated using:
+
+$$MSY = MSY_{ha} \times A$$                                                             
+
+
+Application of the Lester Model to lake trout in Alaska lakes may be substantially improved by direct estimation of asymptotic weight $W_{\infty}$ when possible.  Since estimated *MSY* is inversely proportional to asymptotic weight raised to a power, estimates of *MSY* are therefore particularly mathematically sensitive to how asymptotic weight is estimated.  In the computational framework presented by Lester, et al., $W_{\infty}$ is estimated by means of a sequence of relationships: first, the relationship observed between lake area and asymptotic length observed in Canada; then, the aggregate relationship between length and weight observed in Canada.
+
+We have data at a finer resolution: for `r nlakes` lakes, we have sampling data on `r roundn` individual lake trout (`r nw` weights; `r nl` lengths; `r na` ages), which can be used to gain inference on pairwise relationships between variables (`r nlw` paired length x weight observations from `r nllw` lakes; `r nla` paired length x age observations from `r nlla` lakes).  Not only can the relationships between length and weight and between lake area and asymptotic length be estimated for Alaska, they can be estimated specifically for each of the `r nlakes` lakes and applied to additional lakes as appropriate, and parameters reported by Lester, et. al. may be incorporated as priors within a Bayesian modeling framework.
 
 ## Methods
 
@@ -198,6 +253,93 @@ Plots of sigW & sigL wrt sample sizes
 Plots of Linf & Winf wrt lake area (with lester line)
 
 BIG DARN TABLE with ests & SE per lake
+
+```{r}
+# A good-enough sideways version of caterpillar (data is on x-axis)
+side_cat2 <- function(x, xnames, col=1, medsort=FALSE, x0=FALSE, highlight=NA, xlab="", ...) { 
+
+  if(all(!is.na(highlight))) {
+    col <- ifelse(highlight, col, adjustcolor(col, alpha.f=.2))
+  } else {
+    col <- rep(col, length(xnames))
+  }
+  
+  notNA <- apply(x, 2, \(xx) all(!is.na(xx)))
+  x <- x[, notNA]
+  xnames <- xnames[notNA]
+  col <- col[notNA]
+  
+  ci <- c(0.5, 0.95)
+
+  loq <- apply(x, 2, quantile, p = (1 - ci)/2, na.rm = T)
+  hiq <- apply(x, 2, quantile, p = 1 - (1 - ci)/2, na.rm = T)
+  meds <- apply(x, 2, median, na.rm=T)
+  
+  if(!medsort) {
+    yplot <- seq_along(xnames)
+  } else {
+    yplot <- rank(meds)
+  }
+
+  if(x0) {
+    xlims <- range(0, loq, hiq, na.rm=TRUE)
+  } else {
+    xlims <- range(loq, hiq, na.rm=TRUE)
+  }
+  plot(x=meds, y=yplot,
+       xlim=xlims, ylim=c(ncol(x),1),
+       pch="|", col=col,
+       ylab="", xlab=xlab, yaxt="n")#, ...=...)
+  
+  axis(side=2, at=yplot, labels=xnames, las=2, cex.axis=0.7)
+
+  segments(x0=loq[1,], x1=hiq[1,], y0=yplot,
+           lend=1, lwd=3, col=col)#,col=adjustcolor(1, alpha.f=.2))
+  segments(x0=loq[2,], x1=hiq[2,], y0=yplot,
+           lend=1, lwd=1, col=col)#,col=adjustcolor(1, alpha.f=.2))
+
+  # segments(x0=loq[1,a], x1=hiq[1,a], y0=a,
+  #          lend=1, lwd=6, col=1)
+  # segments(x0=loq[2,a], x1=hiq[2,a], y0=a,
+  #          lend=1, lwd=2, col=1)
+  # segments(x0=meds[a], x1=meds[a], y0=a-1, y1=a+1,
+  #          lend=1, lwd=2, col=1)
+
+  # grid(nx=NULL, ny=NA)
+}
+```
+
+
+```{r, fig.width=8, fig.height=10}
+parmar <- par("mar")
+par(mar=c(5, 10, 4, 1)+0.1)
+
+side_cat2(x=int_Winf_jags_out$sims.list$k,
+          xnames=lakenames, medsort=FALSE,
+          highlight = morphometry$make_estimates)
+side_cat2(x=int_Winf_jags_out$sims.list$t0,
+          xnames=lakenames, medsort=FALSE,
+          highlight = morphometry$make_estimates)
+
+side_cat2(x=int_Winf_jags_out$sims.list$b0_interp,
+          xnames=lakenames, medsort=FALSE,
+          highlight = morphometry$make_estimates)
+abline(v=log(1/451^3.2), lty=3)
+side_cat2(x=int_Winf_jags_out$sims.list$b1,
+          xnames=lakenames, medsort=FALSE,
+          highlight = morphometry$make_estimates)
+abline(v=3.2, lty=3)
+
+side_cat2(x=int_Winf_jags_out$sims.list$Linf,
+          xnames=lakenames, medsort=TRUE, x0=TRUE,
+          highlight = morphometry$make_estimates)
+side_cat2(x=int_Winf_jags_out$sims.list$Winf,
+          xnames=lakenames, medsort=TRUE, x0=TRUE,
+          highlight = morphometry$make_estimates)
+
+
+par(mar=parmar)
+```
 
 
 
