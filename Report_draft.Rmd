@@ -44,6 +44,46 @@ load(file="interim_posts/int_Winf_modelrun.Rdata")
 
 ```
 
+
+
+
+```{r make_nmat}
+ff <- function(x, n=nrow(laketrout_Winf)) { # f for fill
+  c(x, rep(NA, n - length(x)))
+}
+
+smallernames <- lakenames %>%
+  strsplit(split = " Lake") %>%
+  sapply("[", 1)
+smallernames[lakenames == "Caribou Lake (Cantwell)"] <- "Caribou (Cantwell)"
+smallernames[lakenames == "Caribou Lake (Lake Louise)"] <- "Caribou (Lake Louise)"
+smallernames[lakenames == "Itkillik lake"] <- "Itkillik"
+smallernames[lakenames == "Little Lake Louise"] <- "Little Louise"
+smallernames[lakenames == "Sevenmile Lake (Denali Hwy)"] <- "Sevenmile (Denali Hwy)"
+
+nL <- tapply(!is.na(int_Winf_data$L), int_Winf_data$lake, sum)
+nW <- tapply(!is.na(int_Winf_data$logW), int_Winf_data$lake, sum)
+nA <- tapply(!is.na(int_Winf_data$Age), int_Winf_data$lake, sum)
+nLW <- tapply(!is.na(int_Winf_data$L) & !is.na(int_Winf_data$logW), int_Winf_data$lake, sum)
+nLA <- tapply(!is.na(int_Winf_data$L) & !is.na(int_Winf_data$Age), int_Winf_data$lake, sum)
+nproj <- tapply(laketrout$ProjectTitle, laketrout$LakeNum, \(x) length(unique(x)))
+
+nothing <- "-"
+nmat <- data.frame(Lake=smallernames, 
+                   Estimate_Winf = ifelse(morphometry$make_estimates, "Yes", "No"),
+                   Use_Samples = ifelse(morphometry$use_fish, "Yes", "No"),
+                   n_Projects=nothing,
+                   n_Length=nothing, n_Weight=nothing, n_Age=nothing, 
+                   n_LengthWeight=nothing, n_LengthAge=nothing)
+fillnothing <- \(x) ifelse(x > 0, format(x, big.mark=","), nothing)
+nmat$n_Length[as.numeric(names(nL))] <- fillnothing(nL)
+nmat$n_Weight[as.numeric(names(nW))] <- fillnothing(nW)
+nmat$n_Age[as.numeric(names(nA))] <- fillnothing(nA)
+nmat$n_LengthWeight[as.numeric(names(nLW))] <- fillnothing(nLW)
+nmat$n_LengthAge[as.numeric(names(nLA))] <- fillnothing(nLA)
+nmat$n_Projects[as.numeric(names(nproj))] <- fillnothing(nproj)
+```
+
 ## Abstract
 
 
@@ -52,21 +92,15 @@ load(file="interim_posts/int_Winf_modelrun.Rdata")
 
 ## Introduction
 
-Management need
+Lake trout are present as a resident species in Alaska, and are long-lived and slow-growing.  In order to effectively manage localized harvest limits, a productivity model must be employed in order to estimate surplus production in a given waterbody, as environmental variability results in variability in productivity at the local scale.  
 
-Lester Model - spell this out??
-
-Data sources
-
-[yoink some language from a good lake trout report.]  Lake trout exist as a resident species in Alaska, and are long-lived and slow-growing.  In order to effectively manage localized harvest limits, a productivity model must be employed in order to estimate surplus production in a given waterbody, as environmental variability results in variability in productivity at the local scale.  
-
-Currently, the Lake Area Model (LAM, Evans citation) is used [for management, unpack the specifics].  In the LAM, yield potential is estimated from lake area, under the assumption that much of the variability in productivity can be explained by [limnic area thingy??], for which total surface area can serve as a surrogate.  This relationship was estimated using a set of [42] lakes in [Eastern Canada], and can be expressed as the following:
+Following direction in the Wild Lake Trout Management Plan for the Upper Copper-Upper Susitna area lakes, adopted by the Alaska Board of Fisheries (BOF) in 2005 (5AAC 52.060), yield potential (YP) is to be estimated using the lake area (LA) model developed by Evans et al. (1991). In this case YP is the predicted biomass that can be sustainably removed from the lake. This model uses surface area as a measure of available preferred habitat.  As lakes increase in size, so generally does their depth and optimal thermal habitat, where neither temperature nor oxygen is limiting (Marshall 1996).  This model was developed from data compiled from 43 lakes located in Ontario, Canada, and can be expressed as the following:
 
 $$log_{10}(\hat{YP}_{kg}) = 0.60 + 0.72log_{10}(A)$$
 
 in which $\hat{YP}_{kg}$ represents the yield potential expressed in kilograms biomass, and *A* represents lake area measured in hectares.
 
-A newer model developed by Lester et al. (citation), hereafter termed the Lester Model, [fillllll thhhiiissss innnnn]
+A newer, more comprehensive model was recently developed which considers information from 456 lakes throughout Canada including the Yukon Territories and Northwest Territories (Lester et al. 2021). Unlike the LA model, this model (hereafter referred to as the Lester model) estimates maximum sustained yield (MSY), which is much different from YP, and of more use to fishery managers. The model incorporates a variety of metrics including not only surface area, but also mean depth, maximum depth, and mean annual air temperature at the location of the lake. In addition, the model allows for the input of other habitat suitability variables such as the proportion of a lake in the hypolimnetic zone, along with population specific metrics such as natural mortality and asymptotic weight ($W_{\infty}$). 
 
 First, the depth ratio (DR) is calculated using:
 
@@ -129,9 +163,22 @@ $$MSY = MSY_{ha} \times A$$
 
 Application of the Lester Model to lake trout in Alaska lakes may be substantially improved by direct estimation of asymptotic weight $W_{\infty}$ when possible.  Since estimated *MSY* is inversely proportional to asymptotic weight raised to a power, estimates of *MSY* are therefore particularly mathematically sensitive to how asymptotic weight is estimated.  In the computational framework presented by Lester, et al., $W_{\infty}$ is estimated by means of a sequence of relationships: first, the relationship observed between lake area and asymptotic length observed in Canada; then, the aggregate relationship between length and weight observed in Canada.
 
-We have data at a finer resolution: for `r nlakes` lakes, we have sampling data on `r roundn` individual lake trout (`r nw` weights; `r nl` lengths; `r na` ages), which can be used to gain inference on pairwise relationships between variables (`r nlw` paired length x weight observations from `r nllw` lakes; `r nla` paired length x age observations from `r nlla` lakes).  Not only can the relationships between length and weight and between lake area and asymptotic length be estimated for Alaska, they can be estimated specifically for each of the `r nlakes` lakes and applied to additional lakes as appropriate, and parameters reported by Lester, et. al. may be incorporated as priors within a Bayesian modeling framework.
+The Alaska Lake Database (ALDAT, 2013-) serves as a compilation of sampling data from numerous ADF&G research projects and sampling efforts.  Not only does this database provides data at a much finer resolution, the information provided is much more directly applicable to management of the lakes represented, or those closer in proximity and similarity than those used by Lester, et al.  For `r nlakes` lakes, there is sampling data on `r roundn` individual lake trout (`r nw` weights; `r nl` lengths; `r na` ages), which can be used to gain inference on pairwise relationships between variables (`r nlw` paired length x weight observations from `r nllw` lakes; `r nla` paired length x age observations from `r nlla` lakes).  Not only can the relationships between length and weight and between lake area and asymptotic length be estimated for Alaska, they can be estimated specifically for each of the `r nlakes` lakes and applied to additional lakes as appropriate, and parameters reported by Lester, et. al. may be incorporated as priors within a Bayesian modeling framework.
+
+## Objectives
+
+
 
 ## Methods
+
+### Available Data
+
+Sampling data were used from `r sum(as.numeric(nmat$n_Projects), na.rm=TRUE)` unique sampling efforts, across `r sum(morphometry$use_fish)` lakes deemed to have sufficiently representative and high-quality data.  Out of `r nrow(morphometry)` lakes of interest with lake trout present as a resident species, estimation of asymptotic size is desired by management for `r sum(morphometry$make_estimates)` lakes, `r sum(morphometry$make_estimates & morphometry$use_fish)` of which may make direct use of sampling data and `r sum(morphometry$make_estimates & !morphometry$use_fish)` of which have not yet been sampled.  After filtering to the most reliable data (Appendix AAA), a wealth of data remain, and are summarized for each lake in **Table 1**.
+
+```{r}
+knitr::kable(nmat,
+             align = c(rep("l", 3), rep("r", ncol(nmat)-3)))
+```
 
 ### The Integrated Model
 
@@ -139,7 +186,7 @@ Implementation of an integrated model as outlined below allows simultaneous use 
 
 #### Length ~ Age component
 
-The relationship between length and age was modeled using a Von Bertalanffy growth function, with multiplicative (lognormal) error.  For fish *i* within lake *j*:
+The relationship between length and age was modeled using a Von Bertalanffy (LVB) growth function, with multiplicative (lognormal) error.  For fish *i* within lake *j*:
 
 $L[j[i]] \sim LogN(log(\mu_{Lt}[j[i]]), \sigma_{Lt})$
 
@@ -239,21 +286,12 @@ $log(W_{\infty}[j]) = \beta_0[j] + \beta_1[j] log(L_{\infty}[j])$
 
 ### Model fitting and diagnostics
 
-Model fitting was performed using JAGS (Just Another Gibbs Sampler, Plummer 2003) called through R^1 using the jagsUI^2 package, with output manipulation, convergence diagnostics, and plotting performed using the jagshelper package^3. `r english::Words(ncores)` chains of `r formatC(niter, big.mark=",", format="f", digits=0)` MCMC samples were taken, with the first half discarded as burn-in and the remainder thinned to 1,000 samples per parameter node per chain.  Convergence was assessed graphically by means of trace plots and corroborated using the Gelman-Rubin convergence diagnostic (R hat, Gelman & Rubin 1992).  R hat values for all parameter nodes were well within a threshold of 1.1, and all those for global hyperparameters or parameter nodes pertaining to Crosswind Lake were within a threshold of 1.01.   **UPDATE THIS AS NEEDED**
+Model fitting was performed using JAGS (Just Another Gibbs Sampler, Plummer 2003) called through R^[`r capture.output(print(citation(), style="text"))`] using the jagsUI^[`r capture.output(print(citation("jagsUI"), style="text"))`] package, with output manipulation, convergence diagnostics, and plotting performed using the jagshelper package^[`r capture.output(print(citation("jagshelper"), style="text"))`]. `r english::Words(ncores)` chains of `r formatC(niter, big.mark=",", format="f", digits=0)` MCMC samples were taken, with the first half discarded as burn-in and the remainder thinned to 1,000 samples per parameter node per chain.  Convergence was assessed graphically by means of trace plots and corroborated using the Gelman-Rubin convergence diagnostic (R hat, Gelman & Rubin 1992).  R hat values for all parameter nodes were well within a threshold of 1.1, and all those for global hyperparameters or parameter nodes pertaining to Crosswind Lake were within a threshold of 1.01.   **UPDATE THIS AS NEEDED**
 
 Model appropriateness with respect to overparameterization was further assessed by means of posterior predictive quantile-quantile plots whenever possible **list specific cases?**.  Between-parameter correlations were estimated and bivariate plots were constructed as appropriate, in order to ensure that no additional reparameterization was necessary to facilitate convergence **klunky and maybe not needed**.
 
 
 ## Results
-
-Plots of param ests for all lakes:
-b0, b1, k, t0
-
-Plots of sigW & sigL wrt sample sizes
-
-Plots of Linf & Winf wrt lake area (with lester line)
-
-BIG DARN TABLE with ests & SE per lake
 
 ```{r}
 # A good-enough sideways version of caterpillar (data is on x-axis)
@@ -298,7 +336,7 @@ side_cat2 <- function(x, xnames, col=1, medsort=FALSE, x0=FALSE, highlight=NA, x
        pch="|", col=col,
        ylab="", xlab=xlab, yaxt="n", ...=...)
   
-  axis(side=2, at=yplot, labels=xnames, las=2, cex.axis=0.8)
+  axis(side=2, at=yplot, labels=xnames, las=2, cex.axis=1)
   grid(ny=NA)
   
   segments(x0=loq[1,], x1=hiq[1,], y0=yplot,
@@ -367,20 +405,26 @@ y_cat2 <- function(x, xnames=NA, xval=NA, col=1, medsort=FALSE, x0=FALSE, highli
            lend=1, lwd=1, col=col)
 }
 
-smallernames <- lakenames %>%
-  strsplit(split = " Lake") %>%
-  sapply("[", 1)
-smallernames[lakenames == "Caribou Lake (Cantwell)"] <- "Caribou (Cantwell)"
-smallernames[lakenames == "Caribou Lake (Lake Louise)"] <- "Caribou (Lake Louise)"
-smallernames[lakenames == "Itkillik lake"] <- "Itkillik"
-smallernames[lakenames == "Little Lake Louise"] <- "Little Louise"
-smallernames[lakenames == "Sevenmile Lake (Denali Hwy)"] <- "Sevenmile (Denali Hwy)"
+
 parmar <- par("mar")
 ```
 
+Plots of param ests for all lakes:
+b0, b1, k, t0
+
+Plots of sigW & sigL wrt sample sizes
+
+Plots of Linf & Winf wrt lake area (with lester line)
+
+BIG DARN TABLE with ests & SE per lake
+
+
+#### Length ~ Age component
+
+The relationship between length and age was able to be directly estimated for `r sum(!is.na(int_Winf_jags_out$q50$k))` lakes, directly informing estimation of the asymptotic length parameter $L_{\infty}$.  Additional LVB parameters *k* and *t0* were modeled hierarchically, with inferences shown in Figures BBB and CCC.  **Make some comparison to priors used?? Perhaps include this as a model parameter**
 
 ```{r, fig.width=8, fig.height=5, fig.cap="LVB growth parameter k for lakes with sufficient age data.  Light and heavy bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required."}
-par(mar=c(5, 8, 1, 1)+0.1)
+par(mar=c(5, 9, 1, 1)+0.1)
 par(family="serif")
 
 side_cat2(x=int_Winf_jags_out$sims.list$k,
@@ -392,7 +436,7 @@ side_cat2(x=int_Winf_jags_out$sims.list$k,
 
 ```{r, fig.width=8, fig.height=5, fig.cap="LVB growth parameter t0 for lakes with sufficient age data.  Light and heavy bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required."}
 parmar <- par("mar")
-par(mar=c(5, 8, 1, 1)+0.1)
+par(mar=c(5, 9, 1, 1)+0.1)
 par(family="serif")
 
 side_cat2(x=int_Winf_jags_out$sims.list$t0,
@@ -402,58 +446,11 @@ side_cat2(x=int_Winf_jags_out$sims.list$t0,
           xlab="t0 (years)")
 ```
 
-```{r, fig.width=8, fig.height=10, fig.cap="Log(weight) ~ log(length) regression parameter b0.  Light and heavy horizontal bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required.  The vertical dotted line corresponds to the global value used by Lester, et al."}
-par(mar=c(5, 8, 1, 1)+0.1)
-par(family="serif")
-
-side_cat2(x=int_Winf_jags_out$sims.list$b0_interp,
-          xnames=smallernames, 
-          medsort=FALSE,
-          highlight = morphometry$make_estimates,
-          xlab="b0")
-abline(v=log(1/451^3.2), lty=3)
-```
-
-```{r, fig.width=8, fig.height=10, fig.cap="Log(weight) ~ log(length) regression parameter b1.  Light and heavy horizontal bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required.  The vertical dotted line corresponds to the global value used by Lester, et al."}
-par(mar=c(5, 8, 1, 1)+0.1)
-par(family="serif")
-
-side_cat2(x=int_Winf_jags_out$sims.list$b1,
-          xnames=smallernames, 
-          medsort=FALSE,
-          highlight = morphometry$make_estimates,
-          xlab="b1")
-abline(v=3.2, lty=3)
-```
 
 
-```{r, fig.width=8, fig.height=11, fig.cap="Estimated asymptotic length for all lakes.  Light and heavy horizontal bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required."}
+#### $L_{\infty}$ ~ Area component
 
-par(mar=c(5, 8, 1, 1)+0.1)
-par(family="serif")
-
-side_cat2(x=int_Winf_jags_out$sims.list$Linf,
-          xnames=smallernames, 
-          medsort=TRUE, x0=TRUE,
-          highlight = morphometry$make_estimates,
-          xlab="Asymptotic length (mm FL)")
-```
-
-```{r, fig.width=8, fig.height=11, fig.cap="Estimated asymptotic weight for all lakes.  Light and heavy horizontal bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required."}
-
-par(mar=c(5, 8, 1, 1)+0.1)
-par(family="serif")
-
-side_cat2(x=int_Winf_jags_out$sims.list$Winf,
-          xnames=smallernames, 
-          medsort=TRUE, x0=TRUE,
-          highlight = morphometry$make_estimates,
-          xlab="Asymptotic weight (kg)")
-
-
-# par(mar=parmar)
-```
-
+Asymptotic length $L_{\infty}$ was modeled relatively precisely for lakes with paired length and age samples, and the relationship between asymptotic length and lake area was used to estimate $L_{\infty}$ for the remainder of the lakes (Figure DDD).  We estimate an increasing relationship between asymptotic length and lake area, though not as strong as that reported by Lester, et al., and with asymptotic length estimated slightly larger for small lakes.  There is much larger estimation variance associated with lakes with no paired length and age samples; however, this may be expected due to the similar degree of spread in asymptotic length for lakes with paired length and age data.
 
 
 ```{r, fig.width=8, fig.height=7, fig.cap="Estimated asymptotic length for all lakes.  Light and heavy vertical bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required.  The dashed curve corresponds to the relationship reported by Lester, et al."}
@@ -475,6 +472,74 @@ curve(int_Winf_data$gam_lester * (1 - exp(-int_Winf_data$lam_lester * (1 + log(x
 ```
 
 
+
+#### Weight ~ Length component
+
+Similarly, the relationship between length and weight was estimated relatively precisely for lakes with paired length and weight data, and the hierarchical means and variances of regression parameters was propagated to estimate the regression parameters of lakes with no paired length and weight data.  Regression parameters *b0* and *b1* were generally very similar to those reported by Lester et al. (Figure EEE), though most lakes with paired data exhibited strong enough differences from these values to illustrate the value of estimating this relationship separately for each lake.
+
+```{r, fig.width=8, fig.height=10, fig.cap="Log(weight) ~ log(length) regression parameter b0.  Light and heavy horizontal bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required.  The vertical dotted line corresponds to the global value used by Lester, et al."}
+par(mar=c(5, 9, 1, 1)+0.1)
+par(family="serif")
+
+side_cat2(x=int_Winf_jags_out$sims.list$b0_interp,
+          xnames=smallernames, 
+          medsort=FALSE,
+          highlight = morphometry$make_estimates,
+          xlab="b0")
+abline(v=log(1/451^3.2), lty=3)
+```
+
+```{r, fig.width=8, fig.height=10, fig.cap="Log(weight) ~ log(length) regression parameter b1.  Light and heavy horizontal bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required.  The vertical dotted line corresponds to the global value used by Lester, et al."}
+par(mar=c(5, 9, 1, 1)+0.1)
+par(family="serif")
+
+side_cat2(x=int_Winf_jags_out$sims.list$b1,
+          xnames=smallernames, 
+          medsort=FALSE,
+          highlight = morphometry$make_estimates,
+          xlab="b1")
+abline(v=3.2, lty=3)
+```
+
+
+
+#### Length Quantile ~ $L_{\infty}$ and Weight Quantile ~ $W_{\infty}$ components
+
+The relationships between sample quantiles (length and weight) and the respective asymptotic values ($L_{\infty}$ and $W_{\infty}$) were increasingly precise as sample size increased.  The relationship between the relationship standard deviations and the numbers of length or weight samples per lake is illustrated in Figure FFF and GGG.  In the case of length, the relationship standard deviation nearly approaches an asymptotic value, as a result of the comparative wealth of length samples in many lakes.
+
+```{r, fig.width=8, fig.height=7, fig.cap="Estimated standard deviation parameter relating length sample quantile to asymptotic length, as a function of number of length samples per lake.  The light and dark bands correspond to 95% and 50% credible envelopes, and the solid line corresponds to posterior median."}
+par(mar=c(5, 5, 1, 1)+0.1)
+par(family="serif")
+
+envelope(int_Winf_jags_out$sims.list$sig_L[, int_Winf_data$whichlakes_L],
+         x=int_Winf_data$nL[int_Winf_data$whichlakes_L], 
+         log="x",
+         xlab="Number of length samples per lake", 
+         ylab="sig_L (mm FL)",
+         col=1,
+         ylim=c(0, max(int_Winf_jags_out$q97.5$sig_L, na.rm=TRUE)))
+```
+
+
+```{r, fig.width=8, fig.height=7, fig.cap="Estimated standard deviation parameter relating weight sample quantile to asymptotic weight, as a function of number of weight samples per lake.  The light and dark bands correspond to 95% and 50% credible envelopes, and the solid line corresponds to posterior median."}
+par(mar=c(5, 5, 1, 1)+0.1)
+par(family="serif")
+
+envelope(int_Winf_jags_out$sims.list$sig_W[, int_Winf_data$whichlakes_W],
+         x=int_Winf_data$nW[int_Winf_data$whichlakes_W], 
+         log="x",
+         xlab="Number of weight samples per lake", 
+         ylab="sig_W (kg)",
+         col=1,
+         ylim=c(0, max(int_Winf_jags_out$q97.5$sig_W, na.rm=TRUE)))
+```
+
+
+
+#### $W_{\infty} \sim L_{\infty}$ relationship
+
+While estimation of $W_{\infty}$ is not purely a result of propagating estimates of $L_{\infty}$ through the length-weight relationship, it is illustrative to present the relationship between asymptotic weight and lake area, particularly because this is how asymptotic weight is estimated by Lester, et al.  While a loose relationship is indeed apparent, there also exists a strong degree of variability between lakes, further illustrating the utility of lake-specific estimation. 
+
 ```{r, fig.width=8, fig.height=7, fig.cap="Estimated asymptotic weight for all lakes.  Light and heavy vertical bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required.  The dashed curve corresponds to the relationship reported by Lester, et al."}
 
 par(mar=c(5, 5, 1, 1)+0.1)
@@ -495,25 +560,47 @@ curve(exp(-19.56 +
 # par(mar=parmar)
 ```
 
-```{r, fig.width=8, fig.height=7, fig.cap="Estimated standard deviation parameter relating length sample quantile to asymptotic length, as a function of number of length samples per lake.  The light and dark bands correspond to 95% and 50% credible envelopes, and the solid line corresponds to posterior median."}
-envelope(int_Winf_jags_out$sims.list$sig_L[, int_Winf_data$whichlakes_L],
-         x=int_Winf_data$nL[int_Winf_data$whichlakes_L], 
-         log="x",
-         xlab="Number of length samples per lake", 
-         ylab="sig_L",
-         col=1,
-         ylim=c(0, max(int_Winf_jags_out$q97.5$sig_L, na.rm=TRUE)))
+
+
+
+#### $L_{\infty} and  W_{\infty}$ for all lakes
+
+Asymptotic length and weight is presented below for all lakes (Figures HHH and III), showing a wide range in asymptotic sizes and particularly precision in estimation.
+
+```{r, fig.width=8, fig.height=11, fig.cap="Estimated asymptotic length for all lakes.  Light and heavy horizontal bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required."}
+
+par(mar=c(5, 9, 1, 1)+0.1)
+par(family="serif")
+
+side_cat2(x=int_Winf_jags_out$sims.list$Linf,
+          xnames=smallernames, 
+          medsort=TRUE, x0=TRUE,
+          highlight = morphometry$make_estimates,
+          xlab="Asymptotic length (mm FL)")
 ```
 
-```{r, fig.width=8, fig.height=7, fig.cap="Estimated standard deviation parameter relating weight sample quantile to asymptotic weight, as a function of number of weight samples per lake.  The light and dark bands correspond to 95% and 50% credible envelopes, and the solid line corresponds to posterior median."}
-envelope(int_Winf_jags_out$sims.list$sig_W[, int_Winf_data$whichlakes_W],
-         x=int_Winf_data$nW[int_Winf_data$whichlakes_W], 
-         log="x",
-         xlab="Number of weight samples per lake", 
-         ylab="sig_W",
-         col=1,
-         ylim=c(0, max(int_Winf_jags_out$q97.5$sig_W, na.rm=TRUE)))
+```{r, fig.width=8, fig.height=11, fig.cap="Estimated asymptotic weight for all lakes.  Light and heavy horizontal bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required."}
+
+par(mar=c(5, 9, 1, 1)+0.1)
+par(family="serif")
+
+side_cat2(x=int_Winf_jags_out$sims.list$Winf,
+          xnames=smallernames, 
+          medsort=TRUE, x0=TRUE,
+          highlight = morphometry$make_estimates,
+          xlab="Asymptotic weight (kg)")
+
+
+# par(mar=parmar)
 ```
+
+
+
+
+
+
+
+
 
 
 
@@ -522,6 +609,58 @@ envelope(int_Winf_jags_out$sims.list$sig_W[, int_Winf_data$whichlakes_W],
 
 
 ## References
+
+Alaska Lake Database (ALDAT).  2013-.  Alaska Department of Fish and Game, Division of Sport Fish.  Available at http://www.adfg.alaska.gov/SF_Lakes/ (accessed December 23, 2025).
+
+Albert in prep winter 22-23
+
+Albert, M. L., and M. R. Chari.  2026. Stock assessment and yield potential of lake trout in the Tangle Lakes system, 2023–2024. Alaska Department of Fish and Game,Fishery Data Series No. XX-XX, Fairbanks.
+
+Burr, J. M. 1995. Lake trout studies in the AYK Region, and burbot index of abundance in Galbraith Lake, 1994.  Alaska Department of Fish and Game, Fisherv Data Series No. 95-30. Anchorage.
+
+Burr, J.M., 1987. Stock assessment and biological characteristics of lake trout populations in interior Alaska, 1986
+
+Burr, J.M., 1988. Stock assessment and biological characteristics of lake trout populations in interior Alaska, 1987
+
+Burr, J.M., 1989. Stock assessment and biological characteristics of lake trout populations in interior Alaska, 1988
+
+Burr, J.M., 1990. Stock assessment and biological characteristics of lake trout populations in interior Alaska, 1989
+
+Burr, J.M., 1991. Lake trout population studies in interior Alaska 1990, including abundance estimates of lake trout in Glacier, Sevenmile, and Paxson Lakes during 1989.
+
+Burr, J.M., 1992.  Studies of lake trout in Sevenmile Lake and the Tangle Lakes during 1991 
+
+Burr, J.M., 1994. Evaluations of introduced lake trout in the Tanana Drainage and population abundance of lake trout in Sevenmile Lake. Alaska Department of Fish and Game, Fishery Data Series No. 94-18, Anchorage.
+
+Evans, D. O., J. M. Casselman, C. C. Wilcox. 1991. Effects of exploitation, loss of nursery habitat, and stocking on the dynamics and productivity of lake trout populations in Ontario lakes. Lake Trout Synthesis. Ontario Ministry of Natural Resources, Toronto.
+
+Gelman, A., & Rubin, D. B. (1992). Inference from Iterative Simulation Using Multiple Sequences. Statistical Science, 7(4), 457–472. http://www.jstor.org/stable/2246093
+
+Jonson, R.R., and K.D. Troyer. 1994.  Survey of lake trout and Arctic char in Walker Lake, Gates of the Arctic National Park and Preserve, 1987-1989. Fish and Wildlife Service, Fairbanks Fishery Resource Office, Alaska Fisheries technical report Number 25, Fairbanks, Alaska.
+
+Lester, N. P., B. J. Shuter, M. L. Jones and S. Sandstrom. 2021. A general, life history-based model for sustainable exploitation of lake charr across their range, pages 429-485 [In] Muir, A. M., C. C. Krueger, M. J. Hansen and S. C. Riley, editors. The lake charr Salvelinus namaycush: biology, ecology, distribution, and management. Fish and Fisheries 39. 
+
+Mansfield, K. in prep. Lake Trout Abundance in Sevenmile Lake, 2023–2024. Alaska Department of Fish and Game, Fishery Data Series No. YY-XX, Anchorage.
+
+Marshall, T. R. 1996. A hierarchal approach to assessing habitat suitability and yield potential of lake trout. Canadian Journal of Fisheries and Aquatic Sciences 53 (Suppl. 1): 332-341.
+
+Parker, J. F., Scanlon, B., and K. Wuttig. 2001. Abundance and Composition of Lake Trout in Fielding (1999) and Island (2000) Lakes, Alaska. Alaska Department of Fish and Game, Fishery Data Series No. 01-31, Anchorage.
+
+Schwanke, C. J., and M. L. Albert. 2019. Estimation of abundance and yield potential of lake trout in Chandler Lake, 2017–2018. Alaska Department of Fish and Game, Fishery Data Series No. 19-30, Anchorage.
+
+Schwanke, Corey J. 2013. Stock assessment of lake trout in Fielding Lake, 2010-2011. Alaska Department of Fish and Game, Fishery Data Series No. 13-55, Anchorage.
+
+Szarzi, N, and D. B. Bernard. 1997. Evaluation of lake trout stock status and abundance in selected lakes in the Upper Copper and Upper Susitna Drainages, 1995. Alaska Department of Fish and Game, Fishery Data Series No. 97-5, Anchorage.
+
+Taube, T. T. 1996. Lake Trout Studies in the AYK Region, 1995. Alaska Department of Fish and Game, Fishery Manuscript No. 96-3, Anchorage.
+
+Taube, T. T. 1997. Lake Trout Studies in the AYK Region, 1996. Alaska Department of Fish and Game, Fishery Manuscript Number 97-2, Anchorage.
+
+Taube, T. T., K. Wuttig, and L. Stuby. 1998. Lake Trout Studies in the AYK Region, 1997. Alaska Department of Fish and Game, Fishery Data Series 98-24, Anchorage.
+
+Troyer, K. D., and R. R. Johnson. 1994. Survey of lake trout and Arctic char in the Chandler Lakes system, Gates of the Arctic National Park and Preserve, 1987 and 1989. U.S. Fish and Wildlife Service, Fairbanks Fishery Resource Office, Alaska Fisheries technical report Number 26, Fairbanks, Alaska.
+
+Wuttig, K. 2010. Stock assessment of lake trout in Paxson Lake, 2002-2004. Alaska Department of Fish and Game, Fishery Data Series No. 10-46, Anchorage.
 
 
 
