@@ -381,9 +381,9 @@ y_cat2 <- function(x, xnames=NA, xval=NA, col=1, medsort=FALSE, x0=FALSE, highli
 
   # defining YYYlims 
   if(x0) {
-    xlims <- range(0, loq, hiq, na.rm=TRUE)
+    xlims <- range(0, loq[,!is.na(xval)], hiq[,!is.na(xval)], na.rm=TRUE)
   } else {
-    xlims <- range(loq, hiq, na.rm=TRUE)
+    xlims <- range(loq[,!is.na(xval)], hiq[,!is.na(xval)], na.rm=TRUE)
   }
   
   # actually plotting
@@ -475,7 +475,7 @@ curve(int_Winf_data$gam_lester * (1 - exp(-int_Winf_data$lam_lester * (1 + log(x
 
 #### Weight ~ Length component
 
-Similarly, the relationship between length and weight was estimated relatively precisely for lakes with paired length and weight data, and the hierarchical means and variances of regression parameters was propagated to estimate the regression parameters of lakes with no paired length and weight data.  Regression parameters *b0* and *b1* were generally very similar to those reported by Lester et al. (Figure EEE), though most lakes with paired data exhibited strong enough differences from these values to illustrate the value of estimating this relationship separately for each lake.
+Similarly, the relationship between length and weight was estimated relatively precisely for lakes with paired length and weight data, and the hierarchical means and variances of regression parameters was propagated to estimate the regression parameters of lakes with no paired length and weight data.  Regression parameters *b0* and *b1* were generally very similar to those reported by Lester et al. (Figure EEE), though most lakes with paired data exhibited strong enough differences from these values to illustrate the value of estimating this relationship separately for each lake.  However, it is worth noting that the point estimates of asymptotic weight for lakes without sampling data are quite similar to the values that would have been estimated by the Lester model framework.
 
 ```{r, fig.width=8, fig.height=10, fig.cap="Log(weight) ~ log(length) regression parameter b0.  Light and heavy horizontal bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required.  The vertical dotted line corresponds to the global value used by Lester, et al."}
 par(mar=c(5, 9, 1, 1)+0.1)
