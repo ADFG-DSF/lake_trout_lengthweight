@@ -871,7 +871,9 @@ caterpillar_plus(p="b1", x=int_Winf_jags_out$q50$Linf,
 
 ## Actually plotting -- THIS WILL MAKE A LOT OF PLOTS, BE WARNED!
 par(mfrow=c(2,2))
-for(i in seq_along(lakenames)) {
+theselakes <- seq_along(lakenames)
+# theselakes <- 1:5
+for(i in theselakes) {
   par(xpd=FALSE)
 
   # L ~ Age
