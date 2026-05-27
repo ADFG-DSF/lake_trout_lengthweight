@@ -963,3 +963,111 @@ for(i in seq_along(lakenames)) {
 # graphics.off()
 
 
+
+### exploring inferential precision vs data availability??
+ff <- function(x, n=nrow(laketrout_Winf)) { # f for fill
+  c(x, rep(NA, n - length(x)))
+}
+
+smallernames <- lakenames %>%
+  strsplit(split = " Lake") %>%
+  sapply("[", 1)
+smallernames[lakenames == "Caribou Lake (Cantwell)"] <- "Caribou (Cantwell)"
+smallernames[lakenames == "Caribou Lake (Lake Louise)"] <- "Caribou (Lake Louise)"
+smallernames[lakenames == "Itkillik lake"] <- "Itkillik"
+smallernames[lakenames == "Little Lake Louise"] <- "Little Louise"
+smallernames[lakenames == "Sevenmile Lake (Denali Hwy)"] <- "Sevenmile (Denali Hwy)"
+
+nL <- tapply(!is.na(int_Winf_data$L), int_Winf_data$lake, sum)
+nW <- tapply(!is.na(int_Winf_data$logW), int_Winf_data$lake, sum)
+nA <- tapply(!is.na(int_Winf_data$Age), int_Winf_data$lake, sum)
+nLW <- tapply(!is.na(int_Winf_data$L) & !is.na(int_Winf_data$logW), int_Winf_data$lake, sum)
+nLA <- tapply(!is.na(int_Winf_data$L) & !is.na(int_Winf_data$Age), int_Winf_data$lake, sum)
+nproj <- tapply(laketrout$ProjectTitle, laketrout$LakeNum, \(x) length(unique(x)))
+
+nothing <- 0 # "-"   THIS IS DIFFERENT FROM REPORT DRAFT RMD
+nmat_num <- data.frame(Lake=smallernames,
+                   Estimate_Winf = ifelse(morphometry$make_estimates, "Yes", "No"),
+                   Use_Samples = ifelse(morphometry$use_fish, "Yes", "No"),
+                   n_Projects=nothing,
+                   n_Length=nothing, n_Weight=nothing, n_Age=nothing,
+                   n_LengthWeight=nothing, n_LengthAge=nothing)
+# fillnothing <- \(x) ifelse(x > 0, format(x, big.mark=","), nothing)
+fillnothing <- \(x) ifelse(x > 0, x, nothing)
+nmat_num$n_Length[as.numeric(names(nL))] <- fillnothing(nL)
+nmat_num$n_Weight[as.numeric(names(nW))] <- fillnothing(nW)
+nmat_num$n_Age[as.numeric(names(nA))] <- fillnothing(nA)
+nmat_num$n_LengthWeight[as.numeric(names(nLW))] <- fillnothing(nLW)
+nmat_num$n_LengthAge[as.numeric(names(nLA))] <- fillnothing(nLA)
+nmat_num$n_Projects[as.numeric(names(nproj))] <- fillnothing(nproj)
+
+
+
+
+plotbyn <- function(x, for_n, ...) {
+  for_x <- ifelse(nmat_num$Use_Samples!="Yes", 0.1,
+                  ifelse(for_n == 0, 0.3, for_n))
+  plot(x = for_x, y=x, xaxt="n", log="x",
+       xlim = c(0.1, max(nmat_num$n_Length)),
+       ylim = range(0, x, na.rm=TRUE),
+       ...=...)
+  axis(side=1, at=c(0.1, 0.3, c(1, 5, 10, 50, 100, 500, 1000, 5000)),
+       labels = c("Not used", 0, 1, 5, 10, 50, 100, 500, 1000, 5000))
+}
+
+par(mfrow=c(3,1))
+par(mar=c(5,4,0,0)+.1)
+plotbyn(x = int_Winf_jags_out$sd$Linf/int_Winf_jags_out$q50$Linf,
+        for_n = nmat_num$n_Length,
+        xlab="n Length",
+        ylab="CV(L_inf)")
+plotbyn(x = int_Winf_jags_out$sd$Linf/int_Winf_jags_out$q50$Linf,
+        for_n = nmat_num$n_Weight,
+        xlab="n Weight",
+        ylab="CV(L_inf)")
+plotbyn(x = int_Winf_jags_out$sd$Linf/int_Winf_jags_out$q50$Linf,
+        for_n = nmat_num$n_Age,
+        xlab="n Age",
+        ylab="CV(L_inf)")
+
+par(mfrow=c(3,1))
+par(mar=c(5,4,0,0)+.1)
+plotbyn(x = int_Winf_jags_out$sd$Winf/int_Winf_jags_out$q50$Winf,
+        for_n = nmat_num$n_Length,
+        xlab="n Length",
+        ylab="CV(W_inf)")
+plotbyn(x = int_Winf_jags_out$sd$Winf/int_Winf_jags_out$q50$Winf,
+        for_n = nmat_num$n_Weight,
+        xlab="n Weight",
+        ylab="CV(W_inf)")
+plotbyn(x = int_Winf_jags_out$sd$Winf/int_Winf_jags_out$q50$Winf,
+        for_n = nmat_num$n_Age,
+        xlab="n Age",
+        ylab="CV(W_inf)")
+
+
+
+
+par(mfrow=c(1,1))
+plot(x = log(ifelse(nmat_num$Use_Samples!="Yes", 0.1,
+                    ifelse(nmat_num$n_Weight == 0, 0.3, nmat_num$n_Weight))),
+     y = log(ifelse(nmat_num$Use_Samples!="Yes", 0.1,
+                    ifelse(nmat_num$n_Age == 0, 0.3, nmat_num$n_Age))))
+
+data.frame(weight = log(ifelse(nmat_num$Use_Samples!="Yes", 0.1,
+                          ifelse(nmat_num$n_Weight == 0, 0.3, nmat_num$n_Weight))),
+           age = log(ifelse(nmat_num$Use_Samples!="Yes", 0.1,
+                          ifelse(nmat_num$n_Age == 0, 0.3, nmat_num$n_Age))),
+           z = int_Winf_jags_out$sd$Winf/int_Winf_jags_out$q50$Winf) %>%
+  filter(weight > 0.1 & age > 0.1) %>%
+  ggplot(aes(x=weight, y=age, col=z)) +
+  geom_point()
+
+forlm <- data.frame(weight = log(ifelse(nmat_num$Use_Samples!="Yes", 0.1,
+                               ifelse(nmat_num$n_Weight == 0, 0.3, nmat_num$n_Weight))),
+           age = log(ifelse(nmat_num$Use_Samples!="Yes", 0.1,
+                            ifelse(nmat_num$n_Age == 0, 0.3, nmat_num$n_Age))),
+           z = int_Winf_jags_out$sd$Winf/int_Winf_jags_out$q50$Winf) %>%
+  filter(weight > 0.1 & age > 0.1)
+
+summary(lm(z ~ weight + age, data=forlm))
