@@ -48,7 +48,7 @@ load(file="interim_posts/int_Winf_modelrun.Rdata")
 
 ```{r, fig.width=8, fig.height=2.8, warning=FALSE}
 
-par(mar=c(3, 3, 5, 0)+0.1)
+par(mar=c(3, 3, 5, 0.3)+0.1)
 par(mgp=c(2, 1, 0))
 par(family="serif")
 # par(cex.axis=1.2)
@@ -111,7 +111,7 @@ for(i in theselakes) {
     lines(int_Winf_jags_out$q50$Lfit[,j], col=adjustcolor(1, alpha.f = .3), lty=3)
   }
   if(i <= dim(int_Winf_jags_out$sims.list$Lfit)[3]) {
-    envelope(int_Winf_jags_out$sims.list$Lfit[,,i], add=TRUE, col=1)
+    envelope(int_Winf_jags_out$sims.list$Lfit[,,i], add=TRUE, col=adjustcolor(1, alpha.f=0.7))
   }
   points(x=int_Winf_data$Age[int_Winf_data$lake==i],
          y=int_Winf_data$L[int_Winf_data$lake==i])
@@ -135,7 +135,7 @@ for(i in theselakes) {
               length.out=20)
   envelope(exp(int_Winf_jags_out$sims.list$b0_interp[,i]) *
                 t(outer(lvec, int_Winf_jags_out$sims.list$b1[,i], "^")),
-              x=lvec, add=TRUE, col=1)
+              x=lvec, add=TRUE, col=adjustcolor(1, alpha.f=0.7))
 
 
   # # Linf by data sources

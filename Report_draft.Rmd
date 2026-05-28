@@ -656,7 +656,9 @@ Perhaps more likely to affect inferences to this study is the potential for uneq
 
 While the hierarchical nature of this model does provide estimates of asymptotic size for lakes without any direct sampling data, the wide disparity in precision between lakes with and without sampling data is immediately apparent.  Precision improves with increasing sample size as expected; however, the mere presence of trustworthy sampling data has a dramatic effect on precision, even at very modest sample sizes.  Figure JJJ illustrates this by showing the coefficient of variation (CV) of asymptotic weight (here defined as posterior standard deviation divided by posterior median) with respect to sample sizes of length, weight, and age, respectively.  It should be noted that sample sizes in each variable increase with respect to one another (e.g. lakes with a large number of age samples are likely to have large numbers of length and weight samples as well) and it is therefore not appropriate to draw inference to the effect of increasing sample size of a single variable; however, two conclusions may be drawn: 1. More data is better, and 2. Any data is a vast improvement over no data.
 
-```{r, fig.width=6, fig.height=7, fig.cap="Estimated coefficient of variation (CV) of asymptotic weight inferences with respect to length, weight, and age sample sizes.  Note that the plotting scale is logrithmic with respect to sample sizes for $n \\geq 1$."}
+It should also be acknowledged that while the parameters associated with all relationships between variables are estimated, the functional forms of all relationships are assumed *a priori*.  The use of log-log linear regression for weight ~ length is fairly standard, and is quite strongly expressed in the data used here.  The choice of a LVB growth model seems reasonable, but is an assumption nonetheless, and does not account for nuances such as differential growth curves within a lake due to recruitment to different prey regimes, for example.  There is certainly evidence in this body of data of the existence of an increasing relationship between asymptotic length and lake area, but it is difficult to make any statement regarding its functional form without turning to Lester, et. al.  That said, closer inspection of this functional form reveals it to be asymptotically approaching some upper bound, which makes sense biologically, as constraints due to lake size will matter less and less with increasing lake area.
+
+```{r, fig.width=6, fig.height=7, fig.cap="Estimated coefficient of variation (CV) of asymptotic weight inferences with respect to length, weight, and age sample sizes.  Note that the plotting scale is logarithmic with respect to sample sizes for $n \\geq 1$."}
 par(mar=c(5, 4, 0, 0)+0.1)
 par(family="serif")
 
@@ -687,7 +689,12 @@ plotbyn(x = int_Winf_jags_out$sd$Winf/int_Winf_jags_out$q50$Winf,
 ```
 
 
+## Acknowledgements
 
+
+
+
+\pagebreak
 
 ## References
 
@@ -751,13 +758,10 @@ Wuttig, K. 2010. Stock assessment of lake trout in Paxson Lake, 2002-2004. Alask
 
 JAGS code - also need to include github link somehow
 
-Data filtration 
-
-candidate W~L models and model selection?
-
 ALL THE PLOTS ALL THE LAKES!
 
 
+\pagebreak
 
 ### Data Filtration
 
@@ -778,6 +782,8 @@ Importing raw sampling data from ALDAT resulted in a data frame with `r format(f
 
 
 
+\pagebreak
+
 ### Evaluation of candidate models for weight ~ length relationship
 
 Modeling lake-level regression parameters $\beta_0[.]$ and $\beta_1[.]$ explicitly makes it convenient to explore possible relationships between these parameters and lake-level variables.  Among those considered were log(area), latitude, elevation, and temperature.  While it is unlikely that latitude had a direct effect on body morphometry, it did emerge as having a potential association with slope parameter $\beta_1[.]$, possibly as a surrogate for temperature or geographic regime.  
@@ -788,7 +794,19 @@ Given the relative complexity of the integrated model framework, comparison betw
 
 2. Next, a sequence of formulations of the integrated model were run with an extremely large number of iterations, considering each lake-level variable in turn and comparing among models using DIC (deviance information criterion) scores.  **Result: $\beta_0[.]$ ~ log(area), $\beta_1[.]$ free**
 
-3. K-fold cross validation was then employed at the level of individual observations, with k = 10 folds for all models considered.  To accomplish this, a random subset of 1/10 of fish were withheld from the input dataset and the model was run, and posterior predictive point estimates were stored corresponding to withheld data.  This was then repeated for nine more folds of witheld data, and posterior predicted values were compared to actual data using RMSE and mean absolute error (MAE).  **Result: $\beta_0[.]$ ~ log(area), $\beta_1[.]$ ~ free (RMSE), $\beta_0[.]$ ~ log(area), $\beta_1[.]$ ~ latitude (MAE)**
+3. K-fold cross validation was then employed at the level of individual observations, with k = 10 folds for all models considered.  To accomplish this, a random subset of 1/10 of fish were withheld from the input dataset and the model was run, and posterior predictive point estimates were stored corresponding to withheld data.  This was then repeated for nine more folds of witheld data, and posterior predicted values were compared to actual data using RMSE and mean absolute error (MAE).  This was accomplished using the kfold() function, within the jagshelper package for R.  **Result: $\beta_0[.]$ ~ log(area), $\beta_1[.]$ ~ free (RMSE), $\beta_0[.]$ ~ log(area), $\beta_1[.]$ ~ latitude (MAE)**
 
-Candidate models were defined [talk about how this was done computationally]
+4. Leave-one-out cross validation (LOOCV) at the lake level was then employed by withholding the weight data from one lake at a time and predicting log weights from log lengths from each candidate model and comparing by means of RMSE for each associated lake.  This was supplemented by comparing the resulting inferences in terms of $W_{\infty}$ to to those from the base (fully free) model incorporating all data.  **Result: $\beta_0[.]$ ~ log(area), $\beta_1[.]$ ~ free (RMSE at data level), $\beta_0[.]$ ~ log(area), $\beta_1[.]$ ~ latitude (inference level)**
 
+It should be noted that all inferences regarding asymptotic size were nearly identical for lakes containing sampling data, suggesting that data (when available) have a much stronger influence on inferences than model structure, as can be hoped.  Slight differences do emerge in the cases when no sampling data are available; however, these cases are also comparatively inferentially diffuse.  To avoid overfitting, it seems reasonable at this time to select a candidate model with relatively few parameters.  **Overall selection: $\beta_0[.]$ ~ log(area), $\beta_1[.]$ free**
+
+
+\pagebreak
+
+### Comparative visualization of data and inferences for all lakes
+
+A sequence of plots follow for all lakes considered.  In the left panel are paired lengths and ages if available, overlayed with a posterior envelope for the length ~ age relationship, plus the estimated length ~ age curves (posterior medians) for all other lakes for comparison.  
+
+In the middle panel are paired weights and lengths if available, overlayed with a posterior envelope for the weight ~ length relationship, plus the estimated weight ~ length curves for all other lakes for comparison.  It should be noted that this relationship is plotted on the natural scale; if both the x and y axes are plotted on the log scale, this relationship becomes linear.
+
+In the main plot of the right panel are 50% and 95% credible intervals for $W_{\infty}$ for all lakes in grey, with the selected lake highlighted in black.  Offset at the top is a summary of the amount of input data from each source, as well as 50% and 95% credible intervals that would have been estimated from each data source independently.  The intervals associated with weights were calculated solely from the weight sample quantile relationship, the intervals associated with lengths were calculated by means of the length quantile relationship propagated through the weight ~ length relationship, and the intervals associated with area were calculated by means of the $L_{\infty}$ ~ area relationship propagated through the weight ~ length relationship.

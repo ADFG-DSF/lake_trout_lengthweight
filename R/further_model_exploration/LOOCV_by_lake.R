@@ -707,7 +707,7 @@ parameters <- c("sig_Lt", "sig_Lt_prior",
 # JAGS controls
 # niter <- 2*1000
 # niter <- 20*1000
-# niter <- 50*1000      # 50k in 15 minutes
+# niter <- 50*1000      # 50k in 15 minutes --- PER LAKE x 29 lakes
 # niter <- 100*1000
 niter <- 200*1000     # 1.1 hr
 # niter <- 500*1000  # 3 hr
@@ -730,7 +730,7 @@ theselakes <- laketrout_Winf$LakeNum[laketrout_Winf$n_Weight > 1]
 # defining a RMSE function
 rmse <- function(x,y) sqrt(mean((x-y)^2, na.rm=TRUE))
 
-# setting up comparable Linf and Winf
+# setting up comparable Linf and Winf to compare inferences to base (but informed) model
 Linf_0 <- int_Winf_jags_out$sims.list$Linf[, theselakes]
 Winf_0 <- int_Winf_jags_out$sims.list$Winf[, theselakes]
 
@@ -779,10 +779,13 @@ for(i in seq_along(theselakes)) {
   print(Sys.time() - tstart)
 }
 
+### extremely interim result!
 # save(rmses, Linf_0, Linf_1, Linf_2, Linf_3, Winf_0, Winf_1, Winf_2, Winf_3, niter, file="interim_posts/deleteme.Rdata")
 # load(file="interim_posts/deleteme.Rdata")
 niter
 
+
+# comparison at data level (RMSE) - calculated PER LAKE
 par(mfrow=c(1,1))
 boxplot(rmses)
 for(j in 1:nrow(rmses)) lines(rmses[j,], col=jagshelper::rcolors(1), lwd=2)
@@ -815,6 +818,11 @@ apply(rmses[nweights>80,], 2, weighted.mean, na.rm=TRUE, w=sqrt(nweights[nweight
 plot(nweights, rmses[,1], ylim=range(rmses, na.rm=TRUE), col=2, pch=16)
 points(nweights, rmses[,2], col=3, pch=16)
 points(nweights, rmses[,3], col=4, pch=16)
+
+
+
+
+## comparison at inference level (Linf & Winf)
 
 comparecat(list(Linf_0, Linf_1, Linf_2, Linf_3), col=1:4)
 comparecat(list(Winf_0, Winf_1, Winf_2, Winf_3), col=1:4)
