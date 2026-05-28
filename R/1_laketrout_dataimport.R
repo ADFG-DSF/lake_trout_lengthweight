@@ -61,6 +61,13 @@ nrow(laketrout_raw)  # 38040
 nrow(laketrout1)  # 36739
 nrow(laketrout_raw) - nrow(laketrout1)  # 1301
 
+# creating record of decisions and resulting rows
+filter_decisions <- list("Raw",
+                         c("Taking out lake name Other",
+                           "Only including lakes where we estimate Winf or use fish"))
+filter_nrows <- c(nrow(laketrout_raw),
+                  nrow(laketrout1))
+
 
 # table(morphometry1$make_estimates, morphometry1$LakeName %in% laketrout1$LakeName, morphometry1$use_fish)
 morphometry <- morphometry1 %>%
@@ -167,6 +174,12 @@ laketrout2 <- laketrout1 %>%
 nrow(laketrout1) # 36739
 nrow(laketrout2) # 36075
 nrow(laketrout1)- nrow(laketrout2) # 664
+
+filter_decisions <- c(filter_decisions,
+                      "keep fish >= 150 mm FL")
+filter_nrows <- c(filter_nrows,
+                  nrow(laketrout2))
+
 
 laketrout1 %>%
   mutate(keep = ifelse(ForkLength_mm>=150, "yes", "no")) %>%
@@ -287,6 +300,11 @@ nrow(laketrout2) # 36075
 nrow(laketrout3) # 36043
 nrow(laketrout2) - nrow(laketrout3) # 32
 
+filter_decisions <- c(filter_decisions,
+                      "Keep obs within 4*rsd from global logW~logL regression")
+filter_nrows <- c(filter_nrows,
+                  nrow(laketrout3))
+
 
 # are there any fish with ages but no lengths?
 with(subset(laketrout3, !is.na(Age)), table(is.na(ForkLength_mm)))
@@ -317,9 +335,16 @@ nrow(laketrout3) # 36043
 nrow(laketrout) # 36041
 nrow(laketrout3) - nrow(laketrout) # 2
 
+filter_decisions <- c(filter_decisions,
+                      "Keep fish with ages < 50 years")
+filter_nrows <- c(filter_nrows,
+                  nrow(laketrout))
+
 save_results
 if(save_results) {
-  save(laketrout, morphometry, file="Rdata/laketrout_sampling_formodel.Rdata")
+  save(laketrout, morphometry,
+       filter_decisions, filter_nrows,
+       file="Rdata/laketrout_sampling_formodel.Rdata")
 }
 
 

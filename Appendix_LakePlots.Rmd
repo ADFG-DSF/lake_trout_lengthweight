@@ -1,6 +1,5 @@
 ---
 output: word_document
-date: "2026-05-27"
 ---
 
 
@@ -47,15 +46,20 @@ load(file="interim_posts/int_Winf_modelrun.Rdata")
 
 
 
-```{r, fig.width=18, fig.height=6, warning=FALSE}
+```{r, fig.width=8, fig.height=2.8, warning=FALSE}
 
-par(mar=c(5, 4, 5, 1)+0.1)
+par(mar=c(3, 3, 5, 0)+0.1)
+par(mgp=c(2, 1, 0))
 par(family="serif")
+# par(cex.axis=1.2)
+par(cex.lab=1.2)
+
+
 ## --- A COLLECTION OF SUMMARY PLOTS FOR EACH LAKE --- ##
 
 
 # A good-enough sideways version of caterpillar (data is on x-axis)
-side_cat <- function(x, a, xlab="") { # a will be an index to highlight
+side_cat <- function(x, a, xlab="", ylab="") { # a will be an index to highlight
 
   ci <- c(0.5, 0.95)
 
@@ -64,7 +68,7 @@ side_cat <- function(x, a, xlab="") { # a will be an index to highlight
   meds <- apply(x, 2, median, na.rm=T)
 
   plot(NA, xlim=range(0, loq, hiq, na.rm=TRUE), ylim=c(ncol(x),1),
-       ylab="", xlab=xlab, yaxt="n")
+       ylab=ylab, xlab=xlab, yaxt="n")
 
   segments(x0=loq[1,], x1=hiq[1,], y0=1:ncol(x),
            lend=1, lwd=3, col=adjustcolor(1, alpha.f=.2))
@@ -95,7 +99,7 @@ catbars <- function(x, h, col=1) {
 ## Actually plotting -- THIS WILL MAKE A LOT OF PLOTS, BE WARNED!
 par(mfrow=c(1,3)) # was 4
 # theselakes <- seq_along(lakenames)
-theselakes <- 1:3
+theselakes <- 4:6
 for(i in theselakes) {
   par(xpd=FALSE)
 
@@ -104,17 +108,17 @@ for(i in theselakes) {
        xlim=c(0, max(int_Winf_data$Age, na.rm=TRUE)),
        ylim=c(0, max(int_Winf_data$L[!is.na(int_Winf_data$Age)], na.rm=TRUE)))
   for(j in 1:ncol(int_Winf_jags_out$q50$Lfit)) {
-    lines(int_Winf_jags_out$q50$Lfit[,j], col=adjustcolor(1, alpha.f = .1))
+    lines(int_Winf_jags_out$q50$Lfit[,j], col=adjustcolor(1, alpha.f = .3), lty=3)
   }
   if(i <= dim(int_Winf_jags_out$sims.list$Lfit)[3]) {
-    envelope(int_Winf_jags_out$sims.list$Lfit[,,i], add=TRUE)
+    envelope(int_Winf_jags_out$sims.list$Lfit[,,i], add=TRUE, col=1)
   }
   points(x=int_Winf_data$Age[int_Winf_data$lake==i],
          y=int_Winf_data$L[int_Winf_data$lake==i])
 
 
   # W ~ Length
-  plot(NA, xlab="Length (mm)", ylab="Weight (kg)", main=lakenames[i], #log="xy",
+  plot(NA, xlab="Length (mm)", ylab="Weight (kg)", main="", #log="xy",lakenames[i]
        xlim=range(int_Winf_data$L[!is.na(int_Winf_data$logW)], na.rm=TRUE),
        ylim=range(exp(int_Winf_data$logW), na.rm=TRUE),
        # xlim=quantile(int_Winf_data$L[!is.na(int_Winf_data$logW)], na.rm=TRUE, p=c(.01,.999)),
@@ -122,7 +126,7 @@ for(i in theselakes) {
        )
   for(j in 1:length(lakenames)) {
     curve(exp(int_Winf_jags_out$q50$b0_interp[j])*x^int_Winf_jags_out$q50$b1[j],
-          add=TRUE, col=adjustcolor(1, alpha.f = .1))
+          add=TRUE, col=adjustcolor(1, alpha.f = .3), lty=3)
   }
   points(x=int_Winf_data$L[int_Winf_data$lake==i],
          y=exp(int_Winf_data$logW)[int_Winf_data$lake==i])
@@ -131,7 +135,7 @@ for(i in theselakes) {
               length.out=20)
   envelope(exp(int_Winf_jags_out$sims.list$b0_interp[,i]) *
                 t(outer(lvec, int_Winf_jags_out$sims.list$b1[,i], "^")),
-              x=lvec, add=TRUE)
+              x=lvec, add=TRUE, col=1)
 
 
   # # Linf by data sources
@@ -160,28 +164,33 @@ for(i in theselakes) {
 
 
   # Winf by data sources
-  side_cat(x=int_Winf_jags_out$sims.list$Winf, a=i, xlab="Winf (kg)")
+  side_cat(x=int_Winf_jags_out$sims.list$Winf, a=i, xlab="Winf (kg)", ylab="All lakes")
 
   par(xpd=NA)
-  cols <- c(1, 2, 3, 4) # ages, lengths, area
+  # cols <- c(1, 2, 3, 4) # ages, lengths, area
+  cols <- rep(adjustcolor(1,alpha.f=.8), 4) # ages, lengths, area
+  
+  barheights <- seq(to=-4, by=4.5, length.out=4)-1
 
-  segments(x0=int_Winf_data$qW[i], y0=-7-1, y1=1+i, lty=2, col=cols[2])
+  segments(x0=int_Winf_data$qW[i], y0=barheights[2], y1=1+i, lty=2, col=cols[2])
   sig_W <- int_Winf_jags_out$sims.list$sig_W
   if(i <= dim(int_Winf_jags_out$sims.list$Lfit)[3]) {
     qWvec <- rnorm(n=nrow(sig_W), mean=int_Winf_data$qW[i], sd=sig_W[,i])
-    catbars(x=qWvec, h=-7, col=cols[2])
+    catbars(x=qWvec, h=barheights[2], col=cols[2])
   }
 
   qWLvec <- exp(int_Winf_jags_out$sims.list$b0_interp[,i])*qLvec^int_Winf_jags_out$sims.list$b1[,i]
-  segments(x0=median(qWLvec), y0=-5-1, y1=1+i, lty=2, col=cols[3])
-  catbars(x=qWLvec, h=-5, col=cols[3])
+  segments(x0=median(qWLvec), y0=barheights[3], y1=1+i, lty=2, col=cols[3])
+  catbars(x=qWLvec, h=barheights[3], col=cols[3])
 
   areaWLvec <- exp(int_Winf_jags_out$sims.list$b0_interp[,i])*areaLvec^int_Winf_jags_out$sims.list$b1[,i]
-  segments(x0=median(areaWLvec), y0=-3-1, y1=1+i, lty=2, col=cols[4])
-  catbars(x=areaWLvec, h=-3, col=cols[4])
+  segments(x0=median(areaWLvec), y0=barheights[4], y1=1+i, lty=2, col=cols[4])
+  catbars(x=areaWLvec, h=barheights[4], col=cols[4])
 
-  text(x=c(0, 0), y=c(-9, -7, -5, -3)-1, pos=4, cex=0.5, col=cols,
+  text(x=-6, y=barheights, pos=4, cex=1, col=cols,
        labels=paste(c("n ages =", "n weights =", "n lengths =", "area"),
                     c(laketrout_Winf$n_Age[i], laketrout_Winf$n_Weight[i], laketrout_Winf$n_Length[i], "")))
 }
 ```
+
+comparable text
