@@ -93,13 +93,22 @@ catbars <- function(x, h, col=1) {
   segments(x0=lolo[1], x1=hihi[1], y0=h, lwd=3, lend=1, col=col)
   segments(x0=lolo[2], x1=hihi[2], y0=h, lwd=1, lend=1, col=col)
 }
+```
 
 
+```{r, fig.width=8, fig.height=2.8, warning=FALSE}
+
+par(mar=c(3, 3, 5, 0.3)+0.1)
+par(mgp=c(2, 1, 0))
+par(family="serif")
+# par(cex.axis=1.2)
+par(cex.lab=1.2)
+par(mfrow=c(1,3)) # was 4
 
 ## Actually plotting -- THIS WILL MAKE A LOT OF PLOTS, BE WARNED!
-par(mfrow=c(1,3)) # was 4
-# theselakes <- seq_along(lakenames)
-theselakes <- 4:6
+
+theselakes <- seq_along(lakenames)
+# theselakes <- 4:6
 for(i in theselakes) {
   par(xpd=FALSE)
 
