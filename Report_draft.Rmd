@@ -335,6 +335,11 @@ Finally, the relationship between asymptotic length and asymptotic weight for la
 
 $log(W_{\infty}[j]) = \beta_0[j] + \beta_1[j] log(L_{\infty}[j])$
 
+A conceptual schematic of the model is shown in figure DDD.
+
+```{r}
+knitr::include_graphics("flowchart1.jpg")
+```
 
 ### Model fitting and diagnostics
 

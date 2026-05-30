@@ -5,6 +5,7 @@
 *.docx
 *.xlsx
 *.html
+*.pdf
 /obsolete_Rdata
 /interim_posts
 */raw_data
