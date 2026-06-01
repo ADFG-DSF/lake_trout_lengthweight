@@ -61,12 +61,6 @@ cat('model {
     }
   }
 
-  ## this bit might not be useful
-  t0_pp ~ dnorm(mu_t0, tau_t0)T(,1)
-  k_pp ~ dlnorm(mu_k, tau_k)
-  t0_ppp ~ dnorm(mu_t0_prior, tau_t0_prior)T(,1)
-  k_ppp ~ dlnorm(mu_k_prior, tau_k_prior)
-
   mu_t0 ~ dnorm(0, 1)   # was 1
   mu_t0_prior ~ dnorm(0, 1)
   # sig_t0 ~ dunif(0, 0.2)
@@ -289,7 +283,6 @@ int_Winf_data$whichdata_Lt <- which((laketrout$LakeNum %in% int_Winf_data$whichl
 parameters <- c("sig_Lt", "sig_Lt_prior",
                 "t0", "t0_prior",
                 "k", "k_prior",
-                "k_pp", "t0_pp", "k_ppp", "t0_ppp",
                 "mu_t0","mu_t0_prior",
                 "sig_t0","sig_t0_prior",
                 "mu_k","mu_k_prior",
@@ -327,7 +320,8 @@ parameters <- c("sig_Lt", "sig_Lt_prior",
 # niter <- 50*1000      # 50k in 9 minutes
 # niter <- 100*1000  # 37 min
 # niter <- 200*1000
-niter <- 500*1000  # 2.7 hrs
+# niter <- 500*1000  # 2.7 hrs
+niter <- 2000*1000  # 12 hrs
 
 # ncores <- 3
 ncores <- 8
@@ -347,15 +341,6 @@ ncores <- 8
 int_Winf_jags_out$DIC
 
 
-############ THIS BIT NEEDS TO GO AWAY
-caterpillar(cbind(int_Winf_jags_out$sims.list$k,
-                  int_Winf_jags_out$sims.list$k_pp))
-caterpillar(cbind(int_Winf_jags_out$sims.list$t0,
-                  int_Winf_jags_out$sims.list$t0_pp))
-caterpillar(cbind(int_Winf_jags_out$sims.list$k,
-                  int_Winf_jags_out$sims.list$k_ppp))
-caterpillar(cbind(int_Winf_jags_out$sims.list$t0,
-                  int_Winf_jags_out$sims.list$t0_ppp))
 
 
 ###### SAVING INTERIM RESULTS #####
