@@ -707,9 +707,44 @@ because knowledge only goes so far, there must also be ack.
 
 THESE ARE JUST M-R PROJECTS, ADD RECENT GOOD SAMPLINGSES
 
+```{r, eval=FALSE}
+laketrout %>%
+  filter(Year >= 2000) %>%
+  group_by(LakeName, Year, ProjectTitle) %>%
+  summarise(n=n()) %>%
+  filter(n >= 50) %>%
+  filter(str_detect(ProjectTitle, "^Single")) %>%
+  # filter(str_detect(ProjectTitle, "^Mark")) %>% 
+  select(-ProjectTitle) %>%
+  as.data.frame
+
+#                       LakeName Year    n
+# 1             Big Lake (Healy) 2020   65
+# 2               Crosswind Lake 2024  111
+# 3               Crosswind Lake 2024  157
+# Schwanke, C. J., M. Tyers, and M. L. Albert. 2026. Assessing sustainable yield of lake trout in Crosswind Lake using two different models. Alaska Department of Fish and Game, Fishery Data Series No. 26-07, Anchorage. 
+
+# 4                Hanagita Lake 2019   51
+# 5               Jatahmund Lake 2020   61
+# 6                  Paxson Lake 2002  710
+# 7                  Paxson Lake 2003  266
+# 8                  Paxson Lake 2003 1194
+# 9                  Paxson Lake 2004  449
+# 10                 Paxson Lake 2004  806
+# Scanlon, B. 2004. Composition and yield potential of lake trout in Paxson Lake, 2002. Alaska Department of Fish and Game, Fishery Data Series No. 04-14.
+# Wuttig, K. 2010. Stock assessment of lake trout in Paxson Lake, 2002-2004. Alaska Department of Fish and Game, Fishery Data Series No. 10-46, Anchorage. 
+
+# 11              Ptarmigan Lake 2023   74
+# 12           Round Tangle Lake 2018   50
+# 13              Sevenmile Lake 2019   50
+# 14 Sevenmile Lake (Denali Hwy) 2001   72
+# 15 Sevenmile Lake (Denali Hwy) 2001  191
+# 16 Sevenmile Lake (Denali Hwy) 2002  584
+```
+
 Alaska Lake Database (ALDAT).  2013-.  Alaska Department of Fish and Game, Division of Sport Fish.  Available at http://www.adfg.alaska.gov/SF_Lakes/ (accessed December 23, 2025).
 
-Albert in prep winter 22-23
+Albert, M. L., and M. R. Ocaña. 2024. Stock assessment and yield potential of lake trout in Fielding Lake, 2021–2022. Alaska Department of Fish and Game, Fishery Data Series No. 24-14, Anchorage. 
 
 Albert, M. L., and M. R. Chari.  2026. Stock assessment and yield potential of lake trout in the Tangle Lakes system, 2023–2024. Alaska Department of Fish and Game,Fishery Data Series No. XX-XX, Fairbanks.
 
@@ -743,7 +778,11 @@ Marshall, T. R. 1996. A hierarchal approach to assessing habitat suitability and
 
 Parker, J. F., Scanlon, B., and K. Wuttig. 2001. Abundance and Composition of Lake Trout in Fielding (1999) and Island (2000) Lakes, Alaska. Alaska Department of Fish and Game, Fishery Data Series No. 01-31, Anchorage.
 
-NEED PLUMMER CITATION 
+Plummer, M. 2003. JAGS: A Program for Analysis of Bayesian Graphical Models Using Gibbs Sampling. Proceedings of the 3rd International Workshop on Distributed Statistical Computing (DSC 2003), Vienna, 20-22 March 2003, 1-10. 
+
+Scanlon, B. 2004. Composition and yield potential of lake trout in Paxson Lake, 2002. Alaska Department of Fish and Game, Fishery Data Series No. 04-14.
+
+Schwanke, C. J., M. Tyers, and M. L. Albert. 2026. Assessing sustainable yield of lake trout in Crosswind Lake using two different models. Alaska Department of Fish and Game, Fishery Data Series No. 26-07, Anchorage. 
 
 Schwanke, C. J., and M. L. Albert. 2019. Estimation of abundance and yield potential of lake trout in Chandler Lake, 2017–2018. Alaska Department of Fish and Game, Fishery Data Series No. 19-30, Anchorage.
 
@@ -762,6 +801,7 @@ Troyer, K. D., and R. R. Johnson. 1994. Survey of lake trout and Arctic char in 
 Wuttig, K. 2010. Stock assessment of lake trout in Paxson Lake, 2002-2004. Alaska Department of Fish and Game, Fishery Data Series No. 10-46, Anchorage.
 
 
+\pagebreak
 
 ## Appendix
 

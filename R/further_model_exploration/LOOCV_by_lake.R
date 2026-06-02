@@ -796,24 +796,53 @@ mm <- function(x) x-min(x, na.rm=TRUE)
 apply(rmses, 1, which.min) %>%
   unlist %>%
   table
+# 1  2  3
+# 9  7 11
+
 apply(rmses[nweights>80,], 1, which.min) %>%
   unlist %>%
   table
+# 1 2 3
+# 7 3 6
 
 apply(rmses, 2, mean, na.rm=TRUE)
+# [1] 0.1705705 0.1587802 0.1596919
+
 apply(rmses, 2, median, na.rm=TRUE)
+# [1] 0.1625446 0.1544890 0.1622275
+
 apply(rmses, 2, weighted.mean, na.rm=TRUE, w=nweights)
+# [1] 0.1949898 0.1947613 0.1941600
+
 apply(rmses, 2, weighted.mean, na.rm=TRUE, w=sqrt(nweights))
+# [1] 0.1852227 0.1824562 0.1827556
+
 
 apply(rmses, 2, mean, na.rm=TRUE) %>% mm
+# [1] 0.0117902811 0.0000000000 0.0009117202
+
 apply(rmses, 2, median, na.rm=TRUE) %>% mm
+# [1] 0.008055545 0.000000000 0.007738510
+
 apply(rmses, 2, weighted.mean, na.rm=TRUE, w=nweights) %>% mm
+# [1] 0.0008298460 0.0006013288 0.0000000000
+
 apply(rmses, 2, weighted.mean, na.rm=TRUE, w=sqrt(nweights)) %>% mm
+# [1] 0.0027664953 0.0000000000 0.0002993967
+
 
 apply(rmses[nweights>80,], 2, mean, na.rm=TRUE) %>% mm
+# [1] 0.0000000000 0.0003503393 0.0013366849
+
 apply(rmses[nweights>80,], 2, median, na.rm=TRUE) %>% mm
+# [1] 0.0000000000 0.0009430579 0.0047442461
+
 apply(rmses[nweights>80,], 2, weighted.mean, na.rm=TRUE, w=nweights[nweights>80]) %>% mm
+# [1] 0.0003080393 0.0005197369 0.0000000000
+
 apply(rmses[nweights>80,], 2, weighted.mean, na.rm=TRUE, w=sqrt(nweights[nweights>80])) %>% mm
+# [1] 0.0000645516 0.0000000000 0.0005422964
+
 
 plot(nweights, rmses[,1], ylim=range(rmses, na.rm=TRUE), col=2, pch=16)
 points(nweights, rmses[,2], col=3, pch=16)
@@ -827,13 +856,13 @@ points(nweights, rmses[,3], col=4, pch=16)
 comparecat(list(Linf_0, Linf_1, Linf_2, Linf_3), col=1:4)
 comparecat(list(Winf_0, Winf_1, Winf_2, Winf_3), col=1:4)
 
-rmse(apply(Linf_0, 2, median), apply(Linf_1, 2, median))
-rmse(apply(Linf_0, 2, median), apply(Linf_2, 2, median))
-rmse(apply(Linf_0, 2, median), apply(Linf_3, 2, median))
+rmse(apply(Linf_0, 2, median), apply(Linf_1, 2, median)) # [1] 9.763235
+rmse(apply(Linf_0, 2, median), apply(Linf_2, 2, median)) # [1] 8.535235
+rmse(apply(Linf_0, 2, median), apply(Linf_3, 2, median)) # [1] 8.42265
 
-rmse(apply(Winf_0, 2, median), apply(Winf_1, 2, median))
-rmse(apply(Winf_0, 2, median), apply(Winf_2, 2, median))
-rmse(apply(Winf_0, 2, median), apply(Winf_3, 2, median))
+rmse(apply(Winf_0, 2, median), apply(Winf_1, 2, median)) # [1] 0.2496289
+rmse(apply(Winf_0, 2, median), apply(Winf_2, 2, median)) # [1] 0.2361505
+rmse(apply(Winf_0, 2, median), apply(Winf_3, 2, median)) # [1] 0.2207267
 
 plot(apply(Winf_0, 2, median), apply(Winf_1, 2, median))
 abline(0,1)
@@ -842,9 +871,9 @@ abline(0,1)
 plot(apply(Winf_0, 2, median), apply(Winf_3, 2, median))
 abline(0,1)
 
-cor(apply(Winf_0, 2, median), apply(Winf_1, 2, median))^2
-cor(apply(Winf_0, 2, median), apply(Winf_2, 2, median))^2
-cor(apply(Winf_0, 2, median), apply(Winf_3, 2, median))^2
+cor(apply(Winf_0, 2, median), apply(Winf_1, 2, median))^2 # [1] 0.9878752
+cor(apply(Winf_0, 2, median), apply(Winf_2, 2, median))^2 # [1] 0.9893152
+cor(apply(Winf_0, 2, median), apply(Winf_3, 2, median))^2 # [1] 0.9908804
 
 greaters <- cbind(colMeans(Winf_1 > Winf_0),
       colMeans(Winf_2 > Winf_0),
@@ -852,10 +881,10 @@ greaters <- cbind(colMeans(Winf_1 > Winf_0),
 boxplot(greaters)
 abline(h=.5, lwd=2, lty=2)
 for(j in 1:nrow(greaters)) lines(greaters[j,], lwd=2, col=jagshelper::rcolors(1))
-colMeans(greaters)
-apply(greaters, 2, sd)
-colMeans(abs(greaters-.5))
-apply(greaters, 2, rmse, y=.5)
+colMeans(greaters) # [1] 0.5020043 0.5214095 0.5150948
+apply(greaters, 2, sd) # [1] 0.1408260 0.1452405 0.1413474
+colMeans(abs(greaters-.5)) # [1] 0.10317672 0.09889224 0.09044828
+apply(greaters, 2, rmse, y=.5) # [1] 0.1383912 0.1443113 0.1397069
 
 cbind(
   abs(apply(Linf_0, 2, median)-apply(Linf_1, 2, median)),
@@ -863,12 +892,17 @@ cbind(
   abs(apply(Linf_0, 2, median)-apply(Linf_3, 2, median))) %>%
   apply(., 1, which.min) %>%
   table
+# 1  2  3
+# 7  6 16
+
 cbind(
     abs(apply(Winf_0, 2, median)-apply(Winf_1, 2, median)),
     abs(apply(Winf_0, 2, median)-apply(Winf_2, 2, median)),
     abs(apply(Winf_0, 2, median)-apply(Winf_3, 2, median))) %>%
   apply(., 1, which.min) %>%
   table
+# 1  2  3
+# 9  6 14
 
 
 mc_overlap <- function(x1, x2, nbin=1000) {
@@ -903,9 +937,12 @@ cbind(mc_overlap_mat(Winf_0, Winf_1),
       mc_overlap_mat(Winf_0, Winf_2),
       mc_overlap_mat(Winf_0, Winf_3)) %>%
   colMeans
+# [1] 0.6450802 0.6531931 0.6616665
 
 cbind(mc_overlap_mat(Winf_0, Winf_1),
       mc_overlap_mat(Winf_0, Winf_2),
       mc_overlap_mat(Winf_0, Winf_3)) %>%
   apply(., 1, which.max) %>%
   table
+# 1  2  3
+# 9  7 13
