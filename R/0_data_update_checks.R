@@ -8,13 +8,13 @@
 library(tidyverse)
 
 # old & new morphometry datasets
-morph_old <- read_csv("flat_data/lake_morphometry3.csv", skip=1) %>%
+morph_old <- read_csv("flat_data/old_data_versions/lake_morphometry3.csv", skip=1) %>%
   filter(!is.na(LakeName))
 morph_new <- read_csv("flat_data/lake_morphometry_25_12_23.csv", skip=1) %>%
   filter(!is.na(LakeName))
 
 # old & new length/weight/age datasets
-lw_old <- read_csv("flat_data/length_weight4.csv", skip=1) %>%
+lw_old <- read_csv("flat_data/old_data_versions/length_weight4.csv", skip=1) %>%
   filter(!is.na(LakeName))
 lw_new <- read_csv("flat_data/length_weight_25_12_23.csv", skip=1) %>%
   filter(!is.na(LakeName))
