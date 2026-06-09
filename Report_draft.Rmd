@@ -2,7 +2,9 @@
 title: "An Integrated Model for Estimating Asymptotic Size of Lake Trout in Alaska"
 author: "Matt Tyers"
 date: "`r Sys.Date()`"
-output: word_document
+output:
+  word_document:
+    reference_docx: "1columnFMScover+pages.docx"
 ---
 
 ```{r setup, include=FALSE}
@@ -240,8 +242,25 @@ and for all lakes,
 Sampling data were used from `r sum(as.numeric(nmat$n_Projects), na.rm=TRUE)` unique sampling efforts, across `r sum(morphometry$use_fish)` lakes deemed to have sufficiently representative and high-quality data.  Out of `r nrow(morphometry)` lakes of interest with lake trout present as a resident species, estimation of asymptotic size is desired by management for `r sum(morphometry$make_estimates)` lakes, `r sum(morphometry$make_estimates & morphometry$use_fish)` of which may make direct use of sampling data and `r sum(morphometry$make_estimates & !morphometry$use_fish)` of which have not yet been sampled.  After filtering to the most reliable data (Appendix AAA), a wealth of data remain, and are summarized for each lake in **Table 1**.
 
 ```{r}
-knitr::kable(nmat,
+nmat1 <- nmat
+colnames(nmat1) <- c("Lake", 
+                     "Estimate $W_{\\infty}$",
+                     "Use Samples",
+                     "n Projects",
+                     "n Length",
+                     "n Weight",
+                     "n Age",
+                     "n LengthWeight",
+                     "n LengthAge")
+knitr::kable(nmat1[,-(8:9)],
              align = c(rep("l", 3), rep("r", ncol(nmat)-3)))
+```
+
+asfd
+
+```{r, eval=FALSE}
+library(flextable)
+flextable(nmat1[,-(8:9)])
 ```
 
 ### The Integrated Model
@@ -350,7 +369,7 @@ Model appropriateness with respect to overparameterization was further assessed 
 
 ## Results
 
-```{r}
+```{r, eval=FALSE}
 # A good-enough sideways version of caterpillar (data is on x-axis)
 side_cat2 <- function(x, xnames, col=1, medsort=FALSE, x0=FALSE, highlight=NA, xlab="", ...) { 
 
@@ -661,7 +680,7 @@ caterpillar(int_Winf_jags_out$sims.list$sig_W[, int_Winf_data$whichlakes_W],
 
 While estimation of $W_{\infty}$ is not purely a result of propagating estimates of $L_{\infty}$ through the length-weight relationship, it is illustrative to present the relationship between asymptotic weight and lake area, particularly because this is how asymptotic weight is estimated by Lester, et al.  While a loose relationship is indeed apparent, there also exists a strong degree of variability between lakes, further illustrating the utility of lake-specific estimation. 
 
-```{r, fig.width=6.5, fig.height=5.5, fig.cap="Estimated asymptotic weight for all lakes.  Light and heavy vertical bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required.  The dotted curve corresponds to the relationship reported by Lester, et al."}
+```{r, fig.width=6.5, fig.height=5.5, fig.cap="Estimated asymptotic weight for all lakes.  Light and heavy vertical bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required.  The dotted curve corresponds to the relationship reported by Lester, et al., and the dashed curve corresponds to the posterior median curve estimated here."}
 
 par(mar=c(3, 3, 1, 1)+0.1)
 par(family="serif")
@@ -687,6 +706,12 @@ grid(nx=NA, ny=NULL)
 curve(exp(-19.56 +
             3.2*log(int_Winf_data$gam_lester * (1 - exp(-int_Winf_data$lam_lester * (1 + log(x)))))),
       add=TRUE, lty=3)
+with(int_Winf_jags_out$q50,
+     curve(exp(b0_int - b1_int*int_Winf_data$meanlogLc + 
+                 b0_area*(log(x) - mean(log(int_Winf_data$Area), na.rm=TRUE)) +
+                 b1_int*log(gam*(1-exp(-lam*(1+log(x)))))),
+           add=TRUE, lty=2
+           ))
 
 
 # par(mar=parmar)
@@ -695,7 +720,7 @@ curve(exp(-19.56 +
 
 
 
-#### $L_{\infty} and  W_{\infty}$ for all lakes
+#### $L_{\infty}$ and  $W_{\infty}$ for all lakes
 
 Asymptotic length and weight is presented below for all lakes (Figures HHH and III), showing a wide range in asymptotic sizes and particularly precision in estimation.
 
@@ -757,7 +782,17 @@ grid(nx=NULL, ny=NA)
 Estimates for asymptotic size and lake-level parameters are presented in Table DDD.
 
 ```{r}
-knitr::kable(pmat)
+pmat1 <- pmat
+colnames(pmat1) <- c("Lake",
+                     "Estimate $W_{\\infty}$",
+                     "Use Samples",
+                     "$W_{\\infty}$ (kg)",
+                     "$L_{\\infty}$ (mm FL)",
+                     "k",
+                     "$t_0$",
+                     "$b_0$",
+                     "$b_1$")
+knitr::kable(pmat1)
 ```
 
 

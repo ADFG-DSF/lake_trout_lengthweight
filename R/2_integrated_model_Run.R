@@ -321,7 +321,8 @@ parameters <- c("sig_Lt", "sig_Lt_prior",
 # niter <- 100*1000  # 37 min
 # niter <- 200*1000
 # niter <- 500*1000  # 2.7 hrs
-niter <- 2000*1000  # 12 hrs
+# niter <- 2000*1000  # 12 hrs on laptop
+niter <- 5000*1000  # 14 hrs on desktop
 
 # ncores <- 3
 ncores <- 8
