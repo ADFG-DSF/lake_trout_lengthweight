@@ -1,9 +1,12 @@
 ---
-output: word_document
+output:
+  officedown::rdocx_document:
+    reference_docx: "FDS26-07.docx"
+    mapstyles:
+      Normal: ['First Paragraph', 'Body Text']
 ---
 
 
-## Appendix CCC - ALL THE PLOTS ALL THE LAKES
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, dpi=300)
@@ -96,55 +99,75 @@ catbars <- function(x, h, col=1) {
 ```
 
 
-```{r, fig.width=8, fig.height=2.8, warning=FALSE}
+```{r, fig.width=6.5, fig.height=2.18, warning=FALSE}
 
-par(mar=c(3, 3, 5, 0.3)+0.1)
-par(mgp=c(2, 1, 0))
+par(mar=c(2.7, 2.5, 3.5, 0.3)+0.1)
+par(mgp=c(1.7, 0.5, 0))
+par(tcl=-.2)
 par(family="serif")
 # par(cex.axis=1.2)
-par(cex.lab=1.2)
+par(cex.lab=1.3)
+par(cex.axis=1.2)
+par(cex.main=1.6)
 par(mfrow=c(1,3)) # was 4
 
 ## Actually plotting -- THIS WILL MAKE A LOT OF PLOTS, BE WARNED!
 
 theselakes <- seq_along(lakenames)
-# theselakes <- 4:6
+# theselakes <- 4:10
+
+pointcol <- adjustcolor(1, alpha.f=.5)
+curvecol <- adjustcolor(1, alpha.f = .2)
+envcol <- adjustcolor(1, alpha.f=0.7)
+
+lakenames[lakenames=="Summit Lake (Richardson Highway near Paxson"] <-
+  "Summit Lake (Richardson Hwy)"
+
 for(i in theselakes) {
   par(xpd=FALSE)
 
   # L ~ Age
-  plot(NA, xlab="Age", ylab="Length (mm)", main=lakenames[i],
+  plot(NA, xlab="Age", ylab="Length (mm)", 
+       # main=lakenames[i],
        xlim=c(0, max(int_Winf_data$Age, na.rm=TRUE)),
-       ylim=c(0, max(int_Winf_data$L[!is.na(int_Winf_data$Age)], na.rm=TRUE)))
+       ylim=c(0, max(int_Winf_data$L[!is.na(int_Winf_data$Age)], na.rm=TRUE)),
+       yaxt="n")
+  title(lakenames[i], adj=0, xpd=NA)
   for(j in 1:ncol(int_Winf_jags_out$q50$Lfit)) {
-    lines(int_Winf_jags_out$q50$Lfit[,j], col=adjustcolor(1, alpha.f = .3), lty=3)
+    lines(int_Winf_jags_out$q50$Lfit[,j], col=curvecol, lty=3)
   }
   if(i <= dim(int_Winf_jags_out$sims.list$Lfit)[3]) {
-    envelope(int_Winf_jags_out$sims.list$Lfit[,,i], add=TRUE, col=adjustcolor(1, alpha.f=0.7))
+    envelope(int_Winf_jags_out$sims.list$Lfit[,,i], add=TRUE, col=envcol)
   }
   points(x=int_Winf_data$Age[int_Winf_data$lake==i],
-         y=int_Winf_data$L[int_Winf_data$lake==i])
+         y=int_Winf_data$L[int_Winf_data$lake==i],
+         col=pointcol)
+  jagshelper:::smashaxis(2, at=seq(from=0, to=800, by=200), smashall=TRUE)
 
 
   # W ~ Length
-  plot(NA, xlab="Length (mm)", ylab="Weight (kg)", main="", #log="xy",lakenames[i]
+  plot(NA, xlab="Length (mm)", ylab="Weight (kg)", main="", 
+       # log="xy",
        xlim=range(int_Winf_data$L[!is.na(int_Winf_data$logW)], na.rm=TRUE),
        ylim=range(exp(int_Winf_data$logW), na.rm=TRUE),
        # xlim=quantile(int_Winf_data$L[!is.na(int_Winf_data$logW)], na.rm=TRUE, p=c(.01,.999)),
-       # ylim=quantile(exp(int_Winf_data$logW), na.rm=TRUE, p=c(.01,.999)),
+       # ylim=quantile(exp(int_Winf_data$logW), na.rm=TRUE, p=c(.01,.999)),,
+       yaxt="n"
        )
   for(j in 1:length(lakenames)) {
     curve(exp(int_Winf_jags_out$q50$b0_interp[j])*x^int_Winf_jags_out$q50$b1[j],
-          add=TRUE, col=adjustcolor(1, alpha.f = .3), lty=3)
+          add=TRUE, col=curvecol, lty=3)
   }
   points(x=int_Winf_data$L[int_Winf_data$lake==i],
-         y=exp(int_Winf_data$logW)[int_Winf_data$lake==i])
+         y=exp(int_Winf_data$logW)[int_Winf_data$lake==i],
+         col=pointcol)
   lvec <- seq(from=min(int_Winf_data$L[!is.na(int_Winf_data$logW)], na.rm=TRUE),
               to=max(int_Winf_data$L[!is.na(int_Winf_data$logW)], na.rm=TRUE),
               length.out=20)
   envelope(exp(int_Winf_jags_out$sims.list$b0_interp[,i]) *
                 t(outer(lvec, int_Winf_jags_out$sims.list$b1[,i], "^")),
-              x=lvec, add=TRUE, col=adjustcolor(1, alpha.f=0.7))
+              x=lvec, add=TRUE, col=envcol)
+  jagshelper:::smashaxis(2, at=seq(from=0, to=12, by=2), smashall=TRUE)
 
 
   # # Linf by data sources
@@ -179,7 +202,7 @@ for(i in theselakes) {
   # cols <- c(1, 2, 3, 4) # ages, lengths, area
   cols <- rep(adjustcolor(1,alpha.f=.8), 4) # ages, lengths, area
   
-  barheights <- seq(to=-4, by=4.5, length.out=4)-1
+  barheights <- seq(to=-4, by=5.5, length.out=4)-1
 
   segments(x0=int_Winf_data$qW[i], y0=barheights[2], y1=1+i, lty=2, col=cols[2])
   sig_W <- int_Winf_jags_out$sims.list$sig_W
@@ -196,7 +219,7 @@ for(i in theselakes) {
   segments(x0=median(areaWLvec), y0=barheights[4], y1=1+i, lty=2, col=cols[4])
   catbars(x=areaWLvec, h=barheights[4], col=cols[4])
 
-  text(x=-6, y=barheights, pos=4, cex=1, col=cols,
+  text(x=-8.5, y=barheights, pos=4, cex=1.2, col=cols,
        labels=paste(c("n ages =", "n weights =", "n lengths =", "area"),
                     c(laketrout_Winf$n_Age[i], laketrout_Winf$n_Weight[i], laketrout_Winf$n_Length[i], "")))
 }
