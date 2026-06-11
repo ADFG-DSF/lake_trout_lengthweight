@@ -1,0 +1,32 @@
+---
+title: "possibly a template"
+author: "Matt Tyers"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+# Heading 1
+
+## Heading 2
+
+### Heading 3
+
+#### Heading 4
+
+##### Heading 5
+
+This is a first paragraph.
+
+This is probably normal body text^[And here is a footnote.].
+
+```{r}
+# here is some code
+```
+
+```{r,  fig.cap="This is a figure caption", echo=FALSE}
+plot(1:10)
+```
+
+```{r, tab.cap="This is a table caption", echo=FALSE}
+knitr::kable(head(mtcars))
+```

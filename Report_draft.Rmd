@@ -3,11 +3,31 @@ title: "An Integrated Model for Estimating Asymptotic Size of Lake Trout in Alas
 author: "Matt Tyers"
 date: "`r Sys.Date()`"
 output:
-  word_document:
-    reference_docx: "1columnFMScover+pages.docx"
+  officedown::rdocx_document:
+    reference_docx: "FDS26-07.docx"
+    mapstyles:
+      Normal: ['First Paragraph', 'Body Text']
+    plots:
+      caption:
+        pre: "Figure "
+        style: "Caption"
+    tables:
+      caption:
+        pre: "Table "
+        style: "Caption"
 ---
 
 ```{r setup, include=FALSE}
+# output:
+#   word_document:
+#     reference_docx: "1columnFMScover+pages.docx"
+#     fig_caption: yes
+# output:
+#   word_document:
+#     reference_docx: "1columnFMScover+pages.docx"
+# mapstyles:
+#   Normal: ['First Paragraph', 'Body Text']
+#   'Caption': ['Image Caption']
 knitr::opts_chunk$set(echo = FALSE, dpi=300)
 ```
 
@@ -134,12 +154,17 @@ pmat <- data.frame(Lake = smallernames,
                    )
 ```
 
-## Abstract
+# Abstract
 
+:::{custom-style="Abstract"}
 Management of resident lake trout in Alaska is best served to make use of some form of productivity model to estimate sustainable yield.  One such model shows promise, but is particularly mathematically sensitive to estimation of asymptotic weight $W_{\infty}$.  Information from lake area is used as a surrogate for $W_{\infty}$ within this model, but model performance may be dramatically improved by means of direct estimation of $W_{\infty}$.  Here we present an integrated model to estimate asymptotic weight for `r sum(nmat$Estimate_Winf=="Yes")` lakes of management interest using all available information from compiled survey data over the past several decades.
+:::
 
+:::{custom-style="Key words"}
+Keywords:	asymptotic weight, lake trout, *Salvelinus namaycush*, yield potential, maximum sustained yield, lake area model, Lester model
+:::
 
-## Introduction
+# Introduction
 
 Lake trout are present as a resident species in Alaska, and are long-lived and slow-growing.  In order to effectively manage localized harvest limits, a productivity model must be employed in order to estimate surplus production in a given waterbody, as environmental variability results in variability in productivity at the local scale.  
 
@@ -215,7 +240,7 @@ The Alaska Lake Database (ALDAT, 2013-) serves as a compilation of sampling data
 Asymptotic weight is typically estimated solely from a sample of weights for a given lake; for example, the mean of the largest 10% of sampled weights (e.g. Lester, et al. *ibid*), or some sample percentile value.  It is expected that the inclusion of additional sources of information will greatly improve inferential precision.
 
 
-## Objectives
+# Objectives
 
 For `r sum(nmat$Estimate_Winf=="Yes")` lakes of management interest, the primary objective of this study was to:
 
@@ -235,39 +260,23 @@ and for all lakes,
 
 
 
-## Methods
+# Methods
 
-### Available Data
+## Available Data
 
 Sampling data were used from `r sum(as.numeric(nmat$n_Projects), na.rm=TRUE)` unique sampling efforts, across `r sum(morphometry$use_fish)` lakes deemed to have sufficiently representative and high-quality data.  Out of `r nrow(morphometry)` lakes of interest with lake trout present as a resident species, estimation of asymptotic size is desired by management for `r sum(morphometry$make_estimates)` lakes, `r sum(morphometry$make_estimates & morphometry$use_fish)` of which may make direct use of sampling data and `r sum(morphometry$make_estimates & !morphometry$use_fish)` of which have not yet been sampled.  After filtering to the most reliable data (Appendix AAA), a wealth of data remain, and are summarized for each lake in **Table 1**.
 
-```{r}
-nmat1 <- nmat
-colnames(nmat1) <- c("Lake", 
-                     "Estimate $W_{\\infty}$",
-                     "Use Samples",
-                     "n Projects",
-                     "n Length",
-                     "n Weight",
-                     "n Age",
-                     "n LengthWeight",
-                     "n LengthAge")
-knitr::kable(nmat1[,-(8:9)],
-             align = c(rep("l", 3), rep("r", ncol(nmat)-3)))
-```
-
-asfd
 
 ```{r, eval=FALSE}
 library(flextable)
 flextable(nmat1[,-(8:9)])
 ```
 
-### The Integrated Model
+## The Integrated Model
 
 Implementation of an integrated model as outlined below allows simultaneous use of all available information, as well as appropriate propagation of all uncertainty in estimation.  The model can be conceptualized as consisting of six inter-related components:
 
-#### Length ~ Age component
+### Length ~ Age component
 
 The relationship between length and age was modeled using a Von Bertalanffy (LVB) growth function, with multiplicative (lognormal) error.  For fish *i* within lake *j*:
 
@@ -286,7 +295,7 @@ $k[j] \sim N(\mu_{k}, \sigma_{k})$
 Diffuse priors are used for standard deviation parameters $\sigma_{t_0}$ and $\sigma_{k}$ (Uniform) and mean parameter $\mu_{k}$ (Normal).
 
 
-#### $L_{\infty}$ ~ Area component
+### $L_{\infty}$ ~ Area component
 
 Growth parameter $L_{\infty}$ may be thought of as hierarchically distributed, but with a central trend defined not by a global mean but according to the relationship with lake area reported by Lester, et al., and with multiplicative (lognormal) process error.  Parameters $\gamma$ and $\lambda$ were given weakly informative priors centered on the values reported by Lester, et al., and with coefficients of variation given below.  For lake *j*:
 
@@ -300,7 +309,7 @@ $\lambda \sim N(\lambda_{Lester}, 250\% \times \lambda_{Lester})$
 
 A diffuse Uniform prior is used for standard deviation parameter $\sigma_{LA}$.
 
-#### Weight ~ Length component
+### Weight ~ Length component
 
 A log-log regression was used to model weight as a function of length, expanding somewhat on the form used by Lester, et al.  Since fish-level data (lengths and weights) were available from several lakes of differing habitat, the weight ~ length relationships were estimated separately for each lake, with slope and intercept parameters modeled hierarchically as further described.  For fish *i* within lake *j*: 
 
@@ -322,7 +331,7 @@ Diffuse Uniform priors were used for standard deviation parameters $\sigma_{WL}$
 
 Log-transformed lengths were rescaled by subtracting the overall mean in order to eliminate correlation between $\beta_0[.]$ and $\beta_1[.]$ and therefore aid model convergence, thus altering inferences for the intercept parameters $\beta_0[.]$.  Inferences for $\beta_0[.]$ were therefore back-transformed for the purpose of interpretability and equivalence with the relationship presented by Lester, et al., and the back-transformed parameters will be presented hereafter.
 
-#### Length Quantile ~ $L_{\infty}$ component
+### Length Quantile ~ $L_{\infty}$ component
 
 In the absence of sufficient paired age and length data, it is common practice to use a quantile (percentile) value from a length sample as a proxy for asymptotic length.  Given the relative wealth of length samples within our dataset, it is certainly worth incorporating this information into an integrated model.
 
@@ -337,7 +346,7 @@ $\sigma_L[j] = \sqrt{\eta_L^2 + \frac{\zeta_L^2}{n_L[j]}}$
 Diffuse Uniform priors are used for parameters $\eta_L$ and $\zeta_L$.
 
 
-#### Weight Quantile ~ $W_{\infty}$ component
+### Weight Quantile ~ $W_{\infty}$ component
 
 Similarly, weight quantiles were treated as observations of asymptotic weight as available, with estimable error according to the same form.  The relationship between length and weight is non-linear; however, quantile values are invariant to monotonic transformations.  Therefore, the 95th percentile values of weight were used.
 
@@ -348,26 +357,22 @@ $\sigma_W[j] = \sqrt{\eta_W^2 + \frac{\zeta_W^2}{n_W[j]}}$
 Diffuse Uniform priors are used for parameters $\eta_W$ and $\zeta_W$.
 
 
-#### $W_{\infty} \sim L_{\infty}$ relationship
+### $W_{\infty} \sim L_{\infty}$ relationship
 
 Finally, the relationship between asymptotic length and asymptotic weight for lake *j* was treated as deterministic (that is, without additional observation error), according to the log-log regression parameters estimated for that lake.  Since asymptotic size functions as a central trend that is not subject to fish-level variability, the only variability that is necessary to incorporate is that due to estimation of the regression parameters themselves.  Inclusion of this step in the same model that is also estimating the length-weight relationship will therefore propagate this uncertainty.
 
 $log(W_{\infty}[j]) = \beta_0[j] + \beta_1[j] log(L_{\infty}[j])$
 
-A conceptual schematic of the model is shown in figure DDD.
+A conceptual schematic of the model is shown in Figure \@ref(fig:flowchart).
 
-```{r}
-knitr::include_graphics("flowchart1.jpg")
-```
-
-### Model fitting and diagnostics
+## Model fitting and diagnostics
 
 Model fitting was performed using JAGS (Just Another Gibbs Sampler, Plummer 2003) called through R^[`r capture.output(print(citation(), style="text"))`] using the jagsUI^[`r capture.output(print(citation("jagsUI"), style="text"))`] package, with output manipulation, convergence diagnostics, and plotting performed using the jagshelper package^[`r capture.output(print(citation("jagshelper"), style="text"))`]. `r english::Words(ncores)` chains of `r formatC(niter, big.mark=",", format="f", digits=0)` MCMC samples were taken, with the first half discarded as burn-in and the remainder thinned to 1,000 samples per parameter node per chain.  Convergence was assessed graphically by means of trace plots and corroborated using the Gelman-Rubin convergence diagnostic (R hat, Gelman & Rubin 1992).  R hat values for all parameter nodes were well within a threshold of 1.1, and all those for global hyperparameters or parameter nodes pertaining to Crosswind Lake were within a threshold of 1.01.   **UPDATE THIS AS NEEDED**
 
 Model appropriateness with respect to overparameterization was further assessed by means of posterior predictive quantile-quantile plots whenever possible (posterior predictive distributions associated with the weight ~ length relationship, length ~ age relationship, and relationships between length and weight quantiles and respective asymptotic values).  Between-parameter correlations were estimated and bivariate plots were constructed as appropriate, in order to ensure that no additional reparameterization was necessary to facilitate convergence.
 
 
-## Results
+# Results
 
 ```{r, eval=FALSE}
 # A good-enough sideways version of caterpillar (data is on x-axis)
@@ -485,373 +490,67 @@ y_cat2 <- function(x, xnames=NA, xval=NA, col=1, medsort=FALSE, x0=FALSE, highli
 parmar <- par("mar")
 ```
 
+## The Integrated Model
 
+### Length ~ Age component
 
-#### Length ~ Age component
+The relationship between length and age was able to be directly estimated for `r sum(!is.na(int_Winf_jags_out$q50$k))` lakes, directly informing estimation of the asymptotic length parameter $L_{\infty}$.  Additional LVB parameters *k* and $t_0$ were modeled hierarchically, with inferences shown in Figures \@ref(fig:kplot) and \@ref(fig:t0plot). 
 
-The relationship between length and age was able to be directly estimated for `r sum(!is.na(int_Winf_jags_out$q50$k))` lakes, directly informing estimation of the asymptotic length parameter $L_{\infty}$.  Additional LVB parameters *k* and $t_0$ were modeled hierarchically, with inferences shown in Figures BBB and CCC.  
 
-```{r, fig.width=6.5, fig.height=4, fig.cap="LVB growth parameter k for lakes with sufficient age data.  Light and heavy bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required."}
-par(mar=c(3, 9, 1, 1)+0.1)
-par(family="serif")
-par(mgp=c(2, 1, 0))
-
-# side_cat2(x=int_Winf_jags_out$sims.list$k,
-#           xnames=smallernames,
-#           medsort=FALSE,
-#           highlight = morphometry$make_estimates,
-#           xlab="k")
-
-plotcol <- ifelse(morphometry$make_estimates,
-                         adjustcolor(1, alpha.f=0.9),
-                         adjustcolor(1, alpha.f=0.2))
-caterpillar(int_Winf_jags_out, p="k",
-            # xlab="k", 
-            xlab=expression(paste("k (",years^-1,")")),
-            main="",
-            xax = smallernames,
-            horizontal = TRUE, las=1,
-            col = plotcol,
-            na.rm=TRUE)
-grid(nx=NULL, ny=NA)
-```
-
-```{r, fig.width=6.5, fig.height=4, fig.cap="LVB growth parameter t0 for lakes with sufficient age data.  Light and heavy bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required."}
-par(mar=c(3, 9, 1, 1)+0.1)
-par(family="serif")
-par(mgp=c(2, 1, 0))
-
-# side_cat2(x=int_Winf_jags_out$sims.list$t0,
-#           xnames=smallernames,
-#           medsort=FALSE,
-#           highlight = morphometry$make_estimates,
-#           xlab="t0 (years)")
-
-caterpillar(int_Winf_jags_out, p="t0",
-            # xlab="t0 (years)", 
-            xlab=expression(paste(t[0], " (years)")),
-            main="",
-            xax = smallernames,
-            horizontal = TRUE, las=1,
-            col = plotcol,
-            na.rm=TRUE)
-grid(nx=NULL, ny=NA)
-```
-
-
-
-#### $L_{\infty}$ ~ Area component
-
-Asymptotic length $L_{\infty}$ was modeled relatively precisely for lakes with paired length and age samples, and the relationship between asymptotic length and lake area was used to estimate $L_{\infty}$ for the remainder of the lakes (Figure DDD).  We estimate an increasing relationship between asymptotic length and lake area, though increasing to the same degree as that reported by Lester, et al. for our range of lake sizes, and with asymptotic length estimated slightly larger for small lakes.  There is much larger estimation variance associated with lakes with no paired length and age samples; however, this may be expected due to the similar degree of spread in asymptotic length for lakes with paired length and age data.
-
-
-```{r, fig.width=6.5, fig.height=5.5, fig.cap="Estimated asymptotic length for all lakes.  Light and heavy vertical bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required.  The dotted curve corresponds to the relationship reported by Lester, et al., and the dashed curve corresponds to the posterior median curve estimated here."}
-
-par(mar=c(3, 3, 1, 1)+0.1)
-par(family="serif")
-par(mgp=c(2, 1, 0))
-
-# y_cat2(int_Winf_jags_out$sims.list$Linf,
-#        xval=morphometry$SurfaceArea_h,
-#        highlight=morphometry$make_estimates,
-#        x0=TRUE,
-#        log="x",
-#        xlab="Surface area (ha)",
-#        ylab="Asymptotic length (mm FL)")
-
-caterpillar(int_Winf_jags_out, p="Linf",
-            x = morphometry$SurfaceArea_h,
-            col = plotcol,
-            log="x", main="", ylim_add=0,
-       xlab="Surface area (ha)",
-       # ylab="Asymptotic length (mm FL)",
-       ylab=expression(paste(L[infinity], " (mm FL)")))
-curve(int_Winf_jags_out$q50$gam * (1 - exp(-int_Winf_jags_out$q50$lam * (1 + log(x)))), add=TRUE, lty=2)
-curve(int_Winf_data$gam_lester * (1 - exp(-int_Winf_data$lam_lester * (1 + log(x)))), add=TRUE, lty=3)
-
-
-# par(mar=parmar)
-```
-
-
-
-#### Weight ~ Length component
-
-Similarly, the relationship between length and weight was estimated relatively precisely for lakes with paired length and weight data, and the hierarchical means and variances of regression parameters was propagated to estimate the regression parameters of lakes with no paired length and weight data.  Regression parameters $\beta_0$ and $\beta_1$ were generally very similar to those reported by Lester et al. (Figure EEE), though most lakes with paired data exhibited strong enough differences from these values to illustrate the value of estimating this relationship separately for each lake.  However, it is worth noting that the point estimates of asymptotic weight for lakes without sampling data are quite similar to the values that would have been estimated by the Lester model framework.
-
-```{r, fig.width=7, fig.height=9.5, fig.cap="Log(weight) ~ log(length) regression parameter b0.  Light and heavy horizontal bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required.  The vertical dotted line corresponds to the global value used by Lester, et al."}
-par(mar=c(3, 9, 0, 0)+0.1)
-par(family="serif")
-par(mgp=c(2, 1, 0))
-
-# side_cat2(x=int_Winf_jags_out$sims.list$b0_interp,
-#           xnames=smallernames,
-#           medsort=FALSE,
-#           highlight = morphometry$make_estimates,
-#           xlab="b0")
-
-caterpillar(int_Winf_jags_out, p="b0_interp",
-            horizontal=TRUE, las=1,
-            col=plotcol,
-            xax=smallernames,
-            padwd = -3,
-            na.rm=TRUE,
-            main="", xlab=expression(beta[0]))
-abline(v=log(1/451^3.2), lty=3)
-```
-
-```{r, fig.width=7, fig.height=9.5, fig.cap="Log(weight) ~ log(length) regression parameter b1.  Light and heavy horizontal bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required.  The vertical dotted line corresponds to the global value used by Lester, et al."}
-par(mar=c(3, 9, 0, 0)+0.1)
-par(family="serif")
-par(mgp=c(2, 1, 0))
-
-# side_cat2(x=int_Winf_jags_out$sims.list$b1,
-#           xnames=smallernames,
-#           medsort=FALSE,
-#           highlight = morphometry$make_estimates,
-#           xlab="b1")
-
-caterpillar(int_Winf_jags_out, p="b1",
-            horizontal=TRUE, las=1,
-            col=plotcol,
-            xax=smallernames,
-            padwd = -3,
-            na.rm=TRUE,
-            main="", xlab=expression(beta[1]))
-abline(v=3.2, lty=3)
-```
-
-
-
-#### Length Quantile ~ $L_{\infty}$ and Weight Quantile ~ $W_{\infty}$ components
-
-The relationships between sample quantiles (length and weight) and the respective asymptotic values ($L_{\infty}$ and $W_{\infty}$) were increasingly precise as sample size increased.  The relationship between the relationship standard deviations and the numbers of length or weight samples per lake is illustrated in Figure FFF and GGG.  In the case of length, the relationship standard deviation nearly approaches an asymptotic value, as a result of the comparative wealth of length samples in many lakes.
-
-```{r, fig.width=6.5, fig.height=5.5, fig.cap="Estimated standard deviation parameter relating length sample quantile to asymptotic length, as a function of number of length samples per lake.  The light and dark bands correspond to 95% and 50% credible envelopes, and the solid line corresponds to posterior median."}
-par(mar=c(3, 3, 1, 1)+0.1)
-par(family="serif")
-par(mgp=c(2, 1, 0))
-
-# envelope(int_Winf_jags_out$sims.list$sig_L[, int_Winf_data$whichlakes_L],
-#          x=int_Winf_data$nL[int_Winf_data$whichlakes_L],
-#          log="x",
-#          xlab="Number of length samples per lake",
-#          ylab="sig_L (mm FL)",
-#          col=1,
-#          ylim=c(0, max(int_Winf_jags_out$q97.5$sig_L, na.rm=TRUE)))
-
-caterpillar(int_Winf_jags_out$sims.list$sig_L[, int_Winf_data$whichlakes_L],
-            x=int_Winf_data$nL[int_Winf_data$whichlakes_L],
-            log="x",
-         xlab="Number of length samples per lake", 
-         # ylab="sig_L (mm FL)",
-         ylab=expression(paste(sigma[L], " (mm FL)")),
-         col=1,
-         ylim_add=0)
-```
-
-
-```{r, fig.width=6.5, fig.height=5.5, fig.cap="Estimated standard deviation parameter relating weight sample quantile to asymptotic weight, as a function of number of weight samples per lake.  The light and dark bands correspond to 95% and 50% credible envelopes, and the solid line corresponds to posterior median."}
-par(mar=c(3, 3, 1, 1)+0.1)
-par(family="serif")
-par(mgp=c(2, 1, 0))
-
-# envelope(int_Winf_jags_out$sims.list$sig_W[, int_Winf_data$whichlakes_W],
-#          x=int_Winf_data$nW[int_Winf_data$whichlakes_W],
-#          log="x",
-#          xlab="Number of weight samples per lake",
-#          ylab="sig_W (kg)",
-#          col=1,
-#          ylim=c(0, max(int_Winf_jags_out$q97.5$sig_W, na.rm=TRUE)))
-
-caterpillar(int_Winf_jags_out$sims.list$sig_W[, int_Winf_data$whichlakes_W],
-            x=int_Winf_data$nW[int_Winf_data$whichlakes_W],
-            log="x",
-         xlab="Number of weight samples per lake", 
-         # ylab="sig_W (kg)",
-         ylab=expression(paste(sigma[W], " (kg)")),
-         col=1,
-         ylim_add=0)
-```
-
-
-
-#### $W_{\infty} \sim L_{\infty}$ relationship
-
-While estimation of $W_{\infty}$ is not purely a result of propagating estimates of $L_{\infty}$ through the length-weight relationship, it is illustrative to present the relationship between asymptotic weight and lake area, particularly because this is how asymptotic weight is estimated by Lester, et al.  While a loose relationship is indeed apparent, there also exists a strong degree of variability between lakes, further illustrating the utility of lake-specific estimation. 
-
-```{r, fig.width=6.5, fig.height=5.5, fig.cap="Estimated asymptotic weight for all lakes.  Light and heavy vertical bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required.  The dotted curve corresponds to the relationship reported by Lester, et al., and the dashed curve corresponds to the posterior median curve estimated here."}
-
-par(mar=c(3, 3, 1, 1)+0.1)
-par(family="serif")
-par(mgp=c(2, 1, 0))
-
-# y_cat2(x=int_Winf_jags_out$sims.list$Winf,
-#        xval=morphometry$SurfaceArea_h,
-#        highlight=morphometry$make_estimates,
-#        x0=TRUE,
-#        log="x",
-#        xlab="Surface area (ha)",
-#        ylab="Asymptotic weight (kg)")
-
-caterpillar(int_Winf_jags_out, p="Winf",
-            x = morphometry$SurfaceArea_h,
-            col = plotcol,
-            log="x", main="", ylim_add=0,
-       xlab="Surface area (ha)",
-       ylab=expression(paste(W[infinity], " (kg)")),
-       # ylab="Asymptotic weight (kg)",
-       )
-grid(nx=NA, ny=NULL)
-curve(exp(-19.56 +
-            3.2*log(int_Winf_data$gam_lester * (1 - exp(-int_Winf_data$lam_lester * (1 + log(x)))))),
-      add=TRUE, lty=3)
-with(int_Winf_jags_out$q50,
-     curve(exp(b0_int - b1_int*int_Winf_data$meanlogLc + 
-                 b0_area*(log(x) - mean(log(int_Winf_data$Area), na.rm=TRUE)) +
-                 b1_int*log(gam*(1-exp(-lam*(1+log(x)))))),
-           add=TRUE, lty=2
-           ))
-
-
-# par(mar=parmar)
-```
-
-
-
-
-#### $L_{\infty}$ and  $W_{\infty}$ for all lakes
-
-Asymptotic length and weight is presented below for all lakes (Figures HHH and III), showing a wide range in asymptotic sizes and particularly precision in estimation.
-
-```{r, fig.width=7, fig.height=9.5, fig.cap="Estimated asymptotic length for all lakes.  Light and heavy horizontal bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required."}
-
-par(mar=c(2.5, 9, 0, 0)+0.1)
-par(family="serif")
-par(mgp=c(1.5, 0.5, 0))
-par(tcl=-.2)
-
-# side_cat2(x=int_Winf_jags_out$sims.list$Linf,
-#           xnames=smallernames,
-#           medsort=TRUE, x0=TRUE,
-#           highlight = morphometry$make_estimates,
-#           xlab="Asymptotic length (mm FL)")
-
-caterpillar(int_Winf_jags_out, "Linf",
-            horizontal=TRUE,
-            xorder = TRUE,
-            padwd = -3.5,
-            # xlab="Asymptotic length (mm FL)", 
-            xlab = expression(paste(L[infinity], " (mm FL)")),
-            main="",
-            xax=smallernames, las=1,
-            col=plotcol,
-            xlim_add = 0)
-grid(nx=NULL, ny=NA)
-```
-
-```{r, fig.width=7, fig.height=9.5, fig.cap="Estimated asymptotic weight for all lakes.  Light and heavy horizontal bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required."}
-
-par(mar=c(2.5, 9, 0, 0)+0.1)
-par(family="serif")
-par(mgp=c(1.5, 0.5, 0))
-par(tcl=-.2)
-
-# side_cat2(x=int_Winf_jags_out$sims.list$Winf,
-#           xnames=smallernames,
-#           medsort=TRUE, x0=TRUE,
-#           highlight = morphometry$make_estimates,
-#           xlab="Asymptotic weight (kg)")
-
-caterpillar(int_Winf_jags_out, "Winf",
-            horizontal=TRUE,
-            xorder = TRUE,
-            padwd = -3.5,
-            # xlab="Asymptotic weight (kg)", 
-            xlab=expression(paste(W[infinity], " (kg)")),
-            main="",
-            xax=smallernames, las=1,
-            col=plotcol,
-            xlim_add = 0,
-            na.rm=TRUE)
-grid(nx=NULL, ny=NA)
-
-# par(mar=parmar)
-```
+### $L_{\infty}$ ~ Area component
+
+Asymptotic length $L_{\infty}$ was modeled relatively precisely for lakes with paired length and age samples, and the relationship between asymptotic length and lake area was used to estimate $L_{\infty}$ for the remainder of the lakes (Figure \@ref(fig:Linfareaplot)).  We estimate an increasing relationship between asymptotic length and lake area, though increasing to the same degree as that reported by Lester, et al. for our range of lake sizes, and with asymptotic length estimated slightly larger for small lakes.  There is much larger estimation variance associated with lakes with no paired length and age samples; however, this may be expected due to the similar degree of spread in asymptotic length for lakes with paired length and age data.
+
+
+
+### Weight ~ Length component
+
+Similarly, the relationship between length and weight was estimated relatively precisely for lakes with paired length and weight data, and the hierarchical means and variances of regression parameters was propagated to estimate the regression parameters of lakes with no paired length and weight data.  Regression parameters $\beta_0$ and $\beta_1$ were generally very similar to those reported by Lester et al. (Figures \@ref(fig:b0plot) and \@ref(fig:b1plot)), though most lakes with paired data exhibited strong enough differences from these values to illustrate the value of estimating this relationship separately for each lake.  However, it is worth noting that the point estimates of asymptotic weight for lakes without sampling data are quite similar to the values that would have been estimated by the Lester model framework.
+
+
+### Length Quantile ~ $L_{\infty}$ and Weight Quantile ~ $W_{\infty}$ components
+
+The relationships between sample quantiles (length and weight) and the respective asymptotic values ($L_{\infty}$ and $W_{\infty}$) were increasingly precise as sample size increased.  The relationship between the relationship standard deviations and the numbers of length or weight samples per lake is illustrated in Figures \@ref(fig:sigLplot) and \@ref(fig:sigWplot)  In the case of length, the relationship standard deviation nearly approaches an asymptotic value, as a result of the comparative wealth of length samples in many lakes.
+
+
+
+### $W_{\infty} \sim L_{\infty}$ relationship
+
+While estimation of $W_{\infty}$ is not purely a result of propagating estimates of $L_{\infty}$ through the length-weight relationship, it is illustrative to present the relationship between asymptotic weight and lake area, particularly because this is how asymptotic weight is estimated by Lester, et al.  While a loose relationship is indeed apparent, there also exists a strong degree of variability between lakes, further illustrating the utility of lake-specific estimation (Figure \@ref(fig:Winfareaplot)). 
+
+
+
+
+### $L_{\infty}$ and  $W_{\infty}$ for all lakes
+
+Asymptotic length and weight is presented below for all lakes (Figures \@ref(fig:Linfplot) and \@ref(fig:Winfplot)), showing a wide range in asymptotic sizes and particularly precision in estimation.
 
 Estimates for asymptotic size and lake-level parameters are presented in Table DDD.
 
-```{r}
-pmat1 <- pmat
-colnames(pmat1) <- c("Lake",
-                     "Estimate $W_{\\infty}$",
-                     "Use Samples",
-                     "$W_{\\infty}$ (kg)",
-                     "$L_{\\infty}$ (mm FL)",
-                     "k",
-                     "$t_0$",
-                     "$b_0$",
-                     "$b_1$")
-knitr::kable(pmat1)
-```
 
 
 
 
 
-
-## Discussion
+# Discussion
 
 One obvious shortcoming of the model is the fact that all samples for a given lake were pooled, regardless of year, data heritage, or project type.  It is assumed at present that resident populations of lake trout are relatively stable with respect to asymptotic size and body morphometry (i.e. weight ~ length relationship), however, it is certainly within conjecture that population characteristics may change as a result of changes to habitat due to climate change effects, or as a result of localized depletion.  It is likely reasonable to assume that relationships between variables (i.e. weight ~ length and length ~ age) will remain static over time, whereas quantiles (length and weight) may change, particularly if there exists some natural or anthropogenic pressure on large or small fish.
 
 Perhaps more likely to affect inferences to this study is the potential for unequal size-selectivity among studies for a given lake, as different sampling efforts for a given lake may have used different capture methods, may have occurred during different seasons, or may have had different inferential objectives.  A potential expansion of this model might be to account for differences between winter and summer sampling events, for example.  However, a variety in sampling methods and sampling seasons may have a beneficial effect, as any biases due to specific methods may be mitigated.  Additionally, while quantiles (length and weight) will be subject to bias due to size selectivity, relationships between variables (i.e. weight ~ length and length ~ age) will almost certainly be robust.
 
-While the hierarchical nature of this model does provide estimates of asymptotic size for lakes without any direct sampling data, the wide disparity in precision between lakes with and without sampling data is immediately apparent.  Precision improves with increasing sample size as expected; however, the mere presence of trustworthy sampling data has a dramatic effect on precision, even at very modest sample sizes.  Figure JJJ illustrates this by showing the coefficient of variation (CV) of asymptotic weight (here defined as posterior standard deviation divided by posterior median) with respect to sample sizes of length, weight, and age, respectively.  It should be noted that sample sizes in each variable generally increase with respect to one another (e.g. lakes with a large number of age samples are likely to have large numbers of length and weight samples as well) and it is therefore not appropriate to draw inference to the effect of increasing sample size of a single variable; however, two conclusions may be drawn: 1. More data is better, and 2. Any data is a vast improvement over no data.
+While the hierarchical nature of this model does provide estimates of asymptotic size for lakes without any direct sampling data, the wide disparity in precision between lakes with and without sampling data is immediately apparent.  Precision improves with increasing sample size as expected; however, the mere presence of trustworthy sampling data has a dramatic effect on precision, even at very modest sample sizes.  Figure \@ref(fig:CVplot) illustrates this by showing the coefficient of variation (CV) of asymptotic weight (here defined as posterior standard deviation divided by posterior median) with respect to sample sizes of length, weight, and age, respectively.  It should be noted that sample sizes in each variable generally increase with respect to one another (e.g. lakes with a large number of age samples are likely to have large numbers of length and weight samples as well) and it is therefore not appropriate to draw inference to the effect of increasing sample size of a single variable; however, two conclusions may be drawn: 1. More data is better, and 2. Any data is a vast improvement over no data.
 
 It should also be acknowledged that while the parameters associated with all relationships between variables are estimated, the functional forms of all relationships were assumed *a priori*.  The use of log-log linear regression for weight ~ length is fairly standard, and is quite strongly expressed in the data used here.  The choice of a LVB growth model seems reasonable, but is an assumption nonetheless, and does not account for nuances such as differential growth curves within a lake due to recruitment to different prey regimes, for example.  There is certainly evidence in this body of data of the existence of an increasing relationship between asymptotic length and lake area, but it is difficult to make any statement regarding its functional form without turning to Lester, et. al. for guidance.  That said, closer inspection of this functional form reveals it to be asymptotically approaching some upper bound, which makes sense biologically, as constraints due to lake size will matter less and less with increasing lake area.
 
-```{r, fig.width=6, fig.height=7, fig.cap="Estimated coefficient of variation (CV) of asymptotic weight inferences with respect to length, weight, and age sample sizes.  Note that the plotting scale is logarithmic with respect to sample sizes for $n \\geq 1$."}
-par(mar=c(5, 4, 0, 0)+0.1)
-par(family="serif")
 
-plotbyn <- function(x, for_n, ...) {
-  for_x <- ifelse(nmat_num$Use_Samples!="Yes", 0.1,
-                  ifelse(for_n == 0, 0.3, for_n))
-  plot(x = for_x, y=x, xaxt="n", log="x",
-       xlim = c(0.1, max(nmat_num$n_Length)),
-       ylim = range(0, x, na.rm=TRUE),
-       ...=...)
-  axis(side=1, at=c(0.1, 0.3, c(1, 5, 10, 50, 100, 500, 1000, 5000)),
-       labels = c("Not used", 0, 1, 5, 10, 50, 100, 500, 1000, 5000))
-}
-
-par(mfrow=c(3,1))
-plotbyn(x = int_Winf_jags_out$sd$Winf/int_Winf_jags_out$q50$Winf,
-        for_n = nmat_num$n_Length,
-        xlab="n Length",
-        # ylab="CV(W_inf)",
-        ylab=expression(paste("CV(",W[infinity],")")))
-plotbyn(x = int_Winf_jags_out$sd$Winf/int_Winf_jags_out$q50$Winf,
-        for_n = nmat_num$n_Weight,
-        xlab="n Weight",
-        # ylab="CV(W_inf)",
-        ylab=expression(paste("CV(",W[infinity],")")))
-plotbyn(x = int_Winf_jags_out$sd$Winf/int_Winf_jags_out$q50$Winf,
-        for_n = nmat_num$n_Age,
-        xlab="n Age",
-        # ylab="CV(W_inf)",
-        ylab=expression(paste("CV(",W[infinity],")")))
-```
-
-
-## Acknowledgements
+# Acknowledgements
 
 because knowledge only goes so far, there must also be ack.
 
 
 \pagebreak
 
-## References
+# References Cited
 
 ```{r, eval=FALSE}
 laketrout %>%
@@ -888,6 +587,8 @@ laketrout %>%
 # 16 Sevenmile Lake (Denali Hwy) 2002  584
 ```
 
+
+:::{custom-style="Style Lit-Cited + Pattern: Clear (White)"}
 Alaska Lake Database (ALDAT).  2013-.  Alaska Department of Fish and Game, Division of Sport Fish.  Available at http://www.adfg.alaska.gov/SF_Lakes/ (accessed December 23, 2025).
 
 Albert, M. L., and M. R. Ocaña. 2024. Stock assessment and yield potential of lake trout in Fielding Lake, 2021–2022. Alaska Department of Fish and Game, Fishery Data Series No. 24-14, Anchorage. 
@@ -953,15 +654,380 @@ Taube, T. T., K. Wuttig, and L. Stuby. 1998. Lake Trout Studies in the AYK Regio
 Troyer, K. D., and R. R. Johnson. 1994. Survey of lake trout and Arctic char in the Chandler Lakes system, Gates of the Arctic National Park and Preserve, 1987 and 1989. U.S. Fish and Wildlife Service, Fairbanks Fishery Resource Office, Alaska Fisheries technical report Number 26, Fairbanks, Alaska.
 
 Wuttig, K. 2010. Stock assessment of lake trout in Paxson Lake, 2002-2004. Alaska Department of Fish and Game, Fishery Data Series No. 10-46, Anchorage.
+:::
 
+
+\pagebreak
+
+:::{custom-style="Style After:  250 pt"}
+
+:::
+
+# Tables
+
+```{r nmat, tab.cap="Table Caption nmat"}
+nmat1 <- nmat
+colnames(nmat1) <- c("Lake", 
+                     "Estimate $W_{\\infty}$",
+                     "Use Samples",
+                     "n Projects",
+                     "n Length",
+                     "n Weight",
+                     "n Age",
+                     "n LengthWeight",
+                     "n LengthAge")
+knitr::kable(nmat1[,-(8:9)],
+             align = c(rep("l", 3), rep("r", ncol(nmat)-3)))
+```
+
+
+
+```{r pmat, tab.cap="Table Caption pmat"}
+pmat1 <- pmat
+colnames(pmat1) <- c("Lake",
+                     "Estimate $W_{\\infty}$",
+                     "Use Samples",
+                     "$W_{\\infty}$ (kg)",
+                     "$L_{\\infty}$ (mm FL)",
+                     "*k*",
+                     "$t_0$",
+                     "$\\beta_0$",
+                     "$\\beta_1$")
+knitr::kable(pmat1)
+```
+
+\pagebreak
+
+:::{custom-style="Style After:  250 pt"}
+ 
+:::
+
+# Figures
+
+```{r flowchart, fig.cap="Conceptual schematic of the integrated model.", fig.width=6.5, fig.height=3.66}
+knitr::include_graphics("flowchart1.jpg")
+```
+
+ \pagebreak
+
+```{r kplot, fig.width=6.5, fig.height=3.5, fig.cap="LVB growth parameter k for lakes with sufficient age data.  Light and heavy bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required."}
+par(mar=c(2.5, 9, 0, 1)+0.1)
+par(family="serif")
+par(mgp=c(1.5, 0.5, 0))
+par(tcl=-.2)
+
+# side_cat2(x=int_Winf_jags_out$sims.list$k,
+#           xnames=smallernames,
+#           medsort=FALSE,
+#           highlight = morphometry$make_estimates,
+#           xlab="k")
+
+plotcol <- ifelse(morphometry$make_estimates,
+                         adjustcolor(1, alpha.f=0.9),
+                         adjustcolor(1, alpha.f=0.2))
+caterpillar(int_Winf_jags_out, p="k",
+            # xlab="k", 
+            xlab=expression(paste("k (",years^-1,")")),
+            main="",
+            xax = smallernames,
+            horizontal = TRUE, las=1,
+            col = plotcol,
+            na.rm=TRUE)
+grid(nx=NULL, ny=NA)
+```
+
+```{r t0plot, fig.width=6.5, fig.height=3.5, fig.cap="LVB growth parameter t0 for lakes with sufficient age data.  Light and heavy bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required."}
+par(mar=c(2.5, 9, 0, 1)+0.1)
+par(family="serif")
+par(mgp=c(1.5, 0.5, 0))
+par(tcl=-.2)
+
+# side_cat2(x=int_Winf_jags_out$sims.list$t0,
+#           xnames=smallernames,
+#           medsort=FALSE,
+#           highlight = morphometry$make_estimates,
+#           xlab="t0 (years)")
+
+caterpillar(int_Winf_jags_out, p="t0",
+            # xlab="t0 (years)", 
+            xlab=expression(paste(t[0], " (years)")),
+            main="",
+            xax = smallernames,
+            horizontal = TRUE, las=1,
+            col = plotcol,
+            na.rm=TRUE)
+grid(nx=NULL, ny=NA)
+```
+
+
+```{r Linfareaplot, fig.width=6.5, fig.height=5.5, fig.cap="Estimated asymptotic length for all lakes.  Light and heavy vertical bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required.  The dotted curve corresponds to the relationship reported by Lester, et al., and the dashed curve corresponds to the posterior median curve estimated here."}
+
+par(mar=c(3, 3, 1, 1)+0.1)
+par(family="serif")
+par(mgp=c(2, 1, 0))
+
+# y_cat2(int_Winf_jags_out$sims.list$Linf,
+#        xval=morphometry$SurfaceArea_h,
+#        highlight=morphometry$make_estimates,
+#        x0=TRUE,
+#        log="x",
+#        xlab="Surface area (ha)",
+#        ylab="Asymptotic length (mm FL)")
+
+caterpillar(int_Winf_jags_out, p="Linf",
+            x = morphometry$SurfaceArea_h,
+            col = plotcol,
+            log="x", main="", ylim_add=0,
+       xlab="Surface area (ha)",
+       # ylab="Asymptotic length (mm FL)",
+       ylab=expression(paste(L[infinity], " (mm FL)")))
+curve(int_Winf_jags_out$q50$gam * (1 - exp(-int_Winf_jags_out$q50$lam * (1 + log(x)))), add=TRUE, lty=2)
+curve(int_Winf_data$gam_lester * (1 - exp(-int_Winf_data$lam_lester * (1 + log(x)))), add=TRUE, lty=3)
+
+
+# par(mar=parmar)
+```
+
+```{r b0plot, fig.width=6.5, fig.height=8, fig.cap="Log(weight) ~ log(length) regression parameter $\\beta_0$.  Light and heavy horizontal bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required.  The vertical dotted line corresponds to the global value used by Lester, et al."}
+par(mar=c(2.5, 8, 0, 0)+0.1)
+par(family="serif")
+par(mgp=c(1.5, 0.5, 0))
+par(tcl=-.2)
+
+# side_cat2(x=int_Winf_jags_out$sims.list$b0_interp,
+#           xnames=smallernames,
+#           medsort=FALSE,
+#           highlight = morphometry$make_estimates,
+#           xlab="b0")
+
+caterpillar(int_Winf_jags_out, p="b0_interp",
+            horizontal=TRUE, las=1,
+            col=plotcol,
+            xax=smallernames,
+            padwd = -3,
+            na.rm=TRUE,
+            all_ticks=TRUE, cex.axis=0.9,
+            main="", xlab=expression(beta[0]))
+abline(v=log(1/451^3.2), lty=3)
+```
+
+```{r b1plot, fig.width=6.5, fig.height=8, fig.cap="Log(weight) ~ log(length) regression parameter $\\beta_1$.  Light and heavy horizontal bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required.  The vertical dotted line corresponds to the global value used by Lester, et al."}
+par(mar=c(2.5, 8, 0, 0)+0.1)
+par(family="serif")
+par(mgp=c(1.5, 0.5, 0))
+par(tcl=-.2)
+
+# side_cat2(x=int_Winf_jags_out$sims.list$b1,
+#           xnames=smallernames,
+#           medsort=FALSE,
+#           highlight = morphometry$make_estimates,
+#           xlab="b1")
+
+caterpillar(int_Winf_jags_out, p="b1",
+            horizontal=TRUE, las=1,
+            col=plotcol,
+            xax=smallernames,
+            padwd = -3,
+            na.rm=TRUE,
+            all_ticks=TRUE, cex.axis=0.9,
+            main="", xlab=expression(beta[1]))
+abline(v=3.2, lty=3)
+```
+
+```{r sigLplot, fig.width=6.5, fig.height=5.5, fig.cap="Estimated standard deviation parameter relating length sample quantile to asymptotic length, as a function of number of length samples per lake.  The light and dark bands correspond to 95% and 50% credible envelopes, and the solid line corresponds to posterior median."}
+par(mar=c(3, 3, 1, 1)+0.1)
+par(family="serif")
+par(mgp=c(2, 1, 0))
+
+# envelope(int_Winf_jags_out$sims.list$sig_L[, int_Winf_data$whichlakes_L],
+#          x=int_Winf_data$nL[int_Winf_data$whichlakes_L],
+#          log="x",
+#          xlab="Number of length samples per lake",
+#          ylab="sig_L (mm FL)",
+#          col=1,
+#          ylim=c(0, max(int_Winf_jags_out$q97.5$sig_L, na.rm=TRUE)))
+
+caterpillar(int_Winf_jags_out$sims.list$sig_L[, int_Winf_data$whichlakes_L],
+            x=int_Winf_data$nL[int_Winf_data$whichlakes_L],
+            log="x",
+         xlab="Number of length samples per lake", 
+         # ylab="sig_L (mm FL)",
+         ylab=expression(paste(sigma[L], " (mm FL)")),
+         col=1,
+         ylim_add=0)
+```
+
+
+```{r sigWplot, fig.width=6.5, fig.height=5.5, fig.cap="Estimated standard deviation parameter relating weight sample quantile to asymptotic weight, as a function of number of weight samples per lake.  The light and dark bands correspond to 95% and 50% credible envelopes, and the solid line corresponds to posterior median."}
+par(mar=c(3, 3, 1, 1)+0.1)
+par(family="serif")
+par(mgp=c(2, 1, 0))
+
+# envelope(int_Winf_jags_out$sims.list$sig_W[, int_Winf_data$whichlakes_W],
+#          x=int_Winf_data$nW[int_Winf_data$whichlakes_W],
+#          log="x",
+#          xlab="Number of weight samples per lake",
+#          ylab="sig_W (kg)",
+#          col=1,
+#          ylim=c(0, max(int_Winf_jags_out$q97.5$sig_W, na.rm=TRUE)))
+
+caterpillar(int_Winf_jags_out$sims.list$sig_W[, int_Winf_data$whichlakes_W],
+            x=int_Winf_data$nW[int_Winf_data$whichlakes_W],
+            log="x",
+         xlab="Number of weight samples per lake", 
+         # ylab="sig_W (kg)",
+         ylab=expression(paste(sigma[W], " (kg)")),
+         col=1,
+         ylim_add=0)
+```
+
+```{r Winfareaplot, fig.width=6.5, fig.height=5.5, fig.cap="Estimated asymptotic weight for all lakes.  Light and heavy vertical bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required.  The dotted curve corresponds to the relationship reported by Lester, et al., and the dashed curve corresponds to the posterior median curve estimated here."}
+
+par(mar=c(3, 3, 1, 1)+0.1)
+par(family="serif")
+par(mgp=c(2, 1, 0))
+
+# y_cat2(x=int_Winf_jags_out$sims.list$Winf,
+#        xval=morphometry$SurfaceArea_h,
+#        highlight=morphometry$make_estimates,
+#        x0=TRUE,
+#        log="x",
+#        xlab="Surface area (ha)",
+#        ylab="Asymptotic weight (kg)")
+
+caterpillar(int_Winf_jags_out, p="Winf",
+            x = morphometry$SurfaceArea_h,
+            col = plotcol,
+            log="x", main="", ylim_add=0,
+       xlab="Surface area (ha)",
+       ylab=expression(paste(W[infinity], " (kg)")),
+       # ylab="Asymptotic weight (kg)",
+       )
+grid(nx=NA, ny=NULL)
+curve(exp(-19.56 +
+            3.2*log(int_Winf_data$gam_lester * (1 - exp(-int_Winf_data$lam_lester * (1 + log(x)))))),
+      add=TRUE, lty=3)
+with(int_Winf_jags_out$q50,
+     curve(exp(b0_int - b1_int*int_Winf_data$meanlogLc + 
+                 b0_area*(log(x) - mean(log(int_Winf_data$Area), na.rm=TRUE)) +
+                 b1_int*log(gam*(1-exp(-lam*(1+log(x)))))),
+           add=TRUE, lty=2
+           ))
+
+
+# par(mar=parmar)
+```
+
+```{r Linfplot, fig.width=6.5, fig.height=8, fig.cap="Estimated asymptotic length for all lakes.  Light and heavy horizontal bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required."}
+
+par(mar=c(2.5, 8, 0, 0)+0.1)
+par(family="serif")
+par(mgp=c(1.5, 0.5, 0))
+par(tcl=-.2)
+
+# side_cat2(x=int_Winf_jags_out$sims.list$Linf,
+#           xnames=smallernames,
+#           medsort=TRUE, x0=TRUE,
+#           highlight = morphometry$make_estimates,
+#           xlab="Asymptotic length (mm FL)")
+
+caterpillar(int_Winf_jags_out, "Linf",
+            horizontal=TRUE,
+            xorder = TRUE,
+            padwd = -3.5,
+            # xlab="Asymptotic length (mm FL)", 
+            xlab = expression(paste(L[infinity], " (mm FL)")),
+            main="",
+            xax=smallernames, las=1,
+            col=plotcol,
+            all_ticks=TRUE, cex.axis=0.9,
+            xlim_add = 0)
+grid(nx=NULL, ny=NA)
+```
+
+```{r Winfplot, fig.width=6.5, fig.height=8, fig.cap="Estimated asymptotic weight for all lakes.  Light and heavy horizontal bars correspond to 95% and 50% credible intervals, respectively, with black bars representing lakes for which estimates of asymptotic size are required."}
+
+par(mar=c(2.5, 8, 0, 0)+0.1)
+par(family="serif")
+par(mgp=c(1.5, 0.5, 0))
+par(tcl=-.2)
+
+# side_cat2(x=int_Winf_jags_out$sims.list$Winf,
+#           xnames=smallernames,
+#           medsort=TRUE, x0=TRUE,
+#           highlight = morphometry$make_estimates,
+#           xlab="Asymptotic weight (kg)")
+
+caterpillar(int_Winf_jags_out, "Winf",
+            horizontal=TRUE,
+            xorder = TRUE,
+            padwd = -3.5,
+            # xlab="Asymptotic weight (kg)", 
+            xlab=expression(paste(W[infinity], " (kg)")),
+            main="",
+            xax=smallernames, las=1,
+            col=plotcol,
+            xlim_add = 0,
+            all_ticks=TRUE, cex.axis=0.9,
+            na.rm=TRUE)
+grid(nx=NULL, ny=NA)
+
+# par(mar=parmar)
+```
+
+```{r CVplot, fig.width=6.5, fig.height=8, fig.cap="Estimated coefficient of variation (CV) of asymptotic weight inferences with respect to length, weight, and age sample sizes.  Note that the plotting scale is logarithmic with respect to sample sizes for $n \\geq 1$."}
+par(mar=c(4, 3.5, 1, 1)+0.1)
+par(family="serif")
+par(mgp=c(1.8, 0.8, 0))
+par(tcl=-.3)
+
+plotbyn <- function(x, for_n, ...) {
+  thecex <- 1.3
+  for_x <- ifelse(nmat_num$Use_Samples!="Yes", 0.1,
+                  ifelse(for_n == 0, 0.3, for_n))
+  plot(x = for_x, y=x, xaxt="n", log="x",
+       xlim = c(0.1, max(nmat_num$n_Length)),
+       ylim = range(0, x, na.rm=TRUE),
+       cex.lab=thecex, cex.axis=thecex,
+       ...=...)
+  grid(nx=NA, ny=NULL)
+  axis(side=1, 
+       at=c(0.1, 0.3, c(1, 5, 10, 50, 100, 500, 1000, 5000)),
+       labels = c("Not used", 0, 1, 5, 10, 50, 100, 500, 1000, 5000),
+       cex.axis=thecex)
+}
+
+par(mfrow=c(3,1))
+plotbyn(x = int_Winf_jags_out$sd$Winf/int_Winf_jags_out$q50$Winf,
+        for_n = nmat_num$n_Length,
+        xlab="n Length",
+        # ylab="CV(W_inf)",
+        ylab=expression(paste("CV(",W[infinity],")")))
+plotbyn(x = int_Winf_jags_out$sd$Winf/int_Winf_jags_out$q50$Winf,
+        for_n = nmat_num$n_Weight,
+        xlab="n Weight",
+        # ylab="CV(W_inf)",
+        ylab=expression(paste("CV(",W[infinity],")")))
+plotbyn(x = int_Winf_jags_out$sd$Winf/int_Winf_jags_out$q50$Winf,
+        for_n = nmat_num$n_Age,
+        xlab="n Age",
+        # ylab="CV(W_inf)",
+        ylab=expression(paste("CV(",W[infinity],")")))
+```
 
 
 
 \pagebreak
 
-## Appendix
+:::{custom-style="Style After:  250 pt"}
 
-### JAGS model code - CLEAN THIS UP MORE BETTERER
+:::
+
+
+
+# Appendix A: JAGS Model Code 
+
+\pagebreak
 
 ```{r eval=FALSE, echo=TRUE}
 model {
@@ -1102,7 +1168,9 @@ model {
 
 \pagebreak
 
-### Data Filtration
+# Appendix B: Data Filtration
+
+\pagebreak
 
 ```{r, eval=FALSE}
 filter_decisions
@@ -1123,7 +1191,9 @@ Importing raw sampling data from ALDAT resulted in a data frame with `r format(f
 
 \pagebreak
 
-### Evaluation of candidate models for weight ~ length relationship
+# Appendix C: Evaluation of candidate models for weight ~ length relationship
+
+\pagebreak
 
 Modeling lake-level regression parameters $\beta_0[.]$ and $\beta_1[.]$ explicitly makes it convenient to explore possible relationships between these parameters and lake-level variables.  Among those considered were log(area), latitude, elevation, and temperature.  While it is unlikely that latitude had a direct effect on body morphometry, it did emerge as having a potential association with slope parameter $\beta_1[.]$, possibly as a surrogate for temperature or geographic regime.  
 
@@ -1142,7 +1212,9 @@ It should be noted that all inferences regarding asymptotic size were nearly ide
 
 \pagebreak
 
-### Comparative visualization of data and inferences for all lakes
+# Appendix D: Comparative visualization of data and inferences for all lakes
+
+\pagebreak
 
 A sequence of plots follow for all lakes considered.  In the left panel are paired lengths and ages if available, overlayed with a posterior envelope for the length ~ age relationship, plus the estimated length ~ age curves (posterior medians) for all other lakes for comparison.  
 
