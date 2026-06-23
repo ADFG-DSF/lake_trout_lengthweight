@@ -196,6 +196,23 @@ length(nbyname(int_Winf_jags_out))
 par(mfrow=c(1,1))
 plotRhats(int_Winf_jags_out)
 
+
+# how many parameters have Rhat greater than threshold
+thresh <- 1.01
+
+allRhat <- int_Winf_jags_out$Rhat
+
+Rhat_vecs <- allRhat[sapply(allRhat, \(x) length(dim(x))) == 1]
+Rhat_global <- allRhat[sapply(allRhat, \(x) is.null(dim(x)))]
+
+# how many global parameters exceed threshold
+sum(Rhat_global > thresh)
+
+# which lake-specific parameters exceed threshold
+whichlakes_exceed <- unique(unlist(sapply(Rhat_vecs, \(x) which(x > 1.01))))
+length(whichlakes_exceed)
+morphometry[whichlakes_exceed, c("LakeName", "use_fish", "make_estimates")]
+
 # trace plots for the nodes with the worst Rhat value for each named parameter
 traceworstRhat(int_Winf_jags_out, parmfrow=c(3,3))
 
