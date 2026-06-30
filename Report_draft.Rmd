@@ -128,10 +128,16 @@ nmat_num$n_Projects[as.numeric(names(nproj))] <- fillnothing_num(nproj)
 ```{r makepmat}
 formatit <- function(x, xse, nothing="-", digits=0) {
   ifelse(is.na(x), nothing,
-         paste0(round(x, digits=digits),
+         paste0(
+           # round(x, digits=digits),
+           #      " (",
+           #      round(xse, digits=digits),
+           #      ")")
+           format(round(x, digits=digits), nsmall=digits, trim=TRUE),
                 " (",
-                round(xse, digits=digits),
-                ")"))
+                format(round(xse, digits=digits), nsmall=digits, trim=TRUE),
+                ")")
+         )
 }
 pmat <- data.frame(Lake = smallernames,
                    Estimate_Winf = ifelse(morphometry$make_estimates, "Yes", "No"),
@@ -170,7 +176,7 @@ nlakes <- nrow(nmat_num1)
 # Abstract
 
 :::{custom-style="Abstract"}
-In order to effectively manage resident lake trout *Salvelinus namaycush* in Alaska, sustainable yield must be estimated from some form of productivity model.  One such model shows promise, but is particularly mathematically sensitive to estimation of asymptotic weight $W_{\infty}$.  Information from lake area is currently used as a surrogate for $W_{\infty}$, but model inferences may be dramatically improved by means of direct estimation of $W_{\infty}$. 
+In order to effectively manage resident lake trout *Salvelinus namaycush* in Alaska, sustainable yield must be estimated from some form of productivity model.  One such model shows promise, but is particularly mathematically sensitive to estimation of asymptotic weight *W~∞~*.  Information from lake area is currently used as a surrogate for *W~∞~*, but model inferences may be dramatically improved by means of direct estimation of *W~∞~*. 
 
 Here we present an integrated model to estimate asymptotic weight for `r sum(nmat$Estimate_Winf=="Yes")` lakes of management interest using multiple sources of information from compiled survey data over the past several decades.  The integrated model makes use of the relationships between age and length and between length and weight for each lake according to data availability, supplemented by quantile values of weight and length, with additional information garnered from hierarchical distributions and relationships with site-level data such as lake area.
 :::
@@ -181,6 +187,21 @@ Keywords:	asymptotic weight, lake trout, *Salvelinus namaycush*, yield potential
 
 # Introduction
 
+Lake trout *Salvelinus namaycush* support important recreational fisheries in Alaska. Lake trout are relatively long-lived and are slow to mature, meaning they can easily be overexploited when not managed conservatively (Martin and Olver 1980). Lake trout inhabit deep water and typically occur at low densities; consequentially, stock assessment research is difficult and costly, especially in large or remote lakes. When lake trout populations become a concern for ADF&G whether it be due to increased catch, harvest and effort, or concerns from the stakeholders of decreased catch rates and or sizes, it is ADF&G’s responsibility, among other things, to ensure the lake is managed under the constitutional guideline of sustainability. In the absence of the resources necessary to conduct labor-intensive mark-recapture projects to estimate lake-specific population parameters, sustainable yields from lakes can be estimated with modeling techniques, and the sustainability of the population can be ascertained by examining harvest rates relative to yield outputs.
+
+Following direction in the Wild Lake Trout Management Plan, adopted by the Alaska Board of Fisheries (BOF) in 2005 (5AAC 52.060), yield potential (YP) is to be estimated using the lake area (LA) model developed by Evans et al. (1991); Appendix A1. In this case, YP is the predicted biomass that can be sustainably removed from the lake annually. The LA model uses only surface area as a measure of available preferred habitat. As lakes increase in size, so generally do their depth and optimal thermal habitat, where neither temperature nor oxygen is limiting (Marshall 1996). The annual YP in terms of numbers of fish is estimated by dividing the model prediction of YP expressed in biomass (total kg) by the estimated mean weight of lake trout removed by anglers, defined as the sum of estimated harvest and release mortality (assuming 10% mortality of released fish). The mean weight of removed lake trout can be estimated multiple ways, including a simple relationship between lake size and mean weight of lake trout if no sampling data are available (Burr 2006), by sampling (i.e., weighing) harvested fish from a creel survey, or by approximating angler-induced mortality through lake-specific catch sampling. If annual angler removal consistently exceeds the LA model estimate of YP, either a conservative management action may be taken to reduce harvest, or a more rigorous stock assessment may be initiated to determine if the LA model estimate of yield potential is appropriate (Burr 2006). 
+
+The LA model (Evans et al. 1991) was developed from data compiled from 43 lakes located in Ontario, Canada; however, a newer, more comprehensive model was recently developed, which considers information from 456 lakes throughout Canada, including the Yukon Territories and Northwest Territories (Lester et al. 2021). Unlike the LA model, this model (hereafter referred to as the Lester model) estimates maximum sustained yield (MSY), which is much different from YP, and of more use to fishery managers. Recent comparisons have shown that the Lester model is more robust and provides more precise estimates of yield (Schwanke at al. 2026). The model incorporates a variety of metrics, including not only surface area, but also mean depth, maximum depth, and mean annual air temperature at the location of the lake. In addition, the model allows for the input of other habitat suitability variables, such as the proportion of a lake in the hypolimnetic zone, along with population-specific metrics such as natural mortality and asymptotic weight (*W~∞~*) - universally defined as the median length fish would grow for an infinitely long period. If these additional variables are not available, the Lester model estimates them based on lake characteristics (e.g., surface area, maximum depth, mean depth, mean annual air temperature). As with the LA model, the Lester model’s final output is in kg biomass and needs to be expressed in terms of numbers of fish. 
+
+Initial dissemination of the Lester model revealed the importance of *W~∞~* as an input variable. After all, the size of fish in a given lake is directly related to yields, with lakes characterized by smaller fish having higher yields because smaller fish are typically easier to replace (Burr 2006). In a recent lake trout study in Crosswind Lake, we investigated the performance of the Lester model in an Alaskan Lake (Schwanke et al. 2025) and demonstrated the substantial influence of the estimation of *W~∞~*.  Initially, after collecting depth and temperature information, we used the Lester model for a preliminary estimate of *W~∞~* (equations XX-XX in Appendix A2) which came out to 3.96 kg, resulting in a model-estimated MSY of 1,244 lake trout. During the study, we sampled nearly 250 lake trout through the ice in winter with angling gear and during the open water season in June. Using the quantile approach with sampling data, in which *W~∞~* was calculated by taking the average of the top 10% of the sample (Lester et al. 2021), *W~∞~* was estimated at 6.35 kg, resulting in an estimated MSY of 576 fish - less than half of the preliminary estimate. In essence, this study showed that the fish in Crosswind Lake were much larger than the Lester model estimated from lake area, resulting in an even more substantial difference in estimated MSY. 
+
+We had already known the substantive influence of *W~∞~* on the Lester model output from initial inspection of the model. Since estimated MSY is inversely proportional to asymptotic weight raised to a power, estimates of MSY are particularly mathematically sensitive to estimation of asymptotic weight. In the computational framework presented by Lester et al. (2021), *W~∞~* is estimated by means of a sequence of relationships: first, the relationship observed between lake area and asymptotic length observed in Canada; then, the aggregate relationship between length and weight observed in Canada. Application of the Lester Model to lake trout in Alaska lakes may be substantially improved by direct estimation of asymptotic weight *W~∞~* when possible, something that the Crosswind Lake study strongly supports (Schwanke et al. 2025). This publication attempts to “Alaskanize” the estimation of *W~∞~* by using data from Alaskan lakes, and also to improve inferential precision by using modeling techniques to synthesize information from as many data sources as possible.
+
+The Alaska Lake Database (ALDAT, 2013-) serves as a compilation of sampling data from numerous ADF&G research projects and sampling efforts. Not only does this database provide data at a finer resolution, it also provides data much more directly applicable to management of the lakes represented, or those closer in proximity and similarity than those used by Lester et al. (2021). For `r nlakes` Alaska lakes, there is sampling data on `r roundn` individual lake trout (`r nw` weights; `r nl` lengths; `r na` ages), which was used to gain inference on pairwise relationships between variables (`r nlw` paired length x weight observations from `r nllw` lakes; `r nla` paired length x age observations from `r nlla` lakes). Not only can the relationships between length and weight and between lake area and asymptotic length be estimated for Alaska, but these relationships can also be estimated specifically for each of the `r nlakes`  lakes and applied to additional lakes as appropriate, and parameters reported by Lester et. al. (2021) may be incorporated as priors within a Bayesian modeling framework. It is expected that the inclusion of additional sources of information will greatly improve inferential precision over less robust ways of estimating asymptotic weight such using the mean of the largest 10% of sampled weights or some sample percentile value.
+
+
+```{r, eval=FALSE}
+
 Lake trout are present as a resident species in Alaska, and are long-lived and slow-growing.  In order to effectively manage localized harvest limits, a productivity model must be employed in order to estimate surplus production in a given waterbody, as environmental variability results in variability in productivity at the local scale.  
 
 Following direction in the Wild Lake Trout Management Plan for the Upper Copper-Upper Susitna area lakes, adopted by the Alaska Board of Fisheries (BOF) in 2005 (5AAC 52.060), yield potential (YP) is to be estimated using the lake area (LA) model developed by Evans et al. (1991). In this case YP is the predicted biomass that can be sustainably removed from the lake. The LA model uses surface area as a measure of available preferred habitat.  As lakes increase in size, so generally does their depth and optimal thermal habitat, where neither temperature nor oxygen is limiting (Marshall 1996).  This model was developed from data compiled from 43 lakes located in Ontario, Canada, and can be expressed as the following:
@@ -189,7 +210,7 @@ $$log_{10}(\hat{YP}_{kg}) = 0.60 + 0.72log_{10}(A)$$
 
 in which $\hat{YP}_{kg}$ represents the yield potential expressed in kilograms biomass, and *A* represents lake area measured in hectares.
 
-A newer, more comprehensive model was recently developed which considers information from 456 lakes throughout Canada including the Yukon Territories and Northwest Territories (Lester et al., 2021). Unlike the LA model, this model (hereafter referred to as the Lester model) estimates maximum sustained yield (MSY), which is much different from YP, and of more use to fishery managers. The Lester model incorporates a variety of metrics including not only surface area, but also mean depth, maximum depth, and mean annual air temperature at the location of the lake. In addition, the model allows for the input of other habitat suitability variables such as the proportion of a lake in the hypolimnetic zone, along with population specific metrics such as natural mortality and asymptotic weight ($W_{\infty}$). 
+A newer, more comprehensive model was recently developed which considers information from 456 lakes throughout Canada including the Yukon Territories and Northwest Territories (Lester et al., 2021). Unlike the LA model, this model (hereafter referred to as the Lester model) estimates maximum sustained yield (MSY), which is much different from YP, and of more use to fishery managers. The Lester model incorporates a variety of metrics including not only surface area, but also mean depth, maximum depth, and mean annual air temperature at the location of the lake. In addition, the model allows for the input of other habitat suitability variables such as the proportion of a lake in the hypolimnetic zone, along with population specific metrics such as natural mortality and asymptotic weight (*W~∞~*). 
 
 First, the depth ratio (DR) is calculated using:
 
@@ -223,11 +244,11 @@ Habitat suitability (S) is summarized using:
 
 $$S = \frac{1}{1 + e^{2.47 + 0.386T - 16.8pV_{hy} }}$$	
 
-Asymptotic length ($L_{\infty}$) is estimated within the Lester model using:
+Asymptotic length (*L~∞~*) is estimated within the Lester model using:
 
 $$L_{\infty} = 957 \times \left(1 - e^{-0.14 \times \left(1 + ln(A)\right)}\right)$$
 
-Asymptotic weight ($W_{\infty}$) is estimated within the Lester Model using:
+Asymptotic weight (*W~∞~*) is estimated within the Lester Model using:
 
 $$W_{\infty} = \left(\frac{L_{\infty}}{451}\right)^{3.2}$$
 
@@ -248,30 +269,30 @@ MSY expressed in kilograms biomass is estimated using:
 $$MSY = MSY_{ha} \times A$$                                                             
 
 
-Application of the Lester Model to lake trout in Alaska lakes may be substantially improved by direct estimation of asymptotic weight $W_{\infty}$ when possible.  Since estimated *MSY* is inversely proportional to asymptotic weight raised to a power, estimates of *MSY* are therefore particularly mathematically sensitive to how asymptotic weight is estimated.  In the computational framework presented by Lester, et al., $W_{\infty}$ is estimated by means of a sequence of relationships: first, the relationship observed between lake area and asymptotic length observed in Canada; then, the aggregate relationship between length and weight observed in Canada.
+Application of the Lester Model to lake trout in Alaska lakes may be substantially improved by direct estimation of asymptotic weight *W~∞~* when possible.  Since estimated *MSY* is inversely proportional to asymptotic weight raised to a power, estimates of *MSY* are therefore particularly mathematically sensitive to how asymptotic weight is estimated.  In the computational framework presented by Lester, et al., *W~∞~* is estimated by means of a sequence of relationships: first, the relationship observed between lake area and asymptotic length observed in Canada; then, the aggregate relationship between length and weight observed in Canada.
 
 The Alaska Lake Database (ALDAT, 2013-) serves as a compilation of sampling data from numerous ADF&G research projects and sampling efforts.  Not only does this database provide data at a finer resolution, the information provided is much more directly applicable to management of the lakes represented, or those closer in proximity and similarity than those used by Lester, et al.  For `r nlakes` lakes, there is sampling data on `r roundn` individual lake trout (`r nw` weights; `r nl` lengths; `r na` ages), which can be used to gain inference on pairwise relationships between variables (`r nlw` paired length x weight observations from `r nllw` lakes; `r nla` paired length x age observations from `r nlla` lakes).  Not only can the relationships between length and weight and between lake area and asymptotic length be estimated for Alaska, they can be estimated specifically for each of the `r nlakes` lakes and applied to additional lakes as appropriate, and parameters reported by Lester, et. al. may be incorporated as priors within a Bayesian modeling framework.
 
 Asymptotic weight is typically estimated solely from a sample of weights for a given lake: for example, from the mean of the largest 10% of sampled weights (e.g. Lester, et al. *ibid*), or some sample percentile value.  It is expected that the inclusion of additional sources of information will greatly improve inferential precision.
-
+```
 
 # Objectives
 
 For `r sum(nmat$Estimate_Winf=="Yes")` lakes of management interest, the primary objective of this study was to:
 
-1. Estimate asymptotic weight $W_{\infty}$ using all available sources of information such that estimation bias and variance are minimized.
+1. Estimate asymptotic weight *W~∞~* using all available sources of information such that estimation bias and variance are minimized.
 
 For lakes with available data, the secondary objectives were to:
 
-1. Estimate asymptotic length $L_{\infty}$;
+1. Estimate asymptotic length *L~∞~*;
 
-2. Further estimate the length ~ age relationship in terms of Von Bertalanffy parameters *k* and $t_0$; and
+2. Further estimate the length ~ age relationship in terms of Von Bertalanffy parameters *k* and *t~0~*; and
 
-3. Estimate the weight ~ length relationship in terms of log-log regression parameters $\beta_0$ and $\beta_1$;
+3. Estimate the weight ~ length relationship in terms of log-log regression parameters *β~0~* and *β~1~*;
 
 and for all lakes,
 
-4. Estimate the relationship between lake area and asymptotic length in terms of exponential parameters $\gamma$ and $\lambda$.
+4. Estimate the relationship between lake area and asymptotic length in terms of exponential parameters *γ* and *λ*.
 
 
 
@@ -279,7 +300,7 @@ and for all lakes,
 
 ## Available Data
 
-Sampling data were used from `r sum(nmat_num1$n_Projects)` unique sampling efforts, across `r sum(nmat_num1$Use_Samples=="Yes")` lakes deemed to have sufficiently representative and high-quality data.  Out of `r nlakes` lakes of interest with lake trout present as a resident species, estimation of asymptotic size is desired by management for `r sum(nmat_num1$Estimate_Winf=="Yes")` lakes, `r sum(nmat_num1$Estimate_Winf=="Yes" & nmat_num1$Use_Samples=="Yes")` of which may make direct use of sampling data and `r sum(nmat_num1$Estimate_Winf=="Yes" & nmat_num1$Use_Samples=="No")` of which have not yet been sampled.  After filtering to the most reliable data (Appendix B), a wealth of data remain, and are summarized for each lake in Table \@ref(tab:nmat).
+Sampling data were used from `r sum(nmat_num1$n_Projects)` unique sampling efforts, across `r sum(nmat_num1$Use_Samples=="Yes")` lakes deemed to have sufficiently representative and high-quality data.  Out of `r nlakes` lakes of interest with lake trout present as a resident species, estimation of asymptotic size is desired by management for `r sum(nmat_num1$Estimate_Winf=="Yes")` primary lakes, `r sum(nmat_num1$Estimate_Winf=="Yes" & nmat_num1$Use_Samples=="Yes")` of which may make direct use of sampling data and `r sum(nmat_num1$Estimate_Winf=="Yes" & nmat_num1$Use_Samples=="No")` of which have not yet been sampled.  Sampling data were also incorporated for `r sum(nmat_num1$Estimate_Winf=="No")` supplemental lakes, for which estimation of asymptotic size was not necessary but fish-level data could be used.  After filtering to the most reliable data (Appendix C), a wealth of data remain, and are summarized for each lake in Tables \@ref(tab:nmatest) and \@ref(tab:nmatsupp).
 
 
 ## The Integrated Model
@@ -294,7 +315,7 @@ $L[j[i]] \sim LogN(log(\mu_{Lt}[j[i]]), \sigma_{Lt})$
 
 $\mu_{Lt}[j[i]] = L_{\infty}[j](1-e^{-k[j](t[j[i]]-t_0[j])})$
 
-Growth parameters $L_{\infty}$, $k$, and $t_0$ were modeled separately for each lake *j*, with hierarchical distributions according to the form below.  Note that the hierarchical mean for $t_0$ was mildly constrained to be near zero; this was to aid convergence and to ensure that it fell within a biologically reasonable range.
+Growth parameters *L~∞~*, *k*, and *t~0~* were modeled separately for each lake *j*, with hierarchical distributions according to the form below.  Note that the hierarchical mean for *t~0~* was mildly constrained to be near zero; this was to aid convergence and to ensure that it fell within a biologically reasonable range.
 
 $t_0[j] \sim N(\mu_{t_0}, \sigma_{t_0})$
 
@@ -305,9 +326,9 @@ $k[j] \sim N(\mu_{k}, \sigma_{k})$
 Diffuse priors were used for standard deviation parameters $\sigma_{t_0}$ and $\sigma_{k}$ (Uniform) and mean parameter $\mu_{k}$ (Normal).
 
 
-### $L_{\infty}$ ~ Area component
+### *L~∞~* ~ Area component
 
-Growth parameter $L_{\infty}$ may be thought of as hierarchically distributed, but with a central trend defined not by a global mean but according to a relationship with lake area of the same form as that reported by Lester, et al., and with multiplicative (lognormal) process error.  Parameters $\gamma$ and $\lambda$ were given weakly informative priors centered on the values reported by Lester, et al., and with standard deviations determined by the coefficients of variation of 100% and 250%, respectively.  For lake *j*:
+Growth parameter *L~∞~* may be thought of as hierarchically distributed, but with a central trend defined not by a global mean but according to a relationship with lake area of the same form as that reported by Lester, et al., and with multiplicative (lognormal) process error.  Parameters *γ* and *λ* were given weakly informative priors centered on the values reported by Lester, et al., and with standard deviations determined by the coefficients of variation of 100% and 250%, respectively.  For lake *j*:
 
 $L_{\infty}[j] \sim LogN(log(\mu_{LA}[j]), \sigma_{LA})$
 
@@ -331,13 +352,13 @@ $\beta_0[j] \sim N(\mu_{\beta_0}[j], \sigma_{\beta_0})$
 
 $\beta_1[j] \sim N(\mu_{\beta_1}[j], \sigma_{\beta_1})$
 
-Lake-level regression parameters $\beta_0$ and $\beta_1$ were modeled explicitly, as opposed to the addition of a lake-level offset to the regression equation.  This allowed more straightforward modeling of the central trends of intercept and slope parameters as regression-type functions of lake-level variables as appropriate (see Appendix C).
+Lake-level regression parameters *β~0~* and *β~1~* were modeled explicitly, as opposed to the addition of a lake-level offset to the regression equation.  This allowed more straightforward modeling of the central trends of intercept and slope parameters as regression-type functions of lake-level variables as appropriate (see Appendix D).
 
 Diffuse Uniform priors were used for standard deviation parameters $\sigma_{WL}$, $\sigma_{\beta_0}$, and $\sigma_{\beta_1}$.
 
-Log-transformed lengths were recentered by subtracting the overall mean in order to eliminate correlation between $\beta_0$ and $\beta_1$ and therefore aid model convergence.  Inferences for $\beta_0$ were therefore back-transformed for the purpose of interpretability and equivalence with the relationship presented by Lester, et al., and the back-transformed parameters will be presented hereafter.
+Log-transformed lengths were recentered by subtracting the overall mean in order to eliminate correlation between *β~0~* and *β~1~* and therefore aid model convergence.  Inferences for *β~0~* were therefore back-transformed for the purpose of interpretability and equivalence with the relationship presented by Lester, et al., and the back-transformed parameters will be presented hereafter.
 
-### Length Quantile ~ $L_{\infty}$ component
+### Length Quantile ~ *L~∞~* component
 
 In the absence of sufficient paired age and length data, it is common practice to use a quantile (percentile) value from a length sample as a proxy for asymptotic length.  Given the relative wealth of length samples within our dataset, it is certainly worth incorporating this information into an integrated model.
 
@@ -352,7 +373,7 @@ $\sigma_L[j] = \sqrt{\eta_L^2 + \frac{\zeta_L^2}{n_L[j]}}$
 Diffuse Uniform priors are used for parameters $\eta_L$ and $\zeta_L$.
 
 
-### Weight Quantile ~ $W_{\infty}$ component
+### Weight Quantile ~ *W~∞~* component
 
 Similarly, weight quantiles $q_W$ were treated as observations of asymptotic weight as available, with estimable error according to the same form.  Since the length samples represented a much more robust volume of data, the 95th percentile values of weight were also selected, since as the relationship between length and weight is monotonic.  
 
@@ -365,11 +386,11 @@ Diffuse Uniform priors are used for parameters $\eta_W$ and $\zeta_W$.
 
 ### $W_{\infty} \sim L_{\infty}$ relationship
 
-Finally, the relationship between asymptotic length $L_{\infty}$ and asymptotic weight length $L_{\infty}$ for lake *j* was treated as deterministic (that is, without additional observation error), according to the log-log regression parameters estimated for that lake.  Since asymptotic size functions as a central trend that is not subject to fish-level variability, the only variability that is necessary to incorporate is that due to estimation of the regression parameters themselves.  Inclusion of this step in the same model that is also estimating the length-weight relationship will therefore propagate this uncertainty.
+Finally, the relationship between asymptotic length *L~∞~* and asymptotic weight length *L~∞~* for lake *j* was treated as deterministic (that is, without additional observation error), according to the log-log regression parameters estimated for that lake.  Since asymptotic size functions as a central trend that is not subject to fish-level variability, the only variability that is necessary to incorporate is that due to estimation of the regression parameters themselves.  Inclusion of this step in the same model that is also estimating the length-weight relationship will therefore propagate this uncertainty.
 
 $log(W_{\infty}[j]) = \beta_0[j] + \beta_1[j] log(L_{\infty}[j])$
 
-A conceptual schematic of the model is shown in Figure \@ref(fig:flowchart).
+A conceptual schematic of the model is shown in Figure \@ref(fig:flowchart).  JAGS model code is included in Appendix B.
 
 ## Model fitting and diagnostics
 
@@ -500,39 +521,40 @@ parmar <- par("mar")
 
 ### Length ~ Age component
 
-The relationship between length and age was estimated for `r sum(!is.na(int_Winf_jags_out$q50$k))` lakes, thus directly modeling the asymptotic length parameter $L_{\infty}$.  Additional LVB parameters *k* and $t_0$ were modeled hierarchically, with inferences shown in Figures \@ref(fig:kplot) and \@ref(fig:t0plot). 
+The relationship between length and age was estimated for `r sum(!is.na(int_Winf_jags_out$q50$k))` lakes, thus directly modeling the asymptotic length parameter *L~∞~*.  Additional LVB parameters *k* and *t~0~* were modeled hierarchically, with inferences shown in Figures \@ref(fig:kplot) and \@ref(fig:t0plot). 
 
 
-### $L_{\infty}$ ~ Area component
+### *L~∞~* ~ Area component
 
-Asymptotic length $L_{\infty}$ was modeled relatively precisely for lakes with paired length and age samples, and the relationship between asymptotic length and lake area was used to estimate $L_{\infty}$ for the remainder of the lakes (Figure \@ref(fig:Linfareaplot)).  We estimate an increasing relationship between asymptotic length and lake area, though not increasing to the same degree as that reported by Lester, et al. for our range of lake sizes, and with asymptotic length estimated slightly larger for small lakes.  There is much larger estimation variance associated with lakes with no paired length and age samples; however, this may be expected due to the similar degree of spread in asymptotic length for lakes with paired length and age data.
+Asymptotic length *L~∞~* was modeled relatively precisely for lakes with paired length and age samples, and the relationship between asymptotic length and lake area was used to estimate *L~∞~* for the remainder of the lakes (Figure \@ref(fig:Linfareaplot)).  We estimate an increasing relationship between asymptotic length and lake area, though not increasing to the same degree as that reported by Lester, et al. for our range of lake sizes, and with asymptotic length estimated slightly larger for small lakes.  There is much larger estimation variance associated with lakes with no paired length and age samples; however, this may be expected due to the similar degree of spread in asymptotic length for lakes with paired length and age data.
 
 
 
 ### Weight ~ Length component
 
-Similarly, the relationship between length and weight was estimated relatively precisely for lakes with paired length and weight data, and the hierarchical means and variances of regression parameters was propagated to estimate the regression parameters of lakes with no paired length and weight data.  Regression parameters $\beta_0$ and $\beta_1$ were generally similar to those reported by Lester et al. (Figures \@ref(fig:b0plot) and \@ref(fig:b1plot)), though most lakes with paired data exhibited strong enough differences from these values to illustrate the value of estimating this relationship separately for each lake.  However, it is worth noting that the point estimates of asymptotic weight for lakes without sampling data are quite similar to the values that would have been estimated by the Lester model framework.
+Similarly, the relationship between length and weight was estimated relatively precisely for lakes with paired length and weight data, and the hierarchical means and variances of regression parameters was propagated to estimate the regression parameters of lakes with no paired length and weight data.  Regression parameters *β~0~* and *β~1~* were generally similar to those reported by Lester et al. (Figures \@ref(fig:b0plot) and \@ref(fig:b1plot)), though most lakes with paired data exhibited strong enough differences from these values to illustrate the value of estimating this relationship separately for each lake.  However, it is worth noting that the point estimates of asymptotic weight for lakes without sampling data are quite similar to the values that would have been estimated by the Lester model framework.
 
 
-### Length Quantile ~ $L_{\infty}$ and Weight Quantile ~ $W_{\infty}$ components
+### Length Quantile ~ *L~∞~* and Weight Quantile ~ *W~∞~* components
 
-The relationships between sample quantiles for length and weight ($q_L$ and $q_W$) and the respective asymptotic values ($L_{\infty}$ and $W_{\infty}$) were increasingly precise as sample size increased.  The relationship between the relationship standard deviations and the numbers of length or weight samples per lake is illustrated in Figures \@ref(fig:sigLplot) and \@ref(fig:sigWplot)  In the case of length, the relationship standard deviation nearly approaches an asymptotic value, as a result of the comparative wealth of length samples in many lakes.
+The relationships between sample quantiles for length and weight ($q_L$ and $q_W$) and the respective asymptotic values (*L~∞~* and *W~∞~*) were increasingly precise as sample size increased.  The relationship between the relationship standard deviations and the numbers of length or weight samples per lake is illustrated in Figures \@ref(fig:sigLplot) and \@ref(fig:sigWplot)  In the case of length, the relationship standard deviation nearly approaches an asymptotic value, as a result of the comparative wealth of length samples in many lakes.
 
 
 
 ### $W_{\infty} \sim L_{\infty}$ relationship
 
-While estimation of $W_{\infty}$ is not purely a result of propagating estimates of $L_{\infty}$ through the length-weight relationship, it is illustrative to present the relationship between asymptotic weight and lake area, particularly because this is how asymptotic weight was estimated by Lester, et al.  While a loose relationship is indeed apparent, there also exists a strong degree of variability between lakes, further illustrating the utility of lake-specific estimation (Figure \@ref(fig:Winfareaplot)). 
+While estimation of *W~∞~* is not purely a result of propagating estimates of *L~∞~* through the length-weight relationship, it is illustrative to present the relationship between asymptotic weight and lake area, particularly because this is how asymptotic weight was estimated by Lester, et al.  While a loose relationship is indeed apparent, there also exists a strong degree of variability between lakes, further illustrating the utility of lake-specific estimation (Figure \@ref(fig:Winfareaplot)). 
 
 
 
 
-### $L_{\infty}$ and  $W_{\infty}$ for all lakes
+### *L~∞~* and  *W~∞~* for all lakes
 
 Asymptotic length and weight is presented below for all lakes (Figures \@ref(fig:Linfplot) and \@ref(fig:Winfplot)), showing a wide range in asymptotic sizes and particularly precision in estimation.
 
-Estimates for asymptotic size and lake-level parameters are presented in Table \@ref(tab:pmat).
+Estimates for asymptotic size and lake-level parameters are presented in Table \@ref(tab:pmatest). 
 
+Lake-specific data and inferences are further visualized and compared in Appendix E for all lakes: specifically, the length ~ age and weight ~ length relationships, as well as the synthesis of inferences for *W~∞~*.
 
 
 
@@ -673,7 +695,7 @@ Wuttig, K. 2010. Stock assessment of lake trout in Paxson Lake, 2002-2004. Alask
 
 # Tables
 
-```{r nmat, tab.id="nmat", tab.cap="Available sampling data for all lakes."}
+```{r nmatest, tab.id="nmatest", tab.cap="Available sampling data for primary lakes, for which estimation of asymptotic size is desired."}
 # nmat1 <- nmat
 nmat1$n_Length[nmat1$Use_Samples=="No"] <- "-"
 nmat1$n_Weight[nmat1$Use_Samples=="No"] <- "-"
@@ -715,7 +737,9 @@ colnames(nmat1est) <- colnames(nmat1supp) <-
 knitr::kable(nmat1est[,c(1,4:7)],
              align = c("l", rep("r", 4)),
              row.names=FALSE)
+```
 
+```{r nmatsupp, tab.id="nmatsupp", tab.cap="Available sampling data for supplemental lakes."}
 knitr::kable(nmat1supp[,c(1,4:7)],
              align = c("l", rep("r", 4)),
              row.names=FALSE)
@@ -723,7 +747,7 @@ knitr::kable(nmat1supp[,c(1,4:7)],
 
 \pagebreak
 
-```{r pmat, tab.id="pmat", tab.cap="Estimates of asymptotic size and lake-specific growth and body morphometry parameters."}
+```{r pmatest, tab.id="pmatest", tab.cap="Estimates of asymptotic size and lake-specific growth and body morphometry parameters for primary lakes.  Numbers in parentheses represent standard errors of associated estimates."}
 pmat1 <- pmat
 colnames(pmat1) <- c("Lake",
                      "Estimate $W_{\\infty}$",
@@ -731,10 +755,23 @@ colnames(pmat1) <- c("Lake",
                      "$W_{\\infty}$ (kg)",
                      "$L_{\\infty}$ (mm FL)",
                      "*k*",
-                     "$t_0$",
+                     "*t~0~*",
                      "$\\beta_0$",
                      "$\\beta_1$")
-knitr::kable(pmat1)
+# knitr::kable(pmat1)
+
+pmat1est <- subset(pmat1, pmat1$`Estimate $W_{\\infty}$`=="Yes")
+pmat1supp <- subset(pmat1, pmat1$`Estimate $W_{\\infty}$`=="No")
+
+knitr::kable((pmat1est[, c(1,4:9)]),
+             row.names=FALSE,
+             align = c("l", rep("r", 6)))
+```
+
+```{r pmatsupp, tab.id="pmatsupp", tab.cap="Estimates of asymptotic size and lake-specific growth and body morphometry parameters for supplemental lakes.", eval=FALSE}
+knitr::kable((pmat1supp[, c(1,4:9)]),
+             row.names=FALSE,
+             align = c("l", rep("r", 6)))
 ```
 
 \pagebreak
@@ -1057,6 +1094,8 @@ plotbyn(x = int_Winf_jags_out$sd$Winf/int_Winf_jags_out$q50$Winf,
 ```
 
 
+\pagebreak
+
 
 \pagebreak
 
@@ -1066,7 +1105,7 @@ plotbyn(x = int_Winf_jags_out$sd$Winf/int_Winf_jags_out$q50$Winf,
 
 
 
-# Appendix A: JAGS Model Code 
+# Appendix B: JAGS Model Code 
 
 \pagebreak
 
@@ -1209,7 +1248,7 @@ model {
 
 \pagebreak
 
-# Appendix B: Data Filtration
+# Appendix C: Data Filtration
 
 \pagebreak
 
@@ -1232,11 +1271,11 @@ Importing raw sampling data from ALDAT resulted in a data frame with `r format(f
 
 \pagebreak
 
-# Appendix C: Evaluation of candidate models for weight ~ length relationship
+# Appendix D: Evaluation of candidate models for weight ~ length relationship
 
 \pagebreak
 
-Modeling lake-level regression parameters $\beta_0$ and $\beta_1$ explicitly makes it convenient to explore possible relationships between these parameters and lake-level variables.  Among those considered were log(area), latitude, elevation, and temperature.  While it is unlikely that latitude had a direct effect on body morphometry, it did emerge as having a potential association with slope parameter $\beta_1$, possibly as a surrogate for temperature or geographic regime.  Regression-type relationships were considered, based on the form below.  Diffuse normal or uniform priors were used on all parameters as appropriate.
+Modeling lake-level regression parameters *β~0~* and *β~1~* explicitly makes it convenient to explore possible relationships between these parameters and lake-level variables.  Among those considered were log(area), latitude, elevation, and temperature.  While it is unlikely that latitude had a direct effect on body morphometry, it did emerge as having a potential association with slope parameter *β~1~*, possibly as a surrogate for temperature or geographic regime.  Regression-type relationships were considered, based on the form below.  Diffuse normal or uniform priors were used on all parameters as appropriate.
 
 $$\mu_{\beta_0}[j] = \beta_{0,Intercept} + \beta_{0,Area}log(Area[j]) + \beta_{0,Lat}Lat[j] + \beta_{0,Temp}Temp[j]$$
 
@@ -1248,20 +1287,20 @@ $$\beta_1[j] \sim N(\mu_{\beta_1}[j], \sigma_{\beta_1})$$
 
 Given the relative complexity of the integrated model framework, comparison between candidate models was not straightforward, and a suite of model comparison strategies was explored:
 
-1. By means of initial exploration, the base model ($\beta_0$ and $\beta_1$ fully free) was run, and point estimates of both parameters were modeled as functions of site-level variables using both simple linear regression (SLR) and multiple linear regression (MLR) with all possible combinations of variables.  Models were then compared according to AIC and root mean square (RMSE) prediction error.  **Result: $\beta_0$ ~ log(Area), $\beta_1$ free (AIC), $\beta_0$ ~ log(Area), $\beta_1$ ~ Latitude (RMSE)**.
+1. By means of initial exploration, the base model (*β~0~* and *β~1~* fully free) was run, and point estimates of both parameters were modeled as functions of site-level variables using both simple linear regression (SLR) and multiple linear regression (MLR) with all possible combinations of variables.  Models were then compared according to AIC and root mean square (RMSE) prediction error.  **Result: *β~0~* ~ log(Area), *β~1~* free (AIC), *β~0~* ~ log(Area), *β~1~* ~ Latitude (RMSE)**.
 
-2. Next, a sequence of formulations of the integrated model were run with an extremely large number of iterations, considering each lake-level variable in turn and comparing among models using DIC (deviance information criterion) scores.  **Result: $\beta_0$ ~ log(Area), $\beta_1$ free**
+2. Next, a sequence of formulations of the integrated model were run with an extremely large number of iterations, considering each lake-level variable in turn and comparing among models using DIC (deviance information criterion) scores.  **Result: *β~0~* ~ log(Area), *β~1~* free**
 
-3. K-fold cross validation was then employed at the level of individual observations, with k = 10 folds for all models considered.  To accomplish this, a random subset of 1/10 of fish were withheld from the input dataset and the model was run, and posterior predictive point estimates were stored corresponding to withheld data.  This was then repeated for nine more folds of witheld data, and posterior predicted values were compared to actual data using RMSE and mean absolute error (MAE).  This was accomplished using the kfold() function, within the jagshelper package for R.  **Result: $\beta_0$ ~ log(Area), $\beta_1$ ~ free (RMSE), $\beta_0$ ~ log(Area), $\beta_1$ ~ Latitude (MAE)**
+3. K-fold cross validation was then employed at the level of individual observations, with k = 10 folds for all models considered.  To accomplish this, a random subset of 1/10 of fish were withheld from the input dataset and the model was run, and posterior predictive point estimates were stored corresponding to withheld data.  This was then repeated for nine more folds of witheld data, and posterior predicted values were compared to actual data using RMSE and mean absolute error (MAE).  This was accomplished using the kfold() function, within the jagshelper package for R.  **Result: *β~0~* ~ log(Area), *β~1~* ~ free (RMSE), *β~0~* ~ log(Area), *β~1~* ~ Latitude (MAE)**
 
-4. Leave-one-out cross validation (LOOCV) at the lake level was then employed by withholding the weight data from one lake at a time and predicting log weights from log lengths from each candidate model and comparing by means of RMSE for each associated lake.  This was supplemented by comparing the resulting inferences in terms of $W_{\infty}$ to to those from the base (fully free) model incorporating all data.  **Result: $\beta_0$ ~ log(area), $\beta_1$ ~ free (RMSE at data level), $\beta_0$ ~ log(area), $\beta_1$ ~ latitude (inference level)**
+4. Leave-one-out cross validation (LOOCV) at the lake level was then employed by withholding the weight data from one lake at a time and predicting log weights from log lengths from each candidate model and comparing by means of RMSE for each associated lake.  This was supplemented by comparing the resulting inferences in terms of *W~∞~* to to those from the base (fully free) model incorporating all data.  **Result: *β~0~* ~ log(area), *β~1~* ~ free (RMSE at data level), *β~0~* ~ log(area), *β~1~* ~ latitude (inference level)**
 
-It should be noted that all inferences regarding asymptotic size were nearly identical for lakes containing sampling data, suggesting that data (when available) have a much stronger influence on inferences than model structure, as can be hoped.  Slight differences do emerge in the cases when no sampling data are available; however, these cases are also comparatively inferentially diffuse.  To avoid overfitting, it seems reasonable at this time to select a candidate model with relatively few parameters.  **Overall selection: $\beta_0$ ~ log(area), $\beta_1$ free**
+It should be noted that all inferences regarding asymptotic size were nearly identical for lakes containing sampling data, suggesting that data (when available) have a much stronger influence on inferences than model structure, as can be hoped.  Slight differences do emerge in the cases when no sampling data are available; however, these cases are also comparatively inferentially diffuse.  To avoid overfitting, it seems reasonable at this time to select a candidate model with relatively few parameters.  **Overall selection: *β~0~* ~ log(area), *β~1~* free**
 
 
 \pagebreak
 
-# Appendix D: Comparative visualization of data and inferences for all lakes
+# Appendix E: Comparative visualization of data and inferences for all lakes
 
 \pagebreak
 
@@ -1269,4 +1308,4 @@ A sequence of plots follow for all lakes considered.  In the left panel are pair
 
 In the middle panel are paired weights and lengths if available, overlayed with a posterior envelope for the weight ~ length relationship, plus the estimated weight ~ length curves for all other lakes for comparison.  It should be noted that this relationship is plotted on the natural scale; if both the x and y axes are plotted on the log scale, this relationship becomes linear.
 
-In the main plot of the right panel are 50% and 95% credible intervals for $W_{\infty}$ for all lakes in grey, with the selected lake highlighted in black.  Offset at the top is a summary of the amount of input data from each source, as well as 50% and 95% credible intervals that would have been estimated from each data source independently.  The intervals associated with weights were calculated solely from the weight sample quantile relationship, the intervals associated with lengths were calculated by means of the length quantile relationship propagated through the weight ~ length relationship, and the intervals associated with area were calculated by means of the $L_{\infty}$ ~ area relationship propagated through the weight ~ length relationship.
+In the main plot of the right panel are 50% and 95% credible intervals for *W~∞~* for all lakes in grey, with the selected lake highlighted in black.  Offset at the top is a summary of the amount of input data from each source, as well as 50% and 95% credible intervals that would have been estimated from each data source independently.  The intervals associated with weights were calculated solely from the weight sample quantile relationship, the intervals associated with lengths were calculated by means of the length quantile relationship propagated through the weight ~ length relationship, and the intervals associated with area were calculated by means of the *L~∞~* ~ area relationship propagated through the weight ~ length relationship.
