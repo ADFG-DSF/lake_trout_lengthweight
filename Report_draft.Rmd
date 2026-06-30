@@ -123,6 +123,18 @@ nmat_num$n_Age[as.numeric(names(nA))] <- fillnothing_num(nA)
 nmat_num$n_LengthWeight[as.numeric(names(nLW))] <- fillnothing_num(nLW)
 nmat_num$n_LengthAge[as.numeric(names(nLA))] <- fillnothing_num(nLA)
 nmat_num$n_Projects[as.numeric(names(nproj))] <- fillnothing_num(nproj)
+
+
+
+# maybe not the best practice but we will modify in place
+
+nmat <- subset(nmat,
+                nmat_num$Estimate_Winf=="Yes" | nmat_num$n_Length>0 | nmat_num$n_Weight>0 | nmat_num$n_Age>0)
+nmat_num_orig <- nmat_num
+nmat_num <- dplyr::filter(nmat_num,
+                    Estimate_Winf=="Yes" | n_Length>0 | n_Weight>0 | n_Age>0)
+
+nlakes <- nrow(nmat_num)
 ```
 
 ```{r makepmat}
@@ -164,13 +176,13 @@ pmat <- data.frame(Lake = smallernames,
 
 
 ```{r}
-nmat_num1 <- dplyr::filter(nmat_num,
-                    Estimate_Winf=="Yes" | n_Length>0 | n_Weight>0 | n_Age>0)
-
-nmat1 <- subset(nmat,
-                nmat_num$Estimate_Winf=="Yes" | nmat_num$n_Length>0 | nmat_num$n_Weight>0 | nmat_num$n_Age>0)
-
-nlakes <- nrow(nmat_num1)
+# nmat_num1 <- dplyr::filter(nmat_num,
+#                     Estimate_Winf=="Yes" | n_Length>0 | n_Weight>0 | n_Age>0)
+# 
+# nmat1 <- subset(nmat,
+#                 nmat_num$Estimate_Winf=="Yes" | nmat_num$n_Length>0 | nmat_num$n_Weight>0 | nmat_num$n_Age>0)
+# 
+# nlakes <- nrow(nmat_num1)
 ```
 
 # Abstract
@@ -697,9 +709,9 @@ Wuttig, K. 2010. Stock assessment of lake trout in Paxson Lake, 2002-2004. Alask
 
 ```{r nmatest, tab.id="nmatest", tab.cap="Available sampling data for primary lakes, for which estimation of asymptotic size is desired."}
 # nmat1 <- nmat
-nmat1$n_Length[nmat1$Use_Samples=="No"] <- "-"
-nmat1$n_Weight[nmat1$Use_Samples=="No"] <- "-"
-nmat1$n_Age[nmat1$Use_Samples=="No"] <- "-"
+nmat$n_Length[nmat$Use_Samples=="No"] <- "-"
+nmat$n_Weight[nmat$Use_Samples=="No"] <- "-"
+nmat$n_Age[nmat$Use_Samples=="No"] <- "-"
 
 # colnames(nmat1) <- c("Lake", 
 #                      "Estimate $W_{\\infty}$",
@@ -720,10 +732,10 @@ nmat1$n_Age[nmat1$Use_Samples=="No"] <- "-"
 
 # nmat1 <- nmat
 
-nmat1est <- subset(nmat1, Estimate_Winf=="Yes")
-nmat1supp <- subset(nmat1, Estimate_Winf=="No")
+nmatest <- subset(nmat, Estimate_Winf=="Yes")
+nmatsupp <- subset(nmat, Estimate_Winf=="No")
 
-colnames(nmat1est) <- colnames(nmat1supp) <- 
+colnames(nmatest) <- colnames(nmatsupp) <- 
   c("Lake", 
                      "Estimate $W_{\\infty}$",
                      "Use Samples",
@@ -734,7 +746,7 @@ colnames(nmat1est) <- colnames(nmat1supp) <-
                      "n LengthWeight",
                      "n LengthAge")
 
-knitr::kable(nmat1est[,c(1,4:7)],
+knitr::kable(nmatest[,c(1,4:7)],
              align = c("l", rep("r", 4)),
              row.names=FALSE)
 ```
@@ -1061,7 +1073,7 @@ par(tcl=-.3)
 
 plotbyn <- function(x, for_n, ...) {
   thecex <- 1.3
-  for_x <- ifelse(nmat_num$Use_Samples!="Yes", 0.1,
+  for_x <- ifelse(nmat_num_orig$Use_Samples!="Yes", 0.1,
                   ifelse(for_n == 0, 0.3, for_n))
   plot(x = for_x, y=x, xaxt="n", log="x",
        xlim = c(0.1, max(nmat_num$n_Length)),
@@ -1077,17 +1089,17 @@ plotbyn <- function(x, for_n, ...) {
 
 par(mfrow=c(3,1))
 plotbyn(x = int_Winf_jags_out$sd$Winf/int_Winf_jags_out$q50$Winf,
-        for_n = nmat_num$n_Length,
+        for_n = nmat_num_orig$n_Length,
         xlab="n Length",
         # ylab="CV(W_inf)",
         ylab=expression(paste("CV(",W[infinity],")")))
 plotbyn(x = int_Winf_jags_out$sd$Winf/int_Winf_jags_out$q50$Winf,
-        for_n = nmat_num$n_Weight,
+        for_n = nmat_num_orig$n_Weight,
         xlab="n Weight",
         # ylab="CV(W_inf)",
         ylab=expression(paste("CV(",W[infinity],")")))
 plotbyn(x = int_Winf_jags_out$sd$Winf/int_Winf_jags_out$q50$Winf,
-        for_n = nmat_num$n_Age,
+        for_n = nmat_num_orig$n_Age,
         xlab="n Age",
         # ylab="CV(W_inf)",
         ylab=expression(paste("CV(",W[infinity],")")))
