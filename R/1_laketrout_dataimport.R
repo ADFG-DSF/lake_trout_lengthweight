@@ -18,7 +18,10 @@ morphometry1 <- read_csv("flat_data/lake_morphometry_25_12_23.csv", skip=1) %>%
   filter(!(is.na(Latitude_WGS84) & is.na(`Elevation (m)`) & is.na(`Temp (C)`) & is.na(SurfaceArea_h))) %>%
   mutate(use_fish = `Include in "Alaskanizing" Modeling Exercise` %in% c("Yes","yes")) %>%
   mutate(make_estimates = `Potentially Include in Lake Trout Management Plan` != "No") %>%
-  arrange(LakeName)
+  arrange(LakeName) %>%
+
+  filter(!(LakeName %in% c("Skilak Lake", "Harding Lake", "Thing Two Lake")))
+
 
 # # is lake name unique?  YES
 # sum(!is.na(morphometry1$LakeName))
