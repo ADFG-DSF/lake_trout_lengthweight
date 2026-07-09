@@ -312,7 +312,7 @@ and for all lakes,
 
 ## Available Data
 
-Sampling data were used from `r sum(nmat_num1$n_Projects)` unique sampling efforts, across `r sum(nmat_num1$Use_Samples=="Yes")` lakes deemed to have sufficiently representative and high-quality data.  Out of `r nlakes` lakes of interest with lake trout present as a resident species, estimation of asymptotic size is desired by management for `r sum(nmat_num1$Estimate_Winf=="Yes")` primary lakes, `r sum(nmat_num1$Estimate_Winf=="Yes" & nmat_num1$Use_Samples=="Yes")` of which may make direct use of sampling data and `r sum(nmat_num1$Estimate_Winf=="Yes" & nmat_num1$Use_Samples=="No")` of which have not yet been sampled.  Sampling data were also incorporated for `r sum(nmat_num1$Estimate_Winf=="No")` supplemental lakes, for which estimation of asymptotic size was not necessary but fish-level data could be used.  After filtering to the most reliable data (Appendix C), a wealth of data remain, and are summarized for each lake in Tables \@ref(tab:nmatest) and \@ref(tab:nmatsupp).
+Sampling data were used from `r sum(nmat_num$n_Projects)` unique sampling efforts, across `r sum(nmat_num$Use_Samples=="Yes")` lakes deemed to have sufficiently representative and high-quality data.  Out of `r nlakes` lakes of interest with lake trout present as a resident species, estimation of asymptotic size is desired by management for `r sum(nmat_num$Estimate_Winf=="Yes")` primary lakes, `r sum(nmat_num$Estimate_Winf=="Yes" & nmat_num$Use_Samples=="Yes")` of which may make direct use of sampling data and `r sum(nmat_num$Estimate_Winf=="Yes" & nmat_num$Use_Samples=="No")` of which have not yet been sampled.  Sampling data were also incorporated for `r sum(nmat_num$Estimate_Winf=="No")` supplemental lakes, for which estimation of asymptotic size was not necessary but fish-level data could be used.  After filtering to the most reliable data (Appendix C), a wealth of data remain, and are summarized for each lake in Tables \@ref(tab:nmatest) and \@ref(tab:nmatsupp).
 
 
 ## The Integrated Model
@@ -752,7 +752,7 @@ knitr::kable(nmatest[,c(1,4:7)],
 ```
 
 ```{r nmatsupp, tab.id="nmatsupp", tab.cap="Available sampling data for supplemental lakes."}
-knitr::kable(nmat1supp[,c(1,4:7)],
+knitr::kable(nmatsupp[,c(1,4:7)],
              align = c("l", rep("r", 4)),
              row.names=FALSE)
 ```

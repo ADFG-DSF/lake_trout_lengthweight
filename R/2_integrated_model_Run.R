@@ -243,10 +243,12 @@ int_Winf_data <- list(
   latc = morphometry$Latitude_WGS84 - mean(morphometry$Latitude_WGS84, na.rm=TRUE),
   logareac = log(morphometry$SurfaceArea_h) - mean(log(morphometry$SurfaceArea_h), na.rm=TRUE),
 
-  whichlakes_L = which(morphometry$use_fish & laketrout_Winf$n_Length > 10),
+  whichlakes_L = which(morphometry$use_fish & laketrout_Winf$n_Length > 10 &
+                         !(morphometry$LakeName %in% c("Skilak Lake", "Big Lake (Healy)"))),
   qL = tapply(laketrout$ForkLength_mm, laketrout$LakeNum, quantile, p=q_input, na.rm=TRUE),
   nL = laketrout_Winf$n_Length,
-  whichlakes_W = which(morphometry$use_fish & laketrout_Winf$n_Weight > 10),
+  whichlakes_W = which(morphometry$use_fish & laketrout_Winf$n_Weight > 10 &
+                         !(morphometry$LakeName %in% c("Skilak Lake", "Big Lake (Healy)"))),
   qW = tapply(laketrout$Weight_g/1000, laketrout$LakeNum, quantile, p=q_input, na.rm=TRUE),
   nW = laketrout_Winf$n_Weight,
 
@@ -278,6 +280,8 @@ int_Winf_data <- list(
 # can i make this within the above?
 int_Winf_data$whichdata_Lt <- which((laketrout$LakeNum %in% int_Winf_data$whichlakes_Lt) &
                                    (!is.na(laketrout$Age)) & (!is.na(laketrout$ForkLength_mm)))
+
+
 
 
 parameters <- c("sig_Lt", "sig_Lt_prior",

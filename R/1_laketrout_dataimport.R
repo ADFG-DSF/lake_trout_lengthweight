@@ -328,18 +328,32 @@ laketrout3 %>%
 
 
 
-## finalizing and saving the current filtration
-laketrout <- laketrout3 %>%
+laketrout4 <- laketrout3 %>%
   filter(is.na(Age) | Age < 50)
 nrow(laketrout3) # 36043
-nrow(laketrout) # 36041
-nrow(laketrout3) - nrow(laketrout) # 2
+nrow(laketrout4) # 36041
+nrow(laketrout3) - nrow(laketrout4) # 2
 
 filter_decisions <- c(filter_decisions,
                       "Keep fish with ages < 50 years")
 filter_nrows <- c(filter_nrows,
                   nrow(laketrout))
 
+## censoring ages with Age method other than Otolith
+laketrout <- laketrout4
+table(laketrout$`Age Type`, useNA = "ifany")
+unique(laketrout$`Age Type`)
+sum(laketrout$`Age Type` != "Otolith", na.rm=TRUE)
+
+table(laketrout$`Age Type`, is.na(laketrout$Age), useNA="ifany")
+
+
+laketrout$Age[laketrout$`Age Type` != "Otolith"] <- NA
+
+table(laketrout$`Age Type`, is.na(laketrout$Age), useNA="ifany")
+
+
+## finalizing and saving the current filtration
 save_results
 if(save_results) {
   save(laketrout, morphometry,
