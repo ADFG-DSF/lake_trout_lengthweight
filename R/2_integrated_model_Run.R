@@ -20,7 +20,8 @@ laketrout_Winf <- data.frame(LakeName = morphometry$LakeName,
                              Elevation = morphometry$`Elevation (m)`,
                              Temperature = morphometry$`Temp (C)`,
                              use_fish = morphometry$use_fish,
-                             make_estimates = morphometry$make_estimates) %>%
+                             make_estimates = morphometry$make_estimates,
+                             censor = morphometry$censor) %>%
   mutate(n_Weight = ifelse(is.na(n_Weight), 0, n_Weight)) %>%
   mutate(n_Length = ifelse(is.na(n_Length), 0, n_Length)) %>%
   mutate(n_Age = ifelse(is.na(n_Age), 0, n_Age))
@@ -103,10 +104,14 @@ cat('model {
   # sig_LA ~ dexp(0.05)
   # sig_LA_prior ~ dexp(0.05)
 
-  gam ~ dnorm(gam_lester, pow(cv_gam_lester*gam_lester, -2))T(0.01,)
-  gam_prior ~ dnorm(gam_lester, pow(cv_gam_lester*gam_lester, -2))T(0.01,)
-  lam ~ dnorm(lam_lester, pow(cv_lam_lester*lam_lester, -2))T(0.01,)
-  lam_prior ~ dnorm(lam_lester, pow(cv_lam_lester*lam_lester, -2))T(0.01,)
+  # gam ~ dnorm(gam_lester, pow(cv_gam_lester*gam_lester, -2))T(0.01,)
+  # gam_prior ~ dnorm(gam_lester, pow(cv_gam_lester*gam_lester, -2))T(0.01,)
+  # lam ~ dnorm(lam_lester, pow(cv_lam_lester*lam_lester, -2))T(0.01,)
+  # lam_prior ~ dnorm(lam_lester, pow(cv_lam_lester*lam_lester, -2))T(0.01,)
+  gam ~ dnorm(gam_lester, pow(sd_gam_lester, -2))T(0.01,)
+  gam_prior ~ dnorm(gam_lester, pow(sd_gam_lester, -2))T(0.01,)
+  lam ~ dnorm(lam_lester, pow(sd_lam_lester, -2))T(0.01,)
+  lam_prior ~ dnorm(lam_lester, pow(sd_lam_lester, -2))T(0.01,)
 
 
 
@@ -232,6 +237,7 @@ int_Winf_data <- list(
   logLc = log(laketrout$ForkLength_mm) - mean(log(laketrout$ForkLength_mm), na.rm=TRUE),
   lake = as.numeric(as.character(laketrout$LakeNum)),
   whichdata_WL = which(laketrout$use_fish &
+                         !laketrout$censor &
                          !is.na(laketrout$ForkLength_mm) &
                          !is.na(laketrout$SurfaceArea_h) &
                          !is.na(laketrout$Latitude_WGS84)),  # note: only 14 use_fish are missing surface area
@@ -244,20 +250,23 @@ int_Winf_data <- list(
   logareac = log(morphometry$SurfaceArea_h) - mean(log(morphometry$SurfaceArea_h), na.rm=TRUE),
 
   whichlakes_L = which(morphometry$use_fish & laketrout_Winf$n_Length > 10 &
-                         !(morphometry$LakeName %in% c("Skilak Lake", "Big Lake (Healy)"))),
+                         # !(morphometry$LakeName %in% c("Skilak Lake", "Big Lake (Healy)"))
+                       !morphometry$censor),
   qL = tapply(laketrout$ForkLength_mm, laketrout$LakeNum, quantile, p=q_input, na.rm=TRUE),
   nL = laketrout_Winf$n_Length,
   whichlakes_W = which(morphometry$use_fish & laketrout_Winf$n_Weight > 10 &
-                         !(morphometry$LakeName %in% c("Skilak Lake", "Big Lake (Healy)"))),
+                         # !(morphometry$LakeName %in% c("Skilak Lake", "Big Lake (Healy)"))
+                         !(morphometry$LakeName %in% c("Big Lake (Healy)")) &
+                       !morphometry$censor),
   qW = tapply(laketrout$Weight_g/1000, laketrout$LakeNum, quantile, p=q_input, na.rm=TRUE),
   nW = laketrout_Winf$n_Weight,
 
-  whichlakes_Lt = which(morphometry$use_fish & laketrout_Winf$n_Age > 0 & laketrout_Winf$n_Length > 0),
-  whichlakes_LA = which(!is.na(laketrout_Winf$Area_ha)),# & laketrout_Winf$n_Length > 0),
-  whichlakes_LA_c = which(!(!is.na(laketrout_Winf$Area_ha))),# & laketrout_Winf$n_Length > 0)),
-  whichlakes_WL = which(!is.na(laketrout_Winf$Lat) & !is.na(laketrout_Winf$Area_ha)),
-  whichlakes_WL_c = which(is.na(laketrout_Winf$Lat) | is.na(laketrout_Winf$Area_ha)),
-  alllakes = 1:nrow(laketrout_Winf),
+  whichlakes_Lt = which(!morphometry$censor & morphometry$use_fish & laketrout_Winf$n_Age > 0 & laketrout_Winf$n_Length > 0),
+  whichlakes_LA = which(!morphometry$censor & !is.na(laketrout_Winf$Area_ha)),# & laketrout_Winf$n_Length > 0),
+  whichlakes_LA_c = which(!morphometry$censor & !(!is.na(laketrout_Winf$Area_ha))),# & laketrout_Winf$n_Length > 0)),
+  whichlakes_WL = which(!morphometry$censor & !is.na(laketrout_Winf$Lat) & !is.na(laketrout_Winf$Area_ha)),
+  whichlakes_WL_c = which(!morphometry$censor & is.na(laketrout_Winf$Lat) | is.na(laketrout_Winf$Area_ha)),
+  # alllakes = 1:nrow(laketrout_Winf),
 
   # inputs for fitted vals of L~Age
   Agefit = 1:max(laketrout$Age, na.rm=TRUE),
@@ -265,9 +274,11 @@ int_Winf_data <- list(
 
   # priors from Lester
   gam_lester = 957,
-  cv_gam_lester = 0.2*2.5,
+  # cv_gam_lester = 0.2*2.5,
+  sd_gam_lester = 54,
   lam_lester = 0.14,
-  cv_lam_lester = 1*2.5,
+  # cv_lam_lester = 1*2.5,
+  sd_lam_lester = 0.016,
 
   # global values
   eta_L_cap = 500,

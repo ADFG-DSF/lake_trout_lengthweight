@@ -20,7 +20,8 @@ morphometry1 <- read_csv("flat_data/lake_morphometry_25_12_23.csv", skip=1) %>%
   mutate(make_estimates = `Potentially Include in Lake Trout Management Plan` != "No") %>%
   arrange(LakeName) %>%
 
-  filter(!(LakeName %in% c("Skilak Lake", "Harding Lake", "Thing Two Lake")))
+  # filter(!(LakeName %in% c("Skilak Lake", "Harding Lake", "Thing Two Lake")))
+  mutate(censor = LakeName %in% c("Skilak Lake", "Harding Lake", "Thing Two Lake"))
 
 
 # # is lake name unique?  YES
@@ -340,7 +341,7 @@ nrow(laketrout3) - nrow(laketrout4) # 2
 filter_decisions <- c(filter_decisions,
                       "Keep fish with ages < 50 years")
 filter_nrows <- c(filter_nrows,
-                  nrow(laketrout))
+                  nrow(laketrout4))
 
 ## censoring ages with Age method other than Otolith
 laketrout <- laketrout4
