@@ -524,6 +524,8 @@ curve(int_Winf_data$gam_lester * (1 - exp(-int_Winf_data$lam_lester * (1 + log(x
 
 points(datax, datay, col=4)
 
+legend("topleft", lwd=c(3,3,NA), col=c(1,"grey90",4), pch=c(NA,NA,1),
+       legend=c("AK data lakes","AK no-data lakes","Lester lakes"))
 
 lester_resids <- datay - int_Winf_data$gam_lester * (1 - exp(-int_Winf_data$lam_lester * (1 + log(datax))))
 hist(lester_resids)
@@ -535,9 +537,13 @@ ak_resids <- int_Winf_jags_out_dotprior$q50$Linf[datalakes] -
 hist(ak_resids)
 sd(ak_resids, na.rm=TRUE)
 
+par(mfrow=c(2,1))
+hist(lester_resids, xlim=c(-300,300))
+hist(ak_resids, xlim=c(-300,300))
 
+par(mfrow=c(1,1))
 resid_names <- morphometry$LakeName[datalakes]
-plot(x=rank(ak_resids), y=ak_resids, pch=16, ylim=c(-200,350))
+plot(x=rank(ak_resids), y=ak_resids, pch=16, ylim=c(-200,400))
 grid(nx=NA, ny=NULL)
 text(x=rank(ak_resids), y=ak_resids, labels=resid_names, srt=90,
      pos=4)

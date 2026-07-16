@@ -61,6 +61,8 @@ cat('model {
       Lfit[ifit, j] <- Linf[j]*(1-exp(-k[j]*(Agefit[ifit]-t0[j])))
     }
   }
+  # t0_newlake ~ dnorm(mu_t0, tau_t0)T(,1)
+  # k_newlake ~ dlnorm(mu_k, tau_k)
 
   mu_t0 ~ dnorm(0, 1)   # was 1
   mu_t0_prior ~ dnorm(0, 1)
