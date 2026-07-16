@@ -422,7 +422,7 @@ int_Winf_data_newlakes <- list(
 )
 
 # can i make this within the above?
-int_Winf_data_newlakes$whichdata_Lt <- which((laketrout$LakeNum %in% int_Winf_data$whichlakes_Lt) &
+int_Winf_data_newlakes$whichdata_Lt <- which((laketrout$LakeNum %in% int_Winf_data_newlakes$whichlakes_Lt) &
                                       (!is.na(laketrout$Age)) & (!is.na(laketrout$ForkLength_mm)))
 
 
@@ -463,9 +463,9 @@ parameters <- c("sig_Lt", "sig_Lt_prior",
 
 
 # JAGS controls
-niter <- 2*1000
+# niter <- 2*1000
 # niter <- 20*1000
-# niter <- 50*1000      # 50k in 9 minutes
+niter <- 50*1000      # 50k in 9 minutes
 # niter <- 100*1000  # 37 min
 # niter <- 200*1000
 # niter <- 500*1000  # 2.7 hrs
@@ -489,12 +489,81 @@ ncores <- 8
 }
 
 
-
+smallernames <- lakenames %>%
+  strsplit(split = " Lake") %>%
+  sapply("[", 1)
+smallernames[lakenames == "Caribou Lake (Cantwell)"] <- "Caribou (Cantwell)"
+smallernames[lakenames == "Caribou Lake (Lake Louise)"] <- "Caribou (Lake Louise)"
+smallernames[lakenames == "Itkillik lake"] <- "Itkillik"
+smallernames[lakenames == "Little Lake Louise"] <- "Little Louise"
+smallernames[lakenames == "Sevenmile Lake (Denali Hwy)"] <- "Sevenmile (Denali Hwy)"
 
 ###### SAVING INTERIM RESULTS #####
-save(int_Winf_jags_out,
-     int_Winf_data,
-     laketrout_Winf,
-     lakenames,
-     niter, ncores,
-     file="interim_posts/int_Winf_modelrun.Rdata")
+save(int_Winf_jags_out_newlakes,
+     int_Winf_data_newlakes,
+     # laketrout_Winf,
+     # lakenames,
+     smallernames,
+     # niter, ncores,
+     file="interim_posts/int_Winf_modelrun_newlakes.Rdata")
+
+
+
+
+plotRhats(int_Winf_jags_out_newlakes)
+nbyname(int_Winf_jags_out_newlakes)
+
+parmar <- par("mar")
+
+par(cex.axis=.5, mar=c(3,10,4,1))
+caterpillar(int_Winf_jags_out, p="t0", col=4, horizontal = TRUE,
+            xax=smallernames, las=2, all_ticks = TRUE)
+caterpillar(int_Winf_jags_out_newlakes, p="t0", col=2, horizontal = TRUE, add=TRUE)
+
+caterpillar(int_Winf_jags_out, p="k", col=4, horizontal = TRUE,
+            xax=smallernames, las=2, all_ticks = TRUE)
+caterpillar(int_Winf_jags_out_newlakes, p="k", col=2, horizontal = TRUE, add=TRUE)
+
+caterpillar(int_Winf_jags_out, p="b0", col=4, horizontal = TRUE,
+            xax=smallernames, las=2, all_ticks = TRUE)
+caterpillar(int_Winf_jags_out_newlakes, p="b0", col=2, horizontal = TRUE, add=TRUE)
+
+caterpillar(int_Winf_jags_out, p="b0_interp", col=4, horizontal = TRUE,
+            xax=smallernames, las=2, all_ticks = TRUE)
+caterpillar(int_Winf_jags_out_newlakes, p="b0_interp", col=2, horizontal = TRUE, add=TRUE)
+
+caterpillar(int_Winf_jags_out, p="b1", col=4, horizontal = TRUE,
+            xax=smallernames, las=2, all_ticks = TRUE)
+caterpillar(int_Winf_jags_out_newlakes, p="b1", col=2, horizontal = TRUE, add=TRUE)
+
+caterpillar(int_Winf_jags_out, p="Linf", col=4, horizontal = TRUE,
+            xax=smallernames, las=2, all_ticks = TRUE)
+caterpillar(int_Winf_jags_out_newlakes, p="Linf", col=2, horizontal = TRUE, add=TRUE)
+
+caterpillar(int_Winf_jags_out, p="Winf", col=4, horizontal = TRUE,
+            xax=smallernames, las=2, all_ticks = TRUE)
+caterpillar(int_Winf_jags_out_newlakes, p="Winf", col=2, horizontal = TRUE, add=TRUE)
+
+datalakes <- rep(FALSE, length(int_Winf_jags_out$q50$k))
+datalakes[union(union(int_Winf_data$whichlakes_L,
+                      int_Winf_data$whichlakes_W),
+                int_Winf_data$whichlakes_Lt)] <- TRUE
+datacols <- ifelse(datalakes, 4, adjustcolor(4, alpha.f = .2))
+
+caterpillar(int_Winf_jags_out, p="Linf", col=datacols, x=morphometry$SurfaceArea_h, log="x", ylim_add=0)
+caterpillar(int_Winf_jags_out_newlakes, p="Linf", col=2, x=morphometry$SurfaceArea_h[1:56], add=TRUE)
+curve(int_Winf_data$gam_lester * (1 - exp(-int_Winf_data$lam_lester * (1 + log(x)))), add=TRUE, lty=3)
+
+caterpillar(int_Winf_jags_out, p="Winf", col=datacols, x=morphometry$SurfaceArea_h, log="x", ylim_add=0)
+caterpillar(int_Winf_jags_out_newlakes, p="Winf", col=2, x=morphometry$SurfaceArea_h[1:56], add=TRUE)
+curve(exp(-19.56 + 3.2*log(int_Winf_data$gam_lester * (1 - exp(-int_Winf_data$lam_lester * (1 + log(x)))))),
+      add=TRUE, lty=3)
+
+caterpillar(int_Winf_jags_out$sims.list$sig_L[, int_Winf_data$whichlakes_L],
+            x=int_Winf_data$nL[int_Winf_data$whichlakes_L], col=4, log="x")
+caterpillar(int_Winf_jags_out_newlakes$sims.list$sig_L[, int_Winf_data_newlakes$whichlakes_L],
+            x=int_Winf_data$nL[int_Winf_data_newlakes$whichlakes_L], col=2, log="x", add=TRUE)
+caterpillar(int_Winf_jags_out$sims.list$sig_W[, int_Winf_data$whichlakes_W],
+            x=int_Winf_data$nW[int_Winf_data$whichlakes_W], col=4, log="x")
+caterpillar(int_Winf_jags_out_newlakes$sims.list$sig_W[, int_Winf_data_newlakes$whichlakes_W],
+            x=int_Winf_data$nW[int_Winf_data_newlakes$whichlakes_W], col=2, log="x", add=TRUE)
