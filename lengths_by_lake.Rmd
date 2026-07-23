@@ -1,0 +1,114 @@
+---
+title: "Model input data - Lengths by lake"
+output: word_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, dpi=300, fig.height=8, fig.width = 6)
+```
+
+```{r}
+load(file="Rdata/laketrout_sampling_formodel.Rdata")
+load(file="interim_posts/int_Winf_modelrun.Rdata")
+ 
+# load(file="interim_posts/int_Winf_modelrun_26_05_30.Rdata")
+library(magrittr)
+library(jagshelper)
+ 
+load(file="raw_data/dotsfromdots.Rdata")
+ 
+datalakes <- rep(FALSE, length(int_Winf_jags_out$q50$k))
+datalakes[union(union(int_Winf_data$whichlakes_L,
+                      int_Winf_data$whichlakes_W),
+                int_Winf_data$whichlakes_Lt)] <- TRUE
+
+
+smallernames <- lakenames %>%
+  strsplit(split = " Lake") %>%
+  sapply("[", 1)
+smallernames[lakenames == "Caribou Lake (Cantwell)"] <- "Caribou (Cantwell)"
+smallernames[lakenames == "Caribou Lake (Lake Louise)"] <- "Caribou (Lake Louise)"
+smallernames[lakenames == "Itkillik lake"] <- "Itkillik"
+smallernames[lakenames == "Little Lake Louise"] <- "Little Louise"
+smallernames[lakenames == "Sevenmile Lake (Denali Hwy)"] <- "Sevenmile (Denali Hwy)"
+```
+
+
+
+```{r}
+parmar <- par("mar")
+par(mfrow=c(3,1))
+par(mar=c(2,3,4,2))
+lestermn <- function(x) {
+  x1 <- x[x>=300]
+  return(mean(x1[x1 >= quantile(x1, 0.9)]))
+}
+for(j in int_Winf_data$whichlakes_L) {
+  hist(int_Winf_data$L[int_Winf_data$lake==j],
+       xlim=range(int_Winf_data$L, na.rm=TRUE),
+       main=paste0(smallernames[j]," (n = ", 
+                   int_Winf_data$nL[j], ")"),
+       breaks=seq(0,1500, by=50),
+       border="grey")
+  axis(side=1, at=300, cex.axis=1.5)
+  abline(v=int_Winf_data$qL[j], lty=2, lwd=1)
+  segments(x0=int_Winf_jags_out$q2.5$Linf[j],
+           x1=int_Winf_jags_out$q97.5$Linf[j],
+           y0=.95*par("usr")[4], col=1, lwd=2, lend=1)
+  segments(x0=int_Winf_jags_out$q25$Linf[j],
+           x1=int_Winf_jags_out$q75$Linf[j],
+           y0=.95*par("usr")[4], lwd=5, lend=1, col=1)
+  segments(x0=int_Winf_jags_out$q50$Linf[j],
+           y0=.9*par("usr")[4],
+           y1=1*par("usr")[4], col=1, lwd=2, lend=1)
+  abline(v=lestermn(int_Winf_data$L[int_Winf_data$lake==j]), lty=3)
+  legend("topright", lty=1:3, lwd=c(2,1,1),
+         legend=c("Model output","95th percentile", "Lester method"))
+  
+  theprojects <- unique(laketrout$ProjectTitle[laketrout$LakeNum==j])
+  cols <- adjustcolor(rcolors(length(theprojects)),
+                      red.f=.7, green.f=.7, blue.f=.7)
+  
+  plot(NA, yaxt="n", xlab="", ylab="",
+       xlim=range(int_Winf_data$L, na.rm=TRUE), 
+       ylim=c(1+length(theprojects), 0))
+  grid(nx=NULL, ny=NA)
+  axis(side=1, at=300, cex.axis=1.5)
+  abline(v=300, lty=3, col="grey")
+  
+  countup <- 1
+  for(k in theprojects) {
+    lt <- subset(laketrout, LakeNum==j & ProjectTitle==k)
+    points(x=lt$ForkLength_mm, y=jitter(rep(countup,nrow(lt)), amount=.2),
+           col=adjustcolor(cols[countup], alpha.f=.3), pch=16)
+    axis(side=2, at=countup, labels=lt$Year[1], col.axis=cols[countup], las=2)
+    countup <- countup+1
+  }
+  
+  plot(NA, yaxt="n", xlab="", ylab="",
+       xlim=range(int_Winf_data$L, na.rm=TRUE), 
+       ylim=c(1+length(theprojects), 0))
+  grid(nx=NULL, ny=NA)
+  countup <- 1
+  for(k in theprojects) {
+    lt <- subset(laketrout, LakeNum==j & ProjectTitle==k)
+    # points(x=lt$ForkLength_mm, y=jitter(rep(countup,nrow(lt)), amount=.2),
+    #        col=adjustcolor(cols[countup], alpha.f=.2), pch=16)
+    # if(nrow(lt) > 1) {
+    thedens <- density(lt$ForkLength_mm, bw=30)
+    thedensy <- countup + .5 -
+      .95*sqrt(nrow(lt)/max(table(laketrout$ProjectTitle[laketrout$LakeNum==j]))) * 
+      (thedens$y/max(thedens$y))
+    polygon(x=thedens$x, y=thedensy, border=NA, 
+            col=adjustcolor(cols[countup], alpha.f=.5))
+    # } else {
+    #   points(x=lt$ForkLength_mm, y=countup,
+    #        col=cols[countup], pch=16)
+    # }
+    axis(side=2, at=countup, labels=lt$Year[1], col.axis=cols[countup], las=2)
+    countup <- countup+1
+  }
+  
+}
+```
