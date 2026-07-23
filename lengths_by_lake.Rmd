@@ -34,7 +34,13 @@ smallernames[lakenames == "Little Lake Louise"] <- "Little Louise"
 smallernames[lakenames == "Sevenmile Lake (Denali Hwy)"] <- "Sevenmile (Denali Hwy)"
 ```
 
+Three plots follow for each lake.  These were constructed directly from the **input data** to the asymptotic size model - this is after culling some records in the data cleaning & filtration process.
 
+* First, a histogram of all lengths (pooled) for each lake.  The vertical dashed line corresponds to the 95th percentile value (which is currently used as a model input to describe the length sample), and the vertical dotted line corresponds to the method used by Lester & others (mean of the top 10% after culling anything less than 300mm).  I was curious how different these would be - turns out not that different for lakes when we have a good amount of data.  I was also curious how many records exist of fish < 300mm, and if these were in danger of swamping the sample.  The model-output asymptotic length is overlayed at top (95% & 50% CI's, plus a point estimate).  Note: asymptotic length is estimated by the model using a combination of the length sample, the length ~ age relationship, the lake area, and the weight sample & weight ~ length relationship.  
+
+* Next, lengths separated by **project** to see if systematic differences exist, and to explore if any sampling efforts should not be used as input data.  These are labeled by year for simplicity, hopefully it's not too much bother to identify which is which.
+
+* Finally, same thing as a kernel density if that's cleaner to read.
 
 ```{r}
 parmar <- par("mar")
