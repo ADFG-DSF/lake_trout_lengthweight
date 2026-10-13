@@ -8,15 +8,15 @@
 library(tidyverse)
 
 # old & new morphometry datasets
-morph_old <- read_csv("flat_data/old_data_versions/lake_morphometry3.csv", skip=1) %>%
+morph_old <- read_csv("flat_data/old_data_versions/lake_morphometry_25_12_23.csv", skip=1) %>%
   filter(!is.na(LakeName))
-morph_new <- read_csv("flat_data/lake_morphometry_25_12_23.csv", skip=1) %>%
+morph_new <- read_csv("flat_data/lake_morphometry_26_08_25.csv", skip=1) %>%
   filter(!is.na(LakeName))
 
 # old & new length/weight/age datasets
-lw_old <- read_csv("flat_data/old_data_versions/length_weight4.csv", skip=1) %>%
+lw_old <- read_csv("flat_data/old_data_versions/length_weight_25_12_23.csv", skip=1) %>%
   filter(!is.na(LakeName))
-lw_new <- read_csv("flat_data/length_weight_25_12_23.csv", skip=1) %>%
+lw_new <- read_csv("flat_data/length_weight_26_08_25.csv", skip=1) %>%
   filter(!is.na(LakeName))
 
 
@@ -47,11 +47,14 @@ all(sapply(morph_old, class)[order(names(sapply(morph_old, class)))] ==
 
 # any new lakes?
 morph_new$LakeName[!(morph_new$LakeName %in% morph_old$LakeName)]
-# [1] "Chikuminuk Lake" "Nayakuk Lake"    "Tikchik Lake"
+# [1] "Donnelly Lake"                "Nuyakuk Lake"                 "Paul's Pond (Coal Mine Road)"
 
 # any old lakes went away?
 morph_old$LakeName[!(morph_old$LakeName %in% morph_new$LakeName)]
-# [1] "Chelle Lake"                              "South Middle Fork Lake of Goodnews River"
+# [1] "Donnelly Lake (Richardson Highway)" "Nayakuk Lake"                       "Pauls Pond (Coal Mine Road)"
+
+## looks like spellings changed - make sure this is consistent with the lengthweight database
+
 
 # any changes to values?
 old_a2a <- morph_old[order(morph_old$LakeName), ] %>%
@@ -242,6 +245,7 @@ colnames(lw_new)
 
 # any new columns?
 colnames(lw_new)[!(colnames(lw_new) %in% colnames(lw_old))]
+# [1] "Use in Modeling Exercise" "Data Maybe Biased"
 
 # any old columns went away?
 colnames(lw_old)[!(colnames(lw_old) %in% colnames(lw_new))]
@@ -258,17 +262,26 @@ all(sapply(lw_old, class)[order(names(sapply(lw_old, class)))] ==
 
 # any new lakes?
 unique(lw_new$LakeName[!(lw_new$LakeName %in% lw_old$LakeName)])
-# might have to deal with "Other"
-# [1] "Other"                          "Chikuminuk Lake"                "Nayakuk Lake"
-# [4] "Tikchik Lake"                   "Kagati Lake"                    "Island Lake (Philip Smith Mts)"
+# [1] "Chelle Lake (Chaleau Lake or Hot Dog Lake)"
+# [2] "Fourmile Lake (Taylor Highway)"
+# [3] "Lost Lake  (Chisholm Lake) (near Birch Lake)"
+# [4] "North Twin Lake (Meadows Road)"
+# [5] "Paul's Pond (Coal Mine Road)"
+# [6] "Rapids Lake (Richardson Highway)"
+# [7] "Summit Lake (Richardson Highway near Paxson)"
 
 # any old lakes went away?
 unique(lw_old$LakeName[!(lw_old$LakeName %in% lw_new$LakeName)])
+# [1] "Chelle Lake"          "Four Mile Lake"       "Lost Lake"
+# [4] "North Twin Lake"      "Paul's Pond"          "Rapids Lake"
+# [7] "Other"                "Summit Lake (Paxson)"
+
+## probably names got standardized (make sure it's right!!)
 
 # any lake names that don't match with Morphometry?
 unique(lw_old$LakeName[!(lw_old$LakeName %in% morph_old$LakeName)]) # baseline
 unique(lw_new$LakeName[!(lw_new$LakeName %in% morph_new$LakeName)]) # what it is now
-## NEW: Chelle, Other
+## NEW: "Nayakuk Lake"
 
 # ISSUE: 7 lakes don't match Morphometry
 # SOLUTION: same as last round, keep replacement step in data import
